@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/*
+ * RMAX design tokens — Style A (see .context/DESIGN_SYSTEM.md).
+ * All sizes advance on a 4px grid (Tailwind's default spacing unit is 4px).
+ */
+@theme {
+  /* Colours */
+  --color-navy: #002970;
+  --color-navy-600: #315b96;
+  --color-charcoal: #232a32;
+  --color-canvas: #fbf9f5;
+  --color-card: #fdfdfd;
+  --color-muted: #586574;
+  --color-muted-dark: #b8c4d4;
+  --color-line: #d6dce4;
+  --color-soft: #eaf0f8;
+  --color-success: #257052;
+  --color-success-soft: #e8f2ec;
+  --color-danger: #b3261e; /* ASSUMED: no error colour in the design */
+  --color-danger-soft: #fbeae8; /* ASSUMED */
+
+  /* Fonts */
+  --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-jakarta: var(--font-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale (size / line-height) */
+  --text-label: 12px;
+  --text-label--line-height: 20px;
+  --text-body-sm: 14px; /* ASSUMED: used for footer + helper text */
+  --text-body-sm--line-height: 20px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-title: 24px;
+  --text-title--line-height: 36px;
+  --text-section: 36px;
+  --text-section--line-height: 44px;
+  --text-display: 52px;
+  --text-display--line-height: 64px;
+  --text-display-sm: 40px; /* tablet/mobile step of the display size (ASSUMED) */
+  --text-display-sm--line-height: 48px;
+  --text-numeral: 152px;
+  --text-numeral--line-height: 184px;
+
+  /* Radii */
+  --radius-input: 16px;
+  --radius-action: 28px;
+  --radius-card: 32px;
+  --radius-card-lg: 40px;
+
+  /* Shadows (ASSUMED: soft card elevation visible on 08) */
+  --shadow-card: 0 2px 12px rgb(35 42 50 / 0.06);
+
+  /* Layout */
+  --container-page: 1180px;
+  --container-nav: 1440px;
+  --container-home: 1280px;
+}
+
+:root {
+  --header-height: 92px;
+}
+
+/* Price-range slider on the product listing: navy fill up to the thumb, ring thumb as drawn. */
+.price-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+.price-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-navy) var(--pct), var(--color-line) var(--pct));
+}
+.price-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-navy) var(--pct), var(--color-line) var(--pct));
+}
+.price-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 999px;
+  background: var(--color-card);
+  border: 4px solid var(--color-navy);
+}
+.price-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-card);
+  border: 4px solid var(--color-navy);
+}
+
+/* Base styles live in the base layer so utilities (text-white, font-sans, …) can override them. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-height) + 16px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    color: var(--color-charcoal);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-navy);
+    outline-offset: 2px;
+  }
+
+  /* Native <details> used for the FAQ accordion */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
