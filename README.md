@@ -77,7 +77,8 @@ npm run seed      # in a second terminal
 | `/` | Home page design (`RMAX Solutions Home page.png`) — hero, numbers, best sellers, testimonials |
 | `/our-product` | Product Listing design — category pills, filters, sort, two card styles, compare banner |
 | `/products/[slug]` | Product Detail design — gallery, price card, tabs, overview, features, specs, applications, related products, testimonial |
-| `/about-us`, `/contact-us` | **no reference design** — composed from the design system and copy used elsewhere. `/contact-us` has a working form saved to MongoDB (`contactmessages`) |
+| `/about-us` | About Us design (`RMAX Solutions About Us.png`) — hero + numbers, mission/approach, equipment, spaces, principles, how we help, CTA. Uses the white header bar and the wide footer variant |
+| `/contact-us` | **no reference design** — composed from the design system and copy used elsewhere; working form saved to MongoDB (`contactmessages`) |
 
 The header from the Home design (logo · product search · Our Product / Contact Us / About Us · Login) is used on **every** page. It has no Cart link, so a `Cart · n` link appears only while the cart has items.
 

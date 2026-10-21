@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { buttonClasses } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 import { ProductSearch } from "./ProductSearch";
 
 type Props = {
@@ -47,7 +48,11 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
           <ul className="flex items-center gap-8">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="text-body text-muted transition hover:text-navy">
+                <Link
+                  href={l.href}
+                  aria-current={pathname === l.href ? "page" : undefined}
+                  className={cn("text-body transition hover:text-navy", pathname === l.href ? "font-bold text-navy" : "text-muted")}
+                >
                   {l.label}
                 </Link>
               </li>
