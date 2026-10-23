@@ -13,7 +13,7 @@ export default async function OurProductPage() {
   const products = await getAllProducts();
   return (
     <>
-      <section className="mx-auto grid w-full max-w-(--container-home) items-center gap-8 px-5 pt-4 sm:px-8 md:pt-8 lg:grid-cols-[1fr_630px] lg:gap-12 xl:px-0 xl:pt-[64px]">
+      <section className="mx-auto grid w-full max-w-(--container-page) items-center gap-8 px-5 pt-4 sm:px-8 md:pt-8 lg:grid-cols-[1fr_630px] lg:gap-12 xl:px-0 xl:pt-[64px]">
         <div>
           <h1 className="font-jakarta text-[36px]/[44px] font-bold tracking-[-0.01em] text-charcoal md:text-[52px]/[64px]">
             Sanitary disposal to GPS trackers for your bussiness needs.

@@ -52,10 +52,8 @@
   /* Shadows (ASSUMED: soft card elevation visible on 08) */
   --shadow-card: 0 2px 12px rgb(35 42 50 / 0.06);
 
-  /* Layout */
-  --container-page: 1180px;
-  --container-nav: 1440px;
-  --container-home: 1280px;
+  /* Layout — one container width shared by the header, every page and the footer, so their edges line up */
+  --container-page: 1280px;
 }
 
 :root {

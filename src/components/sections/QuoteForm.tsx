@@ -18,10 +18,10 @@ import type { ProductDTO } from "@/lib/data/content";
 export function QuoteForm({
   products,
   initialModel,
-  initialQuantity = 1,
+  initialQuantity,
 }: {
   products: ProductDTO[];
-  initialModel: string;
+  initialModel?: string;
   initialQuantity?: number;
 }) {
   const [done, setDone] = useState(false);
@@ -34,7 +34,10 @@ export function QuoteForm({
     formState: { errors, isSubmitting },
   } = useForm<QuoteRequestInput, unknown, QuoteRequestData>({
     resolver: zodResolver(quoteRequestSchema),
-    defaultValues: { preferredModel: initialModel as QuoteRequestInput["preferredModel"], quantity: initialQuantity },
+    defaultValues: {
+      preferredModel: (initialModel || "") as QuoteRequestInput["preferredModel"],
+      quantity: initialQuantity,
+    },
   });
 
   const selected = useWatch({ control, name: "preferredModel" });
@@ -70,7 +73,7 @@ export function QuoteForm({
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
             <h2 className="text-title">Organization &amp; contact</h2>
             <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
-              <TextInput label="Organization name *" placeholder="Organization name *" autoComplete="organization" error={errors.organizationName?.message} {...register("organizationName")} />
+              <TextInput label="Organization name *" autoComplete="organization" error={errors.organizationName?.message} {...register("organizationName")} />
               <SelectInput label="Institution type *" error={errors.institutionType?.message} defaultValue="" {...register("institutionType")}>
                 <option value="" disabled>
                   Select institution type
@@ -82,15 +85,18 @@ export function QuoteForm({
                 ))}
               </SelectInput>
               <p className="text-body text-muted md:col-span-2">{INSTITUTION_TYPES.join(" · ")}</p>
-              <TextInput label="Contact person *" placeholder="Contact person *" autoComplete="name" error={errors.contactPerson?.message} {...register("contactPerson")} />
-              <TextInput label="Role / department" placeholder="Role / department" autoComplete="organization-title" error={errors.role?.message} {...register("role")} />
-              <TextInput label="Email *" type="email" placeholder="Email *" autoComplete="email" error={errors.email?.message} {...register("email")} />
-              <TextInput label="Phone (optional)" type="tel" placeholder="Phone (optional)" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
+              <TextInput label="Contact person *" autoComplete="name" error={errors.contactPerson?.message} {...register("contactPerson")} />
+              <TextInput label="Role / department" autoComplete="organization-title" error={errors.role?.message} {...register("role")} />
+              <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+              <TextInput label="Phone (optional)" type="tel" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
             </div>
 
             <h2 className="mt-2 text-title">Your requirement</h2>
             <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
-              <SelectInput label="Preferred model *" error={errors.preferredModel?.message} {...register("preferredModel")}>
+              <SelectInput label="Preferred model *" error={errors.preferredModel?.message} defaultValue="" {...register("preferredModel")}>
+                <option value="" disabled>
+                  Select preferred model
+                </option>
                 {products.map((p) => (
                   <option key={p.slug} value={p.slug}>
                     {p.name} · {p.specs.dailyCapacity}
@@ -100,7 +106,7 @@ export function QuoteForm({
               </SelectInput>
               <TextInput label="Quantity *" type="number" min={1} inputMode="numeric" error={errors.quantity?.message} {...register("quantity")} />
               <TextInput label="Expected daily usage *" placeholder="Approximate number of napkins" error={errors.expectedDailyUsage?.message} {...register("expectedDailyUsage")} />
-              <TextInput label="Delivery city & postal code *" placeholder="Delivery city & postal code *" autoComplete="postal-code" error={errors.deliveryCityPostal?.message} {...register("deliveryCityPostal")} />
+              <TextInput label="Delivery city & postal code *" autoComplete="postal-code" error={errors.deliveryCityPostal?.message} {...register("deliveryCityPostal")} />
               <TextArea className="md:col-span-2" label="Use case & number of locations *" placeholder="Describe where and how the units will be used" error={errors.useCase?.message} {...register("useCase")} />
               <TextArea className="md:col-span-2" label="Installation requirements *" placeholder="Site readiness, placement questions and any installation support needed" error={errors.installationRequirements?.message} {...register("installationRequirements")} />
             </div>

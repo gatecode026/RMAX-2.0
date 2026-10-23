@@ -23,8 +23,8 @@ async function HomeHeaderDynamic() {
 /** Prerenderable shell (no request-time hooks) shown while the session resolves. */
 function HomeHeaderStatic() {
   return (
-    <header className="relative z-40">
-      <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-home) items-center justify-between gap-6 px-5 sm:px-8 xl:px-0">
+    <header className="sticky top-0 z-50 bg-transparent transition-all duration-300">
+      <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 xl:px-0">
         <Logo />
         <Link href="/login" className={buttonClasses({ size: "xs", className: "h-[43px] min-w-20" })}>
           Login

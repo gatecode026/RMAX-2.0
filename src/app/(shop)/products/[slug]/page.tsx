@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: Params) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
       {/* Gallery + summary + price */}
-      <section className="mx-auto w-full max-w-(--container-home) px-5 pt-2 sm:px-8 md:pt-4 xl:px-0">
+      <section className="mx-auto w-full max-w-(--container-page) px-5 pt-2 sm:px-8 md:pt-4 xl:px-0">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
           <ProductGallery items={gallery} title={product.title} />
 
@@ -121,7 +121,7 @@ export default async function ProductPage({ params }: Params) {
         <ProductTabs items={tabs} />
       </div>
 
-      <div className="mx-auto mt-8 flex w-full max-w-(--container-home) flex-col gap-6 px-5 sm:px-8 xl:px-0">
+      <div className="mx-auto mt-8 flex w-full max-w-(--container-page) flex-col gap-6 px-5 sm:px-8 xl:px-0">
         <OverviewSection text={product.overview ?? product.summary ?? product.intro ?? ""} image={product.overviewImage} />
 
         <div className="grid items-stretch gap-6 lg:grid-cols-[1.24fr_1fr]">
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: Params) {
       </div>
 
       {related.length > 0 && (
-        <section aria-labelledby="related-h" className="mx-auto mt-14 w-full max-w-(--container-home) px-5 sm:px-8 md:mt-16 xl:px-0">
+        <section aria-labelledby="related-h" className="mx-auto mt-14 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-16 xl:px-0">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 id="related-h" className="font-jakarta text-[28px]/9 font-bold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]">
               Related products.
@@ -158,7 +158,7 @@ export default async function ProductPage({ params }: Params) {
       )}
 
       {testimonial && (
-        <div className="mx-auto mt-8 w-full max-w-(--container-home) px-5 sm:px-8 xl:px-0">
+        <div className="mx-auto mt-8 w-full max-w-(--container-page) px-5 sm:px-8 xl:px-0">
           <ProductTestimonial t={testimonial} />
         </div>
       )}

@@ -22,7 +22,7 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
     formState: { errors, isSubmitting },
   } = useForm<ContactInput, unknown, ContactData>({
     resolver: zodResolver(contactSchema),
-    defaultValues: { enquiryType: "Sales", model: "" },
+    defaultValues: { enquiryType: "" as ContactInput["enquiryType"], model: "" },
   });
 
   async function onSubmit(values: ContactData) {
@@ -54,7 +54,10 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
       <h2 className="text-title">Send us a message</h2>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 flex flex-col gap-5">
         <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
-          <SelectInput label="Enquiry type *" error={errors.enquiryType?.message} {...register("enquiryType")}>
+          <SelectInput label="Enquiry type *" error={errors.enquiryType?.message} defaultValue="" {...register("enquiryType")}>
+            <option value="" disabled>
+              Select enquiry type
+            </option>
             {ENQUIRY_TYPES.map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -69,9 +72,9 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
               </option>
             ))}
           </SelectInput>
-          <TextInput label="Full name *" placeholder="Full name *" autoComplete="name" error={errors.name?.message} {...register("name")} />
-          <TextInput label="Email *" type="email" placeholder="Email *" autoComplete="email" error={errors.email?.message} {...register("email")} />
-          <TextInput label="Phone (optional)" type="tel" placeholder="Phone (optional)" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
+          <TextInput label="Full name *" autoComplete="name" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+          <TextInput label="Phone (optional)" type="tel" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
           <TextInput label="Order reference (optional)" placeholder="e.g. RMAX-DEMO-001" error={errors.orderReference?.message} {...register("orderReference")} />
           <TextArea
             className="md:col-span-2"

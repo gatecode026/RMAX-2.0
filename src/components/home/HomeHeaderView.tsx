@@ -27,6 +27,16 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
   const pathname = usePathname();
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const open = openedOn === pathname;
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -38,13 +48,47 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
   const account = userName ? { href: "/account", label: userName.split(" ")[0] || "Account" } : { href: "/login", label: "Login" };
 
   return (
-    <header className="relative z-40">
-      <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-home) items-center gap-6 px-5 sm:px-8 xl:px-0">
-        <Logo />
-        <div className="hidden min-w-0 flex-1 lg:block lg:max-w-[410px] xl:ml-[271px]">
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-300",
+        isScrolled
+          ? "border-b border-line/60 bg-canvas/95 backdrop-blur-md shadow-[0_2px_12px_rgb(35_42_50/0.05)]"
+          : "bg-transparent",
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 xl:px-0 transition-all duration-300",
+          isScrolled ? "h-16" : "h-(--header-height)",
+        )}
+      >
+        {/* Left Side: Logo */}
+        <div className="shrink-0">
+          <Logo />
+        </div>
+
+        {/* Searchbar: When scrolled, moves to the right side! */}
+        <div
+          className={cn(
+            "hidden min-w-0 transition-all duration-300 lg:block",
+            isScrolled
+              ? "ml-auto w-full max-w-[360px]"
+              : "flex-1 max-w-[410px] xl:ml-[271px]",
+          )}
+        >
           <ProductSearch items={products} />
         </div>
-        <nav aria-label="Main" className="ml-auto hidden items-center gap-8 lg:flex">
+
+        {/* Nav links: Visible at top, hidden when scrolled so only Logo & Searchbar show on both sides */}
+        <nav
+          aria-label="Main"
+          className={cn(
+            "hidden items-center gap-8 transition-all duration-300 lg:flex",
+            isScrolled
+              ? "pointer-events-none hidden max-w-0 overflow-hidden opacity-0"
+              : "ml-auto opacity-100",
+          )}
+        >
           <ul className="flex items-center gap-8">
             {LINKS.map((l) => (
               <li key={l.href}>
@@ -69,6 +113,8 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
             {account.label}
           </Link>
         </nav>
+
+        {/* Mobile menu button */}
         <button
           type="button"
           className="ml-auto inline-flex size-11 items-center justify-center rounded-full border border-line bg-card text-navy lg:hidden"

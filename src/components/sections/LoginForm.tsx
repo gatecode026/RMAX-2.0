@@ -35,8 +35,8 @@ export function LoginForm() {
       <h2 className="text-[28px]/9">Login to your account</h2>
       <p className="mt-4 text-body-sm text-muted">Enter the email and password you used to create your account.</p>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-5 flex flex-col gap-5">
-        <TextInput label="Email address *" type="email" placeholder="Email address *" autoComplete="email" error={errors.email?.message} {...register("email")} />
-        <TextInput label="Password *" type="password" placeholder="Enter your password" autoComplete="current-password" error={errors.password?.message} {...register("password")} />
+        <TextInput label="Email address *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+        <TextInput label="Password *" type="password" autoComplete="current-password" error={errors.password?.message} {...register("password")} />
         <Checkbox label={<span className="text-body-sm">Remember me</span>} {...register("remember")} />
         <Link href="/forgot-password" className="w-fit text-body-sm font-semibold text-navy underline-offset-4 hover:underline">
           Forgot password?

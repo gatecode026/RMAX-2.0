@@ -7,7 +7,7 @@ import type { HomeStat, ProductDTO } from "@/lib/data/content";
 /** Headline + hero card, then the four-number strip. */
 export function HomeHero({ featured, stats }: { featured?: ProductDTO; stats: HomeStat[] }) {
   return (
-    <section className="mx-auto w-full max-w-(--container-home) px-5 pt-4 sm:px-8 md:pt-8 xl:px-0 xl:pt-[66px]">
+    <section className="mx-auto w-full max-w-(--container-page) px-5 pt-4 sm:px-8 md:pt-8 xl:px-0 xl:pt-[66px]">
       <div className="grid items-start gap-10 lg:grid-cols-[1fr_534px] lg:gap-8">
         <div>
           <h1 className="max-w-[620px] font-jakarta text-[44px]/[52px] font-bold tracking-[-0.015em] text-charcoal sm:text-[56px]/[64px] xl:text-[72px]/[84px]">

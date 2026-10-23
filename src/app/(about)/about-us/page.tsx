@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "RMAX Solutions is an Indian manufacturer and OEM supplier of sanitary waste disposal, pad vending systems and smart service hardware.",
 };
 
-const wrap = "mx-auto w-full max-w-(--container-home) px-5 sm:px-8 xl:px-0";
+const wrap = "mx-auto w-full max-w-(--container-page) px-5 sm:px-8 xl:px-0";
 const h2 = "text-[28px]/9 font-extrabold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]";
 const lead = "text-body text-muted";
 const card = "rounded-[28px] border border-line bg-card";

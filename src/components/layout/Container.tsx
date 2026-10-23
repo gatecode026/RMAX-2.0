@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-/** Page container — 1180px content width at desktop (x130→1310 on a 1440 canvas). */
+/** Page container — 1280px at desktop (x80→1360 on a 1440 canvas), identical to the header and footer. */
 export function Container({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("mx-auto w-full max-w-(--container-page) px-5 sm:px-8 xl:px-0", className)} {...props} />;
 }

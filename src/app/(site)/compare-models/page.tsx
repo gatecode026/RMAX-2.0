@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   description: "Capacity, power and launch pricing at a glance. Match the model to the expected daily usage of your institution.",
 };
 
-const COLS = "grid grid-cols-[244px_repeat(3,304px)]";
+/** Label column + three model columns, proportional (244 : 304 × 3) so the table fills the 1280px container. */
+const COLS = "grid grid-cols-[244fr_304fr_304fr_304fr]";
 
 export default async function CompareModelsPage() {
   const products = await getProducts();
@@ -46,7 +47,7 @@ export default async function CompareModelsPage() {
                       alt={p.image.alt}
                       width={280}
                       height={190}
-                      className="h-[190px] w-[280px] rounded-[24px] object-cover"
+                      className="h-[190px] w-full rounded-[24px] object-cover"
                     />
                     <h2 className="mt-5 text-title">{p.name}</h2>
                     <p className="mt-2 font-heading text-[32px]/10 font-extrabold text-charcoal">{formatINR(p.price)}</p>
@@ -66,10 +67,10 @@ export default async function CompareModelsPage() {
               <table className="w-full table-fixed border-collapse text-left">
                 <caption className="sr-only">Specification comparison of Basic, Pro and Pro-Max</caption>
                 <colgroup>
-                  <col style={{ width: 244 }} />
-                  <col style={{ width: 304 }} />
-                  <col style={{ width: 304 }} />
-                  <col style={{ width: 304 }} />
+                  <col style={{ width: "21.1%" }} />
+                  <col style={{ width: "26.3%" }} />
+                  <col style={{ width: "26.3%" }} />
+                  <col style={{ width: "26.3%" }} />
                 </colgroup>
                 <thead className="sr-only">
                   <tr>

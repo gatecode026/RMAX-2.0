@@ -67,20 +67,20 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
           </div>
           <h2 className="mt-4 text-title">Contact details</h2>
           <div className="mt-4 grid gap-x-5 gap-y-5 md:grid-cols-2">
-            <TextInput label="Full name *" placeholder="Full name *" autoComplete="name" error={errors.fullName?.message} {...register("fullName")} />
-            <TextInput label="Email *" type="email" placeholder="Email *" autoComplete="email" error={errors.email?.message} {...register("email")} />
-            <TextInput className="md:col-span-2" label="Phone for delivery *" type="tel" placeholder="Phone for delivery *" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
+            <TextInput label="Full name *" autoComplete="name" error={errors.fullName?.message} {...register("fullName")} />
+            <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+            <TextInput className="md:col-span-2" label="Phone for delivery *" type="tel" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
           </div>
         </Card>
 
         <Card className="p-6 md:p-7">
           <h2 className="text-title">Institutional shipping details</h2>
           <div className="mt-4 grid gap-x-5 gap-y-5 md:grid-cols-2">
-            <TextInput label="Organization / institution *" placeholder="Organization / institution *" autoComplete="organization" error={errors.organization?.message} {...register("organization")} />
-            <TextInput label="Department / recipient *" placeholder="Department / recipient *" error={errors.department?.message} {...register("department")} />
+            <TextInput label="Organization / institution *" autoComplete="organization" error={errors.organization?.message} {...register("organization")} />
+            <TextInput label="Department / recipient *" error={errors.department?.message} {...register("department")} />
             <TextInput className="md:col-span-2" label="Street address *" placeholder="Building, street and delivery location" autoComplete="address-line1" error={errors.street?.message} {...register("street")} />
             <TextInput className="md:col-span-2" label="Address line 2" placeholder="Optional landmark or unit number" autoComplete="address-line2" error={errors.line2?.message} {...register("line2")} />
-            <TextInput label="City *" placeholder="City *" autoComplete="address-level2" error={errors.city?.message} {...register("city")} />
+            <TextInput label="City *" autoComplete="address-level2" error={errors.city?.message} {...register("city")} />
             <SelectInput label="State *" error={errors.state?.message} {...register("state")}>
               <option value="" disabled>
                 Select state
@@ -91,7 +91,7 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
                 </option>
               ))}
             </SelectInput>
-            <TextInput label="Postal code *" placeholder="Postal code *" autoComplete="postal-code" error={errors.postalCode?.message} {...register("postalCode")} />
+            <TextInput label="Postal code *" autoComplete="postal-code" error={errors.postalCode?.message} {...register("postalCode")} />
             <SelectInput label="Country *" error={errors.country?.message} {...register("country")}>
               <option value="India">India</option>
             </SelectInput>
@@ -103,8 +103,8 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
           <h2 className="text-title">Billing details</h2>
           <Checkbox className="mt-4" label="Billing address is the same as shipping" {...register("billingSameAsShipping")} />
           <div className="mt-4 grid gap-x-5 gap-y-5 md:grid-cols-2">
-            <TextInput label="Billing organization *" placeholder="Billing organization *" error={errors.billingOrganization?.message} {...register("billingOrganization")} />
-            <TextInput label="Purchase order reference (optional)" placeholder="Purchase order reference (optional)" error={errors.poReference?.message} {...register("poReference")} />
+            <TextInput label="Billing organization *" error={errors.billingOrganization?.message} {...register("billingOrganization")} />
+            <TextInput label="Purchase order reference (optional)" error={errors.poReference?.message} {...register("poReference")} />
           </div>
           <p className="mt-4 text-body-sm text-muted">
             {sameBilling ? "Uncheck to enter a different institutional billing address. " : "Enter your institutional billing details. "}

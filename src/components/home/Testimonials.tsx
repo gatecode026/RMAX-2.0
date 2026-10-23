@@ -93,7 +93,7 @@ export function Testimonials({ items, reviews }: { items: TestimonialDTO[]; revi
   const featured = items.find((t) => t.featured);
   const cards = items.filter((t) => !t.featured && !t.forProduct).slice(0, 3);
   return (
-    <section className="mx-auto mt-16 w-full max-w-(--container-home) px-5 sm:px-8 md:mt-[130px] xl:px-0" aria-labelledby="testimonials-heading">
+    <section className="mx-auto mt-16 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-[130px] xl:px-0" aria-labelledby="testimonials-heading">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <p className="text-[14px] font-extrabold tracking-[0.28em] text-navy uppercase">Testimonials</p>

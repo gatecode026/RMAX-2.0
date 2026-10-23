@@ -13,9 +13,10 @@ import { cn } from "@/lib/cn";
 
 /**
  * Footer variants, one per design family:
- * - "default": the original screens (1180px container, uppercase column headings)
- * - "home":    the Home / catalogue screens (new copy, smaller type, fixed column positions)
- * - "wide":    the About Us screen (1280px container, sentence-case headings)
+ * - "default": the original screens (uppercase column headings)
+ * - "home":    the Home / catalogue screens (new copy, smaller type)
+ * - "wide":    the About Us screen (sentence-case headings)
+ * All variants share the page container (1280px) so the footer lines up with the header and page content.
  */
 export type FooterVariant = "default" | "home" | "wide";
 
@@ -30,14 +31,14 @@ const CONFIG = {
   },
   home: {
     container: "max-w-(--container-page) pt-11 pb-[14px]",
-    grid: "lg:grid-cols-[416px_306px_279px_1fr] lg:gap-x-0",
+    grid: "lg:grid-cols-[447px_340px_314px_1fr] lg:gap-x-0",
     heading: "pt-[5px] text-[11px]/4 tracking-wide uppercase",
     list: "mt-3.5 gap-4",
     link: "block text-[12px]/4",
     tagline: "mt-2 text-[12px]",
   },
   wide: {
-    container: "max-w-(--container-home) pt-[46px] pb-8",
+    container: "max-w-(--container-page) pt-[46px] pb-8",
     grid: "lg:grid-cols-[447px_340px_314px_1fr] lg:gap-x-0",
     heading: "text-[13px]/5",
     list: "mt-[18px] gap-3",
