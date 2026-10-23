@@ -71,7 +71,7 @@ export async function Footer({ variant = "default" }: { variant?: FooterVariant 
 
   return (
     <footer className="bg-charcoal text-white">
-      <div className={cn("mx-auto w-full px-5 sm:px-8 xl:px-0", c.container)}>
+      <div className={cn("mx-auto w-full px-5 sm:px-8 lg:px-12 xl:px-16", c.container)}>
         <div className={cn("grid gap-10 sm:grid-cols-2", c.grid)}>
           <div>
             <p className="font-heading text-title font-extrabold text-white">RMAX Solutions</p>

@@ -24,7 +24,7 @@ async function HomeHeaderDynamic() {
 function HomeHeaderStatic() {
   return (
     <header className="sticky top-0 z-50 bg-transparent transition-all duration-300">
-      <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 xl:px-0">
+      <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-12 xl:px-16">
         <Logo />
         <Link href="/login" className={buttonClasses({ size: "xs", className: "h-[43px] min-w-20" })}>
           Login

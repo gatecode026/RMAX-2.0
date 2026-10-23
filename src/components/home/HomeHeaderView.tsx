@@ -58,7 +58,7 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 xl:px-0 transition-all duration-300",
+          "mx-auto flex w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-12 xl:px-16 transition-all duration-300",
           isScrolled ? "h-16" : "h-(--header-height)",
         )}
       >

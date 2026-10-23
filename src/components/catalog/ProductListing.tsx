@@ -102,7 +102,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
   const pct = (maxPrice / PRICE_MAX) * 100;
 
   return (
-    <div className="mx-auto w-full max-w-(--container-page) px-5 sm:px-8 xl:px-0">
+    <div className="mx-auto w-full max-w-(--container-page) px-5 sm:px-8 lg:px-12 xl:px-16">
       {/* Category pills + sort */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div role="group" aria-label="Product category" className="flex flex-wrap gap-3">

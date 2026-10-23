@@ -4,7 +4,7 @@ import type { ProductDTO } from "@/lib/data/content";
 
 export function BestSellers({ products }: { products: ProductDTO[] }) {
   return (
-    <section id="best-sellers" className="mx-auto mt-16 w-full max-w-(--container-page) scroll-mt-24 px-5 sm:px-8 md:mt-[104px] xl:px-0">
+    <section id="best-sellers" className="mx-auto mt-16 w-full max-w-(--container-page) scroll-mt-24 px-5 sm:px-8 md:mt-[104px] lg:px-12 xl:px-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[14px] font-extrabold tracking-[0.28em] text-navy uppercase">Best sellers</p>
