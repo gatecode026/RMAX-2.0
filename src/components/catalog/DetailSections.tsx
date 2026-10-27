@@ -35,7 +35,7 @@ export function RatingRow({ rating, label, stars }: { rating: string; label: str
 
 export function SpecTiles({ tiles }: { tiles: { value: string; label: string }[] }) {
   return (
-    <ul className="mt-5 grid grid-cols-2 gap-3">
+    <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
       {tiles.map((t) => (
         <li key={t.label} className="rounded-[14px] bg-soft px-4 py-3.5">
           <p className="font-jakarta text-[16px]/6 font-semibold text-charcoal">{t.value}</p>

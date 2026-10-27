@@ -1,0 +1,43 @@
+/* RMAX Admin Dashboard - Design Tokens & Utilities */
+:root {
+  --admin-bg: #F4F7FC;
+  --admin-card: #FFFFFF;
+  --admin-primary: #10469B;
+  --admin-primary-dark: #0B2450;
+  --admin-primary-light: #EBF2FC;
+  --admin-text-main: #202A36;
+  --admin-text-muted: #718096;
+  --admin-border: #E5EBF4;
+  --admin-success: #16A34A;
+  --admin-success-light: #DCFCE7;
+  --admin-warning: #D97706;
+  --admin-warning-light: #FEF3C7;
+  --admin-danger: #DC2626;
+  --admin-danger-light: #FEE2E2;
+  --admin-info: #0284C7;
+  --admin-info-light: #E0F2FE;
+  --admin-sidebar-width: 260px;
+  --admin-topbar-height: 70px;
+}
+
+.admin-body {
+  background-color: var(--admin-bg);
+  color: var(--admin-text-main);
+  min-height: 100vh;
+}
+
+/* Custom scrollbars for clean admin look */
+.admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

@@ -41,6 +41,8 @@ export interface IOrder {
   timeline: { step: OrderStatus; at?: Date }[];
   termsAcceptedAt: Date;
   isIllustrative: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const orderSchema = new Schema<IOrder>(

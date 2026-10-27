@@ -139,7 +139,10 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[302px_1fr]">
         {/* Filters */}
-        <aside aria-label="Filters">
+        <aside
+          aria-label="Filters"
+          className="lg:sticky lg:top-[74px] lg:max-h-[calc(100vh-84px)] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           <button
             type="button"
             className="flex h-12 w-full items-center justify-between rounded-input border border-line bg-card px-5 font-bold text-charcoal lg:hidden"
@@ -272,7 +275,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
             </div>
           ) : (
             <>
-              <ul className="grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-label="Products">
+              <ul className="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-2" aria-label="Products">
                 {showcase.map((p) => (
                   <li key={`s-${p.slug}`} className="h-full">
                     <ShowcaseCard product={p} clamp variant="listing" />
@@ -280,7 +283,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
                 ))}
               </ul>
               {detail.length > 0 && (
-                <ul className="mt-6 grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-label="Products with specifications">
+                <ul className="mt-8 grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-2" aria-label="Products with specifications">
                   {detail.map((p) => (
                     <li key={`d-${p.slug}`} className="h-full">
                       <DetailCard product={p} />

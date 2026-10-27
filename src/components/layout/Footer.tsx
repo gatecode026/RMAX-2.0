@@ -31,7 +31,7 @@ const CONFIG = {
   },
   home: {
     container: "max-w-(--container-page) pt-11 pb-[14px]",
-    grid: "lg:grid-cols-[447px_340px_314px_1fr] lg:gap-x-0",
+    grid: "lg:grid-cols-[minmax(0,1.4fr)_1fr_1fr_auto] lg:gap-x-8 xl:gap-x-12",
     heading: "pt-[5px] text-[11px]/4 tracking-wide uppercase",
     list: "mt-3.5 gap-4",
     link: "block text-[12px]/4",
@@ -39,7 +39,7 @@ const CONFIG = {
   },
   wide: {
     container: "max-w-(--container-page) pt-[46px] pb-8",
-    grid: "lg:grid-cols-[447px_340px_314px_1fr] lg:gap-x-0",
+    grid: "lg:grid-cols-[minmax(0,1.4fr)_1fr_1fr_auto] lg:gap-x-8 xl:gap-x-12",
     heading: "text-[13px]/5",
     list: "mt-[18px] gap-3",
     link: "block text-[13px]/5",
@@ -70,7 +70,7 @@ export async function Footer({ variant = "default" }: { variant?: FooterVariant 
   const t = (s: string) => (variant === "wide" ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s);
 
   return (
-    <footer className="bg-charcoal text-white">
+    <footer className="w-full overflow-hidden bg-charcoal text-white">
       <div className={cn("mx-auto w-full px-5 sm:px-8 lg:px-12 xl:px-16", c.container)}>
         <div className={cn("grid gap-10 sm:grid-cols-2", c.grid)}>
           <div>

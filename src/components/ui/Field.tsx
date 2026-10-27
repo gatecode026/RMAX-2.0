@@ -37,12 +37,21 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
     const isControlled = value !== undefined;
     const currentVal = isControlled ? String(value ?? "") : internalValue;
 
+
     useEffect(() => {
-      if (inputRef.current) {
-        const domVal = inputRef.current.value;
-        if (domVal && domVal !== internalValue) {
-          setInternalValue(domVal);
+      const syncVal = () => {
+        if (inputRef.current) {
+          const domVal = inputRef.current.value || "";
+          if (domVal !== internalValue) {
+            setInternalValue(domVal);
+          }
         }
+      };
+      syncVal();
+      const node = inputRef.current;
+      if (node) {
+        node.addEventListener("animationstart", syncVal);
+        return () => node.removeEventListener("animationstart", syncVal);
       }
     }, [internalValue]);
 
@@ -76,14 +85,15 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             defaultValue={defaultValue}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errId : undefined}
-            placeholder={effectivePlaceholder || " "}
+            placeholder={effectivePlaceholder}
             onFocus={(e) => {
               setIsFocused(true);
+              setInternalValue(e.target.value || "");
               props.onFocus?.(e);
             }}
             onBlur={(e) => {
               setIsFocused(false);
-              setInternalValue(e.target.value);
+              setInternalValue(e.target.value || "");
               props.onBlur?.(e);
             }}
             onChange={(e) => {
@@ -107,21 +117,15 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             htmlFor={id}
             className={cn(
               "pointer-events-none absolute select-none whitespace-nowrap z-10 transition-all duration-200 ease-out",
-              // CSS peer fallback for instantaneous native interaction
-              "peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:left-3 peer-focus:px-2 peer-focus:text-xs peer-focus:font-bold peer-focus:bg-card peer-focus:text-navy",
-              "peer-autofill:top-0 peer-autofill:-translate-y-1/2 peer-autofill:left-3 peer-autofill:px-2 peer-autofill:text-xs peer-autofill:font-bold peer-autofill:bg-card",
-              "peer-not-placeholder-shown:top-0 peer-not-placeholder-shown:-translate-y-1/2 peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:px-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-bold peer-not-placeholder-shown:bg-card",
-              // Active state from React
+              // Active state: float when focused or has content, else rest in placeholder position
               isFloated
                 ? "top-0 -translate-y-1/2 left-3 px-2 text-xs font-bold leading-none bg-card"
                 : "top-1/2 -translate-y-1/2 left-4 px-0 text-body font-normal bg-transparent",
               error
-                ? "text-danger peer-focus:text-danger"
+                ? "text-danger"
                 : isFocused
                   ? "text-navy"
-                  : isFloated
-                    ? "text-muted"
-                    : "text-muted",
+                  : "text-muted",
             )}
           >
             {label}
@@ -271,12 +275,21 @@ export const TextArea = forwardRef<HTMLTextAreaElement, BaseProps & TextareaHTML
     const isControlled = value !== undefined;
     const currentVal = isControlled ? String(value ?? "") : internalValue;
 
+
     useEffect(() => {
-      if (textareaRef.current) {
-        const domVal = textareaRef.current.value;
-        if (domVal && domVal !== internalValue) {
-          setInternalValue(domVal);
+      const syncVal = () => {
+        if (textareaRef.current) {
+          const domVal = textareaRef.current.value || "";
+          if (domVal !== internalValue) {
+            setInternalValue(domVal);
+          }
         }
+      };
+      syncVal();
+      const node = textareaRef.current;
+      if (node) {
+        node.addEventListener("animationstart", syncVal);
+        return () => node.removeEventListener("animationstart", syncVal);
       }
     }, [internalValue]);
 
@@ -309,14 +322,15 @@ export const TextArea = forwardRef<HTMLTextAreaElement, BaseProps & TextareaHTML
             defaultValue={defaultValue}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errId : undefined}
-            placeholder={effectivePlaceholder || " "}
+            placeholder={effectivePlaceholder}
             onFocus={(e) => {
               setIsFocused(true);
+              setInternalValue(e.target.value || "");
               props.onFocus?.(e);
             }}
             onBlur={(e) => {
               setIsFocused(false);
-              setInternalValue(e.target.value);
+              setInternalValue(e.target.value || "");
               props.onBlur?.(e);
             }}
             onChange={(e) => {
@@ -340,18 +354,14 @@ export const TextArea = forwardRef<HTMLTextAreaElement, BaseProps & TextareaHTML
             htmlFor={id}
             className={cn(
               "pointer-events-none absolute select-none whitespace-nowrap z-10 transition-all duration-200 ease-out",
-              "peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:left-3 peer-focus:px-2 peer-focus:text-xs peer-focus:font-bold peer-focus:bg-card peer-focus:text-navy",
-              "peer-not-placeholder-shown:top-0 peer-not-placeholder-shown:-translate-y-1/2 peer-not-placeholder-shown:left-3 peer-not-placeholder-shown:px-2 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:font-bold peer-not-placeholder-shown:bg-card",
               isFloated
                 ? "top-0 -translate-y-1/2 left-3 px-2 text-xs font-bold leading-none bg-card"
                 : "top-4 translate-y-0 left-4 px-0 text-body font-normal bg-transparent",
               error
-                ? "text-danger peer-focus:text-danger"
+                ? "text-danger"
                 : isFocused
                   ? "text-navy"
-                  : isFloated
-                    ? "text-muted"
-                    : "text-muted",
+                  : "text-muted",
             )}
           >
             {label}

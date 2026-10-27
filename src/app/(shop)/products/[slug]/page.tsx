@@ -95,23 +95,24 @@ export default async function ProductPage({ params }: Params) {
         <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
           <ProductGallery items={gallery} title={product.title} />
 
-          <div>
-            <div className="grid grid-cols-[minmax(0,1fr)] gap-8 xl:grid-cols-[minmax(0,1fr)_301px]">
-              <div>
-                <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
-                <h1 className="mt-3 font-jakarta text-[28px]/9 font-bold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
-                {product.intro && <p className="mt-4 text-body leading-6 text-muted">{product.intro}</p>}
-                {tiles.length > 0 && <SpecTiles tiles={tiles} />}
-              </div>
-              <PurchasePanel
-                slug={product.slug}
-                price={product.price}
-                mrp={product.mrp}
-                colours={product.colours}
-                quoteModel={QUOTE_MODELS.has(product.slug) ? product.slug : null}
-                showOptions={isIncinerator}
-              />
+          <div className="flex flex-col gap-6">
+            <div>
+              <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
+              <h1 className="mt-3 font-jakarta text-[28px]/9 font-bold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
+              {product.intro && <p className="mt-4 text-body leading-relaxed text-muted">{product.intro}</p>}
+              {tiles.length > 0 && <SpecTiles tiles={tiles} />}
             </div>
+
+            {/* Purchase Panel positioned underneath description and spec tiles */}
+            <PurchasePanel
+              slug={product.slug}
+              price={product.price}
+              mrp={product.mrp}
+              colours={product.colours}
+              quoteModel={QUOTE_MODELS.has(product.slug) ? product.slug : null}
+              showOptions={isIncinerator}
+            />
+
             <TrustRow points={trust} />
           </div>
         </div>
