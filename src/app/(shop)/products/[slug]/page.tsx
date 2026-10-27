@@ -19,6 +19,9 @@ import { getAllProducts, getProductBySlug, getProductTestimonial, getReviewSumma
 import { SITE_URL } from "@/lib/constants";
 
 type Params = { params: Promise<{ slug: string }> };
+
+export const instant = false;
+
 export async function generateStaticParams() {
   return (await getAllProducts()).map((p) => ({ slug: p.slug }));
 }
