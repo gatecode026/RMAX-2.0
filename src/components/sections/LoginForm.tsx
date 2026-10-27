@@ -26,7 +26,14 @@ export function LoginForm() {
     setFormError(null);
     const res = await loginAction(values);
     if (!res.ok) return setFormError(res.message);
-    router.push(next);
+
+    if (res.role === "super_admin" || res.role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (res.role === "manager") {
+      router.push("/manager/dashboard");
+    } else {
+      router.push(next || "/account");
+    }
     router.refresh();
   }
 

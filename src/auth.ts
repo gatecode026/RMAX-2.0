@@ -32,19 +32,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await connectDB();
         const user = await User.findOne({ email }).select("+passwordHash").lean();
         if (!user) return null;
+        if (user.status === "inactive") return null;
+
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
-        return { id: String(user._id), name: user.name, email: user.email };
+
+        // Update last login timestamp asynchronously
+        User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } }).exec().catch(() => {});
+
+        const role = user.role || "customer";
+        return {
+          id: String(user._id),
+          name: user.name,
+          email: user.email,
+          role,
+          status: user.status || "active",
+        };
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
-      if (user?.id) token.uid = user.id;
+      if (user) {
+        token.uid = user.id;
+        token.role = user.role;
+        token.status = user.status;
+      }
       return token;
     },
     session({ session, token }) {
-      if (token.uid && session.user) session.user.id = token.uid as string;
+      if (session.user) {
+        if (token.uid) session.user.id = token.uid as string;
+        if (token.role) session.user.role = token.role;
+        if (token.status) session.user.status = token.status;
+      }
       return session;
     },
   },

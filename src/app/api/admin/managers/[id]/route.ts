@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { connectDB } from "@/lib/mongodb";
+import { User } from "@/models/User";
+import { checkApiRole } from "@/lib/session";
+import { logAuditEvent } from "@/lib/audit";
+import { createNotification } from "@/lib/notifications";
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const authResult = await checkApiRole(["super_admin", "admin"]);
+    if ("error" in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { user: currentAdmin } = authResult;
+    const { id } = await params;
+
+    await connectDB();
+    const manager = await User.findById(id);
+
+    if (!manager || (manager.role !== "manager" && manager.role !== "admin" && manager.role !== "super_admin")) {
+      return NextResponse.json({ error: "Manager account not found" }, { status: 404 });
+    }
+
+    const body = await req.json();
+    const { status, name, phone, department, newPassword } = body;
+
+    const updates: Record<string, unknown> = {};
+
+    if (status && (status === "active" || status === "inactive")) {
+      updates.status = status;
+      manager.status = status;
+    }
+
+    if (name?.trim()) {
+      updates.name = name.trim();
+      manager.name = name.trim();
+    }
+
+    if (phone !== undefined) {
+      updates.phone = phone.trim();
+      manager.phone = phone.trim();
+    }
+
+    if (department !== undefined) {
+      updates.department = department.trim();
+      manager.department = department.trim();
+    }
+
+    if (newPassword && newPassword.length >= 6) {
+      manager.passwordHash = await bcrypt.hash(newPassword, 10);
+      updates.passwordReset = true;
+    }
+
+    await manager.save();
+
+    await logAuditEvent({
+      actor: currentAdmin,
+      action: status ? `MANAGER_STATUS_${status.toUpperCase()}` : "MANAGER_UPDATED",
+      entityType: "manager",
+      entityId: String(manager._id),
+      metadata: { name: manager.name, email: manager.email, ...updates },
+    });
+
+    if (status) {
+      await createNotification({
+        targetRole: "super_admin",
+        title: `Manager ${status === "active" ? "Activated" : "Deactivated"}`,
+        message: `${manager.name} (${manager.email}) status was changed to ${status}`,
+        type: "manager_action",
+        entityType: "user",
+        entityId: String(manager._id),
+        link: `/admin/users`,
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      manager: {
+        id: String(manager._id),
+        name: manager.name,
+        email: manager.email,
+        phone: manager.phone,
+        department: manager.department,
+        status: manager.status,
+      },
+    });
+  } catch (error) {
+    console.error("Manager update error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

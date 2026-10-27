@@ -12,15 +12,23 @@ export interface IAddress {
   country: string;
 }
 
+import { USER_ROLES, USER_STATUSES, type UserRole, type UserStatus } from "@/lib/enums";
+
 export interface IUser {
   name: string;
   email: string;
   organization?: string;
   phone?: string;
   passwordHash: string;
+  role: UserRole;
+  status: UserStatus;
+  department?: string;
+  lastLoginAt?: Date;
   shippingAddress?: IAddress;
   billingSameAsShipping: boolean;
   billingAddress?: IAddress;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const addressSchema = new Schema<IAddress>(
@@ -45,6 +53,10 @@ const userSchema = new Schema<IUser>(
     organization: { type: String, trim: true },
     phone: { type: String, trim: true },
     passwordHash: { type: String, required: true, select: false },
+    role: { type: String, enum: USER_ROLES, default: "customer", index: true },
+    status: { type: String, enum: USER_STATUSES, default: "active", index: true },
+    department: { type: String, trim: true },
+    lastLoginAt: { type: Date },
     shippingAddress: { type: addressSchema },
     billingSameAsShipping: { type: Boolean, default: true },
     billingAddress: { type: addressSchema },
@@ -53,3 +65,4 @@ const userSchema = new Schema<IUser>(
 );
 
 export const User: Model<IUser> = models.User || model<IUser>("User", userSchema);
+

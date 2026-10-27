@@ -21,6 +21,8 @@ import {
   ChevronUp,
   X,
   ExternalLink,
+  Target,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -34,6 +36,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Leads", href: "/admin/leads", icon: Target, badge: "Live" },
   {
     label: "Products",
     href: "/admin/products",
@@ -66,7 +69,8 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Impact & Hygiene", href: "/admin/reports?tab=impact" },
     ],
   },
-  { label: "Users", href: "/admin/users", icon: UserCog },
+  { label: "Users & Managers", href: "/admin/users", icon: UserCog },
+  { label: "Audit Logs", href: "/admin/audit-logs", icon: ClipboardList },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
