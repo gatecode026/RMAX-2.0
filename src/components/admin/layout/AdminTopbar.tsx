@@ -60,18 +60,15 @@ export function AdminTopbar({ onToggleMobile }: { onToggleMobile: () => void }) 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Quick mock search matches
+  // Quick search matches
   const searchableItems = [
     { type: "Lead", title: "Leads Management & Pipeline", href: "/admin/leads" },
+    { type: "Quote", title: "Institutional Quotations & Proposals", href: "/admin/quotations" },
     { type: "Product", title: "Napkin Incinerator (Pro-Max)", href: "/admin/products" },
     { type: "Product", title: "Napkin Incinerator (Pro)", href: "/admin/products" },
     { type: "Product", title: "Napkin Incinerator (Basic)", href: "/admin/products" },
-    { type: "Order", title: "#1523 - Singhania School (₹6,500)", href: "/admin/orders" },
-    { type: "Order", title: "#1522 - Sunrise Public School (₹4,500)", href: "/admin/orders" },
-    { type: "Institution", title: "Singhania School, Jaipur", href: "/admin/institutions" },
-    { type: "Institution", title: "City Hospital, Jaipur", href: "/admin/institutions" },
-    { type: "Enquiry", title: "Amit Sharma (Delhi Public School)", href: "/admin/enquiries" },
-    { type: "Audit", title: "Audit Trail & Logs", href: "/admin/audit-logs" },
+    { type: "Audit", title: "Audit Trail & Compliance", href: "/admin/audit-logs" },
+    { type: "Users", title: "Manager & Team Administration", href: "/admin/users" },
   ];
 
   const searchResults = searchQuery.trim()

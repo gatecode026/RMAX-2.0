@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "../src/lib/mongodb";
 import { User } from "../src/models/User";
 import { Lead } from "../src/models/Lead";
+import { QuoteRequest } from "../src/models/QuoteRequest";
 import { Notification } from "../src/models/Notification";
 import { AuditLog } from "../src/models/AuditLog";
 
@@ -270,7 +271,95 @@ async function main() {
   await Lead.insertMany(sampleLeads);
   console.log(`✔ Seeded ${sampleLeads.length} sample leads`);
 
-  // 4. Seed initial notifications
+  // 4. Seed initial Quotations (MongoDB persistence)
+  await QuoteRequest.deleteMany({});
+  await QuoteRequest.insertMany([
+    {
+      quoteNumber: "QT-1001",
+      organizationName: "Delhi Public School International",
+      institutionType: "Schools",
+      contactPerson: "Dr. Arvind Suman",
+      role: "Vice Principal",
+      email: "principal@dpsjaipur.edu.in",
+      phone: "+91 98290 12345",
+      preferredModel: "pro-max",
+      quantity: 8,
+      expectedDailyUsage: "150-200 pads per day",
+      deliveryCityPostal: "Jaipur, Rajasthan - 302020",
+      useCase: "Sanitary hygiene for 4 high school girl wings",
+      installationRequirements: "Wall mounted 230V MCB electrical supply",
+      consent: true,
+      status: "in_review",
+      quotedAmount: 52000,
+      notes: "Demo completed successfully. Formal proposal under management review.",
+      assignedManager: manager1._id,
+      assignedManagerName: manager1.name,
+    },
+    {
+      quoteNumber: "QT-1002",
+      organizationName: "Fortis Super Specialty Hospital Quarters",
+      institutionType: "Hospitals",
+      contactPerson: "Rajeev Menon",
+      role: "Facility Director",
+      email: "facilities@fortiscare.org",
+      phone: "+91 94140 67890",
+      preferredModel: "pro",
+      quantity: 5,
+      expectedDailyUsage: "75-100 pads",
+      deliveryCityPostal: "Gurugram, Haryana - 122001",
+      useCase: "Nurse residency and staff washrooms",
+      installationRequirements: "Standard wall installation",
+      consent: true,
+      status: "quote_sent",
+      quotedAmount: 34000,
+      notes: "Formal quotation sent with 1 year AMC warranty coverage.",
+      assignedManager: manager1._id,
+      assignedManagerName: manager1.name,
+    },
+    {
+      quoteNumber: "QT-1003",
+      organizationName: "Infosys IT Park Tower 3",
+      institutionType: "Offices",
+      contactPerson: "Pooja Varma",
+      role: "Procurement Lead",
+      email: "p.varma@infosyscorporate.com",
+      phone: "+91 98800 22114",
+      preferredModel: "basic",
+      quantity: 12,
+      expectedDailyUsage: "20-30 pads per floor",
+      deliveryCityPostal: "Electronic City, Bengaluru - 560100",
+      useCase: "Corporate female washroom cubicles",
+      installationRequirements: "Internal compact wall mount",
+      consent: true,
+      status: "new",
+      quotedAmount: 36000,
+      notes: "New quotation request from website.",
+    },
+    {
+      quoteNumber: "QT-1004",
+      organizationName: "Manipal University Girls Hostel Complex",
+      institutionType: "Hostels",
+      contactPerson: "Col. Sandeep Rana",
+      role: "Chief Warden",
+      email: "warden@manipalcampus.edu",
+      phone: "+91 97850 54321",
+      preferredModel: "pro-max",
+      quantity: 15,
+      expectedDailyUsage: "300+ pads daily",
+      deliveryCityPostal: "Manipal, Karnataka - 576104",
+      useCase: "Heavy duty disposal across 5 hostel towers",
+      installationRequirements: "Dedicated 16A industrial electrical points",
+      consent: true,
+      status: "approved",
+      quotedAmount: 97500,
+      notes: "Proposal accepted by University Chancellor. Preparing dispatch invoice.",
+      assignedManager: manager1._id,
+      assignedManagerName: manager1.name,
+    },
+  ]);
+  console.log("✔ Seeded 4 sample institutional quotations in MongoDB");
+
+  // 5. Seed initial notifications
   await Notification.deleteMany({});
   await Notification.insertMany([
     {

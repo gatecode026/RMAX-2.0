@@ -1,7 +1,9 @@
-import { Schema, model, models, type Model } from "mongoose";
+import { Schema, model, models, type Model, type Types } from "mongoose";
 import { INSTITUTION_TYPES, QUOTE_MODELS } from "@/lib/enums";
 
 export interface IQuoteRequest {
+  _id?: Types.ObjectId;
+  quoteNumber?: string;
   organizationName: string;
   institutionType: (typeof INSTITUTION_TYPES)[number];
   contactPerson: string;
@@ -15,11 +17,19 @@ export interface IQuoteRequest {
   useCase: string;
   installationRequirements: string;
   consent: boolean;
-  status: "new" | "contacted" | "closed";
+  status: "new" | "in_review" | "quote_sent" | "approved" | "declined" | "closed" | "contacted";
+  quotedAmount?: number;
+  notes?: string;
+  assignedManager?: Types.ObjectId | null;
+  assignedManagerName?: string;
+  validUntil?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const quoteRequestSchema = new Schema<IQuoteRequest>(
   {
+    quoteNumber: { type: String, trim: true, index: true },
     organizationName: { type: String, required: true, trim: true },
     institutionType: { type: String, enum: INSTITUTION_TYPES, required: true },
     contactPerson: { type: String, required: true, trim: true },
@@ -32,11 +42,23 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     deliveryCityPostal: { type: String, required: true, trim: true },
     useCase: { type: String, required: true, trim: true },
     installationRequirements: { type: String, required: true, trim: true },
-    consent: { type: Boolean, required: true, validate: (v: boolean) => v === true },
-    status: { type: String, enum: ["new", "contacted", "closed"], default: "new", index: true },
+    consent: { type: Boolean, required: true },
+    status: {
+      type: String,
+      enum: ["new", "in_review", "quote_sent", "approved", "declined", "closed", "contacted"],
+      default: "new",
+      index: true,
+    },
+    quotedAmount: { type: Number, default: 0 },
+    notes: { type: String, trim: true },
+    assignedManager: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    assignedManagerName: { type: String, trim: true },
+    validUntil: { type: Date, default: null },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
+
+quoteRequestSchema.index({ createdAt: -1 });
 
 export const QuoteRequest: Model<IQuoteRequest> =
   models.QuoteRequest || model<IQuoteRequest>("QuoteRequest", quoteRequestSchema);

@@ -13,7 +13,7 @@ export function RecentEnquiriesList({ enquiries }: RecentEnquiriesListProps) {
       <div className="flex items-center justify-between pb-4 border-b border-gray-100">
         <h3 className="font-jakarta text-[17px] font-bold text-[#202A36]">Recent Enquiries</h3>
         <Link
-          href="/admin/enquiries"
+          href="/admin/leads"
           className="inline-flex items-center gap-1 text-[13px] font-bold text-[#10469B] hover:underline"
         >
           <span>View All</span>

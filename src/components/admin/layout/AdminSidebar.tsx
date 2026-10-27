@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Target,
   ClipboardList,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -37,6 +38,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Leads", href: "/admin/leads", icon: Target, badge: "Live" },
+  { label: "Quotations", href: "/admin/quotations", icon: FileText, badge: "Quotes" },
   {
     label: "Products",
     href: "/admin/products",
@@ -46,10 +48,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Add Product", href: "/admin/products/create" },
     ],
   },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { label: "Customers", href: "/admin/customers", icon: Users },
-  { label: "Institutions", href: "/admin/institutions", icon: Building2 },
-  { label: "Enquiries", href: "/admin/enquiries", icon: MessageSquareQuote },
   { label: "Service Requests", href: "/admin/service-requests", icon: Wrench },
   {
     label: "Inventory",

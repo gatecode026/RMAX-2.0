@@ -5,7 +5,7 @@ import type { SessionUser } from "@/lib/session";
 interface LogActionParams {
   actor?: SessionUser | null;
   action: string;
-  entityType: "lead" | "user" | "manager" | "order" | "system";
+  entityType: "lead" | "user" | "manager" | "order" | "quotation" | "system";
   entityId?: string;
   metadata?: Record<string, unknown>;
   ipAddress?: string;

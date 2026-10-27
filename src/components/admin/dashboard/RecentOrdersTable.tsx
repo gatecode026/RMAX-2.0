@@ -25,10 +25,10 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
       {/* Panel Heading & Actions */}
       <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
         <div>
-          <h3 className="font-jakarta text-[16px] font-bold text-[#202A36]">Recent Orders</h3>
+          <h3 className="font-jakarta text-[16px] font-bold text-[#202A36]">Recent Quotations & Proposals</h3>
         </div>
         <Link
-          href="/admin/orders"
+          href="/admin/quotations"
           className="inline-flex items-center gap-1 text-[13px] font-bold text-[#10469B] hover:underline"
         >
           <span>View All</span>
