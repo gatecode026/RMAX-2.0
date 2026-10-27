@@ -14,8 +14,9 @@ export function KpiCards({ data }: KpiCardsProps) {
       growth: data.ordersGrowth,
       period: "vs last month",
       icon: Package,
-      iconBg: "bg-[#EBF2FC]",
-      iconColor: "text-[#10469B]",
+      badgeBg: "bg-[#EFF6FF]",
+      badgeText: "text-[#2563EB]",
+      badgeBorder: "border-[#DBEAFE]",
     },
     {
       title: "Total Customers",
@@ -23,8 +24,9 @@ export function KpiCards({ data }: KpiCardsProps) {
       growth: data.customersGrowth,
       period: "vs last month",
       icon: Users,
-      iconBg: "bg-[#E8F8EE]",
-      iconColor: "text-[#16A34A]",
+      badgeBg: "bg-[#F0FDF4]",
+      badgeText: "text-[#16A34A]",
+      badgeBorder: "border-[#DCFCE7]",
     },
     {
       title: "Total Revenue",
@@ -32,8 +34,9 @@ export function KpiCards({ data }: KpiCardsProps) {
       growth: data.revenueGrowth,
       period: "vs last month",
       customIcon: "₹",
-      iconBg: "bg-[#FEF4E6]",
-      iconColor: "text-[#D97706]",
+      badgeBg: "bg-[#FFFBEB]",
+      badgeText: "text-[#D97706]",
+      badgeBorder: "border-[#FEF3C7]",
       isCurrency: true,
     },
     {
@@ -42,8 +45,9 @@ export function KpiCards({ data }: KpiCardsProps) {
       growth: data.institutionsGrowth,
       period: "vs last month",
       icon: Building2,
-      iconBg: "bg-[#F2EDFB]",
-      iconColor: "text-[#7C3AED]",
+      badgeBg: "bg-[#FAF5FF]",
+      badgeText: "text-[#9333EA]",
+      badgeBorder: "border-[#F3E8FF]",
     },
   ];
 
@@ -54,45 +58,44 @@ export function KpiCards({ data }: KpiCardsProps) {
         return (
           <div
             key={card.title}
-            className="flex h-full items-center gap-3.5 rounded-2xl border border-[#E5EBF4] bg-white px-4 py-3.5 sm:px-4.5 sm:py-4 shadow-[0_2px_12px_rgb(35_42_50/0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgb(35_42_50/0.06)] min-w-0"
+            className="group relative flex flex-col justify-between rounded-[20px] border border-[#E2E8F0] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.07)] hover:border-[#CBD5E1] w-full min-w-0"
           >
-            {/* Left Icon Square */}
-            <div
-              className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${card.iconBg} ${card.iconColor}`}
-            >
-              {card.customIcon ? (
-                <span className="font-heading text-[20px] font-bold">{card.customIcon}</span>
-              ) : Icon ? (
-                <Icon className="size-5.5 stroke-[2.2]" />
-              ) : null}
+            {/* Top row: Metric label on left, icon badge on right */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[13px] font-semibold text-[#64748B] tracking-[-0.01em]">
+                {card.title}
+              </span>
+              <div
+                className={`flex size-10 shrink-0 items-center justify-center rounded-[12px] border ${card.badgeBg} ${card.badgeText} ${card.badgeBorder} transition-transform duration-200 group-hover:scale-105`}
+              >
+                {card.customIcon ? (
+                  <span className="font-heading text-[17px] font-bold">{card.customIcon}</span>
+                ) : Icon ? (
+                  <Icon className="size-5 stroke-[2.2]" />
+                ) : null}
+              </div>
             </div>
 
-            {/* Right Metric Details */}
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] sm:text-[12.5px] font-medium text-[#64748B] whitespace-nowrap">
-                {card.title}
-              </p>
-              
-              <div className="mt-0.5 flex items-baseline gap-2.5">
-                <span
-                  className={`font-jakarta font-extrabold tracking-tight text-[#0F172A] tabular-nums ${
-                    card.isCurrency ? "text-[18px] sm:text-[20px]" : "text-[21px] sm:text-[23px]"
-                  }`}
-                >
-                  {card.value}
-                </span>
+            {/* Middle row: Large Hero Number with 100% full-width room */}
+            <div className="mt-3.5">
+              <span
+                className={`font-jakarta font-extrabold tracking-[-0.02em] text-[#0F172A] tabular-nums block ${
+                  card.isCurrency ? "text-[23px] sm:text-[25px] 2xl:text-[26px]" : "text-[26px] sm:text-[28px]"
+                }`}
+              >
+                {card.value}
+              </span>
+            </div>
 
-                {/* Growth and period stacked next to value */}
-                <div className="flex flex-col leading-none shrink-0">
-                  <span className="inline-flex items-center text-[10.5px] sm:text-[11px] font-bold text-[#16A34A]">
-                    <ArrowUp className="size-2.5 stroke-[3] mr-0.5" />
-                    <span>{card.growth}%</span>
-                  </span>
-                  <span className="text-[9px] sm:text-[9.5px] text-[#94A3B8] font-normal whitespace-nowrap mt-0.5">
-                    {card.period}
-                  </span>
-                </div>
-              </div>
+            {/* Bottom row: Trend badge & comparison */}
+            <div className="mt-3 flex items-center gap-2">
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-[11px] font-bold text-[#059669]">
+                <ArrowUp className="size-3 stroke-[3]" />
+                <span>+{card.growth}%</span>
+              </span>
+              <span className="text-[11.5px] font-medium text-[#94A3B8]">
+                {card.period}
+              </span>
             </div>
           </div>
         );
