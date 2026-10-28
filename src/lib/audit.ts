@@ -44,3 +44,13 @@ export async function logAuditEvent({
     console.error("Failed to record audit log:", error);
   }
 }
+
+export async function logAction(
+  params: LogActionParams & { details?: string }
+): Promise<void> {
+  return logAuditEvent({
+    ...params,
+    metadata: params.metadata || (params.details ? { details: params.details } : undefined),
+  });
+}
+

@@ -66,7 +66,7 @@ export interface ServiceRequestItem {
   ticketId: string;
   institution: string;
   location: string;
-  serviceType: "Installation" | "Routine Maintenance" | "Heating Element Check" | "Filter Replacement";
+  serviceType: "Installation" | "Routine Maintenance" | "Heating Element Check" | "Filter Replacement" | "Emergency Repair" | "Inspection";
   model: string;
   status: "Completed" | "In Progress" | "Scheduled" | "Pending";
   priority: "High" | "Medium" | "Low";
@@ -77,35 +77,37 @@ export interface ServiceRequestItem {
 export interface InstitutionItem {
   id: string;
   name: string;
-  type: "School" | "College / University" | "Hospital" | "Workplace" | "Government";
+  type: "School" | "College / University" | "Hospital" | "Workplace" | "Government" | string;
   city: string;
   state: string;
   contactPerson: string;
   email: string;
   phone: string;
   unitsInstalled: number;
-  status: "Active" | "Pending Installation" | "Inactive";
+  status: "Active" | "Pending Installation" | "Pending" | "Inactive";
 }
 
 export interface InventoryItem {
   id: string;
   sku: string;
   name: string;
-  category: "Finished Machines" | "Spare Parts" | "Heating Coils" | "Filters";
+  category: "Finished Machines" | "Spare Parts" | "Heating Coils" | "Filters" | "Vending Machines" | string;
   inStock: number;
-  allocated: number;
+  allocated?: number;
   reorderPoint: number;
   status: "In Stock" | "Low Stock" | "Out of Stock";
   unitCost: number;
+  lastRestocked?: string;
 }
 
 export interface AdminUserItem {
   id: string;
   name: string;
   email: string;
-  role: "Super Admin" | "Operations Admin" | "Service Manager" | "Support Staff";
+  role: "Super Admin" | "Operations Admin" | "Service Manager" | "Support Staff" | "Manager" | "Customer";
   status: "Active" | "Inactive";
   lastActive: string;
+  department?: string;
 }
 
 /** Baseline reference data matching the PRD specification exactly */

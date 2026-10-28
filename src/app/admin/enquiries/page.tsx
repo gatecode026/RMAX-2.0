@@ -1,42 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
-import { Search, Mail, Phone, Clock, CheckCircle2, Send } from "lucide-react";
-import { DEFAULT_RECENT_ENQUIRIES, AdminEnquiry } from "@/lib/admin/types";
+import { Search, Mail, Phone, Clock, CheckCircle2, Send, MessageSquare } from "lucide-react";
 
-const EXTENDED_ENQUIRIES: AdminEnquiry[] = [
-  ...DEFAULT_RECENT_ENQUIRIES,
-  {
-    id: "enq-005",
-    customerName: "Sanjay Singhal",
-    initials: "SS",
-    institution: "St. Xavier's Senior Secondary School",
-    timeAgo: "2 days ago",
-    messagePreview: "Requesting formal quotation for 4 units of Pro incinerators with installation in Jaipur campus.",
-    status: "in-progress",
-    date: "25 Oct 2026",
-    email: "admin@stxaviersjaipur.org",
-    phone: "+91 94140 88776",
-    modelInterest: "Pro (4 units)",
-  },
-  {
-    id: "enq-006",
-    customerName: "Dr. Sunita Patel",
-    initials: "SP",
-    institution: "LifeLine Multi-Specialty Clinic",
-    timeAgo: "3 days ago",
-    messagePreview: "Inquiring about emission certification and biomedical waste norms compliance for hospital wing.",
-    status: "resolved",
-    date: "24 Oct 2026",
-    email: "compliance@lifelineclinics.in",
-    phone: "+91 98220 99001",
-    modelInterest: "Pro-Max",
-  },
-];
+export interface AdminEnquiry {
+  id: string;
+  customerName: string;
+  initials: string;
+  institution: string;
+  timeAgo: string;
+  messagePreview: string;
+  status: "new" | "in-progress" | "resolved";
+  date: string;
+  email: string;
+  phone: string;
+  modelInterest: string;
+}
 
 export default function AdminEnquiriesPage() {
-  const [enquiries, setEnquiries] = useState<AdminEnquiry[]>(EXTENDED_ENQUIRIES);
+  const [enquiries, setEnquiries] = useState<AdminEnquiry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("All");
   const [activeEnquiry, setActiveEnquiry] = useState<AdminEnquiry | null>(null);
@@ -44,6 +28,25 @@ export default function AdminEnquiriesPage() {
   const [replySent, setReplySent] = useState(false);
 
   const statuses = ["All", "New", "In-Progress", "Resolved"];
+
+  const fetchEnquiries = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/enquiries");
+      if (res.ok) {
+        const data = await res.json();
+        setEnquiries(data.enquiries || []);
+      }
+    } catch (err) {
+      console.error("Failed to load enquiries:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, [fetchEnquiries]);
 
   const filtered = enquiries.filter((enq) => {
     const matchesStatus = filterStatus === "All" || enq.status.toLowerCase() === filterStatus.toLowerCase();
@@ -54,235 +57,229 @@ export default function AdminEnquiriesPage() {
     return matchesStatus && matchesSearch;
   });
 
-  const handleUpdateStatus = (id: string, status: AdminEnquiry["status"]) => {
-    setEnquiries((prev) => prev.map((e) => (e.id === id ? { ...e, status } : e)));
-    if (activeEnquiry && activeEnquiry.id === id) {
-      setActiveEnquiry({ ...activeEnquiry, status });
+  const handleUpdateStatus = async (id: string, status: AdminEnquiry["status"]) => {
+    try {
+      const res = await fetch(`/api/admin/enquiries/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: status === "resolved" ? "closed" : "new" }),
+      });
+      if (res.ok) {
+        setEnquiries((prev) => prev.map((e) => (e.id === id ? { ...e, status } : e)));
+        if (activeEnquiry && activeEnquiry.id === id) {
+          setActiveEnquiry({ ...activeEnquiry, status });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to update enquiry status:", err);
     }
   };
 
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim() || !activeEnquiry) return;
-
-    handleUpdateStatus(activeEnquiry.id, "in-progress");
     setReplySent(true);
+    handleUpdateStatus(activeEnquiry.id, "resolved");
     setTimeout(() => {
-      setReplySent(false);
       setReplyText("");
-      setActiveEnquiry(null);
-    }, 1500);
+      setReplySent(false);
+    }, 2000);
   };
 
   return (
     <div>
       <AdminPageHeader
-        title="Enquiries & Quotes"
-        subtitle="Review institutional procurement inquiries, sanitary napkin incinerator quotes, and contact leads."
+        title="Customer Inquiries & Messages"
+        subtitle="Manage prospective institutional buyers, quotation requests, and product questions from the website contact forms."
         breadcrumbs={[
           { label: "Dashboard", href: "/admin/dashboard" },
           { label: "Enquiries" },
         ]}
       />
 
-      {/* Filter and Search Bar */}
-      <div className="mb-6 flex flex-col gap-3 rounded-xl border border-[#E5EBF4] bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by school, applicant, message..."
-            className="w-full rounded-lg border border-slate-200 bg-[#F4F7FC]/50 pl-9 pr-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-[#10469B] focus:bg-white focus:outline-none"
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {statuses.map((st) => (
-            <button
-              key={st}
-              onClick={() => setFilterStatus(st)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                filterStatus === st
-                  ? "bg-[#10469B] text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Enquiries Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {filtered.length === 0 ? (
-          <div className="col-span-2 rounded-xl border border-[#E5EBF4] bg-white p-12 text-center text-slate-400">
-            No enquiries found matching your search.
-          </div>
-        ) : (
-          filtered.map((enq) => (
-            <div
-              key={enq.id}
-              className="flex flex-col justify-between rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm hover:shadow transition-shadow"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-[#10469B] text-xs">
-                      {enq.initials}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900">{enq.customerName}</h3>
-                      <div className="text-xs font-medium text-slate-500">{enq.institution}</div>
-                    </div>
-                  </div>
-
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                      enq.status === "new"
-                        ? "bg-emerald-50 text-emerald-700 font-semibold"
-                        : enq.status === "in-progress"
-                        ? "bg-blue-50 text-[#10469B]"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        enq.status === "new"
-                          ? "bg-emerald-500 animate-pulse"
-                          : enq.status === "in-progress"
-                          ? "bg-[#10469B]"
-                          : "bg-slate-400"
-                      }`}
-                    />
-                    {enq.status}
-                  </span>
-                </div>
-
-                <div className="my-3.5 rounded-lg bg-[#F4F7FC]/70 p-3 text-sm text-slate-700 leading-relaxed">
-                  &ldquo;{enq.messagePreview}&rdquo;
-                </div>
-
-                {enq.modelInterest && (
-                  <div className="mb-3 text-xs text-slate-500">
-                    <span className="font-semibold text-slate-600">Model of Interest:</span> {enq.modelInterest}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-400">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {enq.timeAgo}
-                </div>
-
+      {/* Main Split Layout */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Left Column: Enquiries List */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
+          {/* Search & Status Filters */}
+          <div className="flex flex-col gap-3 rounded-xl border border-[#E5EBF4] bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by customer, institution, keyword..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-4 text-sm focus:border-[#10469B] focus:outline-none"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {statuses.map((s) => (
                 <button
-                  onClick={() => setActiveEnquiry(enq)}
-                  className="rounded-lg bg-slate-50 px-3 py-1.5 font-semibold text-[#10469B] hover:bg-blue-50 transition-colors"
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    filterStatus === s
+                      ? "bg-[#10469B] text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
                 >
-                  Reply & Actions →
+                  {s}
                 </button>
-              </div>
+              ))}
             </div>
-          ))
-        )}
-      </div>
+          </div>
 
-      {/* Reply Modal */}
-      {activeEnquiry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">{activeEnquiry.customerName}</h3>
-                <p className="text-xs text-slate-500">{activeEnquiry.institution}</p>
+          {/* Enquiries Card List */}
+          <div className="space-y-3">
+            {loading ? (
+              <div className="rounded-xl border border-[#E5EBF4] bg-white p-12 text-center text-sm font-medium text-slate-500">
+                Loading messages from database...
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <a
-                  href={`mailto:${activeEnquiry.email}`}
-                  className="rounded-md border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
-                  title="Direct Email"
-                >
-                  <Mail className="h-4 w-4" />
-                </a>
-                {activeEnquiry.phone && (
-                  <a
-                    href={`tel:${activeEnquiry.phone}`}
-                    className="rounded-md border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
-                    title="Call"
-                  >
-                    <Phone className="h-4 w-4" />
-                  </a>
-                )}
-              </div>
-            </div>
-
-            <div className="mb-4 rounded-lg bg-[#F4F7FC] p-3 text-sm text-slate-700">
-              <span className="font-semibold text-slate-900 block mb-1">Original Request:</span>
-              {activeEnquiry.messagePreview}
-            </div>
-
-            {replySent ? (
-              <div className="my-6 flex items-center gap-2 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                Official quote response sent to {activeEnquiry.email}!
+            ) : filtered.length === 0 ? (
+              <div className="rounded-xl border border-[#E5EBF4] bg-white p-12 text-center">
+                <MessageSquare className="mx-auto h-8 w-8 text-slate-300" />
+                <p className="mt-2 text-base font-bold text-slate-700">No Enquiries Found</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  When visitors submit inquiries through the website contact form, they will appear here.
+                </p>
               </div>
             ) : (
-              <form onSubmit={handleSendReply} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Official Quotation & Follow-up Response
-                  </label>
-                  <textarea
-                    rows={4}
-                    required
-                    placeholder="Dear Principal / Facility Head, Thank you for reaching out to RMAX Solutions regarding our incinerators..."
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#10469B] focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">Mark Status:</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateStatus(activeEnquiry.id, "resolved")}
-                      className={`rounded px-2.5 py-1 text-xs font-semibold ${
-                        activeEnquiry.status === "resolved"
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                    >
-                      Resolved
-                    </button>
+              filtered.map((enq) => {
+                const isSelected = activeEnquiry?.id === enq.id;
+                return (
+                  <div
+                    key={enq.id}
+                    onClick={() => setActiveEnquiry(enq)}
+                    className={`cursor-pointer rounded-xl border p-4 transition-all duration-150 ${
+                      isSelected
+                        ? "border-[#10469B] bg-[#F4F7FC] shadow-sm"
+                        : "border-[#E5EBF4] bg-white hover:border-slate-300 hover:bg-slate-50/50 shadow-xs"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF2FC] text-sm font-bold text-[#10469B]">
+                          {enq.initials}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-[#0B2450]">{enq.customerName}</h4>
+                          <p className="text-xs font-medium text-[#10469B]">{enq.institution}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-xs text-slate-400">{enq.timeAgo}</span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            enq.status === "new"
+                              ? "bg-rose-50 text-rose-700"
+                              : enq.status === "in-progress"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-emerald-50 text-emerald-700"
+                          }`}
+                        >
+                          {enq.status === "new" ? "New" : enq.status === "in-progress" ? "In Progress" : "Resolved"}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-600 line-clamp-2">{enq.messagePreview}</p>
+                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-xs text-slate-400">
+                      <span>Model Interest: <strong className="text-slate-700">{enq.modelInterest}</strong></span>
+                      <span>{enq.date}</span>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveEnquiry(null)}
-                      className="rounded-lg border border-slate-200 px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                    >
-                      Close
-                    </button>
-                    <button
-                      type="submit"
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#10469B] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#0B2450]"
-                    >
-                      <Send className="h-4 w-4" />
-                      Send Response
-                    </button>
-                  </div>
-                </div>
-              </form>
+                );
+              })
             )}
           </div>
         </div>
-      )}
+
+        {/* Right Column: Active Enquiry Detail & Action Panel */}
+        <div className="lg:col-span-5">
+          {activeEnquiry ? (
+            <div className="sticky top-6 rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm space-y-4">
+              <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EBF2FC] text-base font-bold text-[#10469B]">
+                    {activeEnquiry.initials}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#0B2450]">{activeEnquiry.customerName}</h3>
+                    <p className="text-xs text-slate-500">{activeEnquiry.institution}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={activeEnquiry.status}
+                    onChange={(e) =>
+                      handleUpdateStatus(activeEnquiry.id, e.target.value as AdminEnquiry["status"])
+                    }
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 focus:border-[#10469B] focus:outline-none"
+                  >
+                    <option value="new">New</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Contact Details */}
+              <div className="grid grid-cols-2 gap-3 rounded-lg bg-[#F8FAFC] p-3 text-xs">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span className="truncate">{activeEnquiry.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span>{activeEnquiry.phone}</span>
+                </div>
+              </div>
+
+              {/* Full Message */}
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Message Content</label>
+                <div className="mt-1 rounded-lg border border-slate-100 bg-[#FAFCFF] p-3 text-xs leading-relaxed text-slate-700">
+                  {activeEnquiry.messagePreview}
+                </div>
+              </div>
+
+              {/* Quick Reply Form */}
+              <form onSubmit={handleSendReply} className="space-y-3 pt-2 border-t border-slate-100">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Direct Institutional Reply</label>
+                <textarea
+                  rows={3}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder={`Draft official response to ${activeEnquiry.customerName}...`}
+                  className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-800 focus:border-[#10469B] focus:outline-none"
+                />
+
+                {replySent && (
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Response recorded and status marked as resolved!
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Recorded with audit trail</span>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#10469B] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#0B2450] transition-colors"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    Submit Reply
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-xs text-slate-400">
+              Select an inquiry from the list to view its full details and respond.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

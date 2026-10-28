@@ -109,9 +109,24 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
               </li>
             )}
           </ul>
-          <Link href={account.href} className={buttonClasses({ size: "xs", className: "h-[43px] min-w-20" })}>
-            {account.label}
-          </Link>
+          {userName ? (
+            <Link
+              href="/account"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3 shadow-2xs transition hover:border-navy/30 hover:bg-soft/50"
+              title={`My Account (${userName})`}
+            >
+              <div className="flex size-8 items-center justify-center rounded-full bg-navy font-bold text-xs text-white uppercase shadow-xs">
+                {userName.trim().charAt(0)}
+              </div>
+              <span className="font-semibold text-charcoal text-xs">
+                {userName.split(" ")[0]}
+              </span>
+            </Link>
+          ) : (
+            <Link href="/login" className={buttonClasses({ size: "xs", className: "h-[43px] min-w-20" })}>
+              Login
+            </Link>
+          )}
         </nav>
 
         {/* Mobile menu button */}
@@ -146,9 +161,21 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
               </li>
             ))}
           </ul>
-          <Link href={account.href} className={buttonClasses({ size: "sm", className: "mt-3 w-full" })}>
-            {account.label}
-          </Link>
+          {userName ? (
+            <Link
+              href="/account"
+              className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-navy py-2.5 font-bold text-white shadow-xs"
+            >
+              <div className="flex size-7 items-center justify-center rounded-full bg-white/20 font-bold text-xs uppercase">
+                {userName.trim().charAt(0)}
+              </div>
+              <span>My Account ({userName.split(" ")[0]})</span>
+            </Link>
+          ) : (
+            <Link href="/login" className={buttonClasses({ size: "sm", className: "mt-3 w-full" })}>
+              Login
+            </Link>
+          )}
         </nav>
       )}
     </header>

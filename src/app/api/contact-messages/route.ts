@@ -13,5 +13,18 @@ export const POST = route(async (req: Request) => {
 
   await connectDB();
   const doc = await ContactMessage.create(parsed.data);
+
+  try {
+    const { createNotification } = await import("@/lib/notifications");
+    await createNotification({
+      title: "New Customer Enquiry",
+      message: `${parsed.data.name} sent an enquiry: "${parsed.data.message.slice(0, 50)}..."`,
+      type: "lead_created",
+      link: "/admin/enquiries",
+    });
+  } catch {
+    // Non-blocking notification
+  }
+
   return ok({ id: String(doc._id) }, 201);
 });

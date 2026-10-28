@@ -7,16 +7,16 @@ interface ServiceStatusChartProps {
 }
 
 export function ServiceStatusChart({ summary }: ServiceStatusChartProps) {
-  const total = summary.total || 42;
+  const total = summary?.total ?? 0;
 
   // Donut chart math: 80x80 viewBox
   const radius = 30;
   const circumference = 2 * Math.PI * radius; // ~188.5
 
-  const completedPct = summary.completed / total;
-  const inProgressPct = summary.inProgress / total;
-  const scheduledPct = summary.scheduled / total;
-  const pendingPct = summary.pending / total;
+  const completedPct = total > 0 ? (summary?.completed || 0) / total : 0;
+  const inProgressPct = total > 0 ? (summary?.inProgress || 0) / total : 0;
+  const scheduledPct = total > 0 ? (summary?.scheduled || 0) / total : 0;
+  const pendingPct = total > 0 ? (summary?.pending || 0) / total : 0;
 
   const strokeCompleted = completedPct * circumference;
   const strokeInProgress = inProgressPct * circumference;

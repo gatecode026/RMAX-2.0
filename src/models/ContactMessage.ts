@@ -11,6 +11,8 @@ export interface IContactMessage {
   message: string;
   consent: boolean;
   status: "new" | "answered" | "closed";
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const contactMessageSchema = new Schema<IContactMessage>(

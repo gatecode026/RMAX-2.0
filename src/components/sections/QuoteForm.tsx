@@ -19,10 +19,18 @@ export function QuoteForm({
   products,
   initialModel,
   initialQuantity,
+  currentUser,
 }: {
   products: ProductDTO[];
   initialModel?: string;
   initialQuantity?: number;
+  currentUser?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    organization?: string;
+  } | null;
 }) {
   const [done, setDone] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -35,8 +43,14 @@ export function QuoteForm({
   } = useForm<QuoteRequestInput, unknown, QuoteRequestData>({
     resolver: zodResolver(quoteRequestSchema),
     defaultValues: {
+      organizationName: currentUser?.organization || "",
+      contactPerson: currentUser?.name || "",
+      email: currentUser?.email || "",
+      phone: currentUser?.phone || "",
       preferredModel: (initialModel || "") as QuoteRequestInput["preferredModel"],
       quantity: initialQuantity,
+      useCase: "",
+      installationRequirements: "",
     },
   });
 
@@ -70,6 +84,30 @@ export function QuoteForm({
         </Card>
       ) : (
         <Card className="p-7 md:p-8">
+          {!currentUser && (
+            <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500 font-bold text-white text-sm">
+                  !
+                </span>
+                <div>
+                  <p className="font-semibold text-charcoal text-sm">
+                    Already have an account? Sign in for instant tracking
+                  </p>
+                  <p className="text-xs text-muted">
+                    Sign in to automatically link this quotation proposal directly to your profile.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/login?next=${encodeURIComponent("/institutional-quote")}`}
+                className="shrink-0 rounded-xl bg-navy px-4 py-2 font-semibold text-xs text-white shadow-xs transition hover:bg-navy/90"
+              >
+                Log In / Register
+              </Link>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
             <h2 className="text-title">Organization &amp; contact</h2>
             <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
@@ -88,7 +126,7 @@ export function QuoteForm({
               <TextInput label="Contact person *" autoComplete="name" error={errors.contactPerson?.message} {...register("contactPerson")} />
               <TextInput label="Role / department" autoComplete="organization-title" error={errors.role?.message} {...register("role")} />
               <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
-              <TextInput label="Phone (optional)" type="tel" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
+              <TextInput label="Mobile Number *" type="tel" autoComplete="tel" placeholder="10-digit mobile number" error={errors.phone?.message} {...register("phone")} />
             </div>
 
             <h2 className="mt-2 text-title">Your requirement</h2>
@@ -107,8 +145,8 @@ export function QuoteForm({
               <TextInput label="Quantity *" type="number" min={1} inputMode="numeric" error={errors.quantity?.message} {...register("quantity")} />
               <TextInput label="Expected daily usage *" placeholder="Approximate number of napkins" error={errors.expectedDailyUsage?.message} {...register("expectedDailyUsage")} />
               <TextInput label="Delivery city & postal code *" autoComplete="postal-code" error={errors.deliveryCityPostal?.message} {...register("deliveryCityPostal")} />
-              <TextArea className="md:col-span-2" label="Use case & number of locations *" placeholder="Describe where and how the units will be used" error={errors.useCase?.message} {...register("useCase")} />
-              <TextArea className="md:col-span-2" label="Installation requirements *" placeholder="Site readiness, placement questions and any installation support needed" error={errors.installationRequirements?.message} {...register("installationRequirements")} />
+              <TextArea className="md:col-span-2" label="Use case & number of locations (optional)" placeholder="Describe where and how the units will be used" error={errors.useCase?.message} {...register("useCase")} />
+              <TextArea className="md:col-span-2" label="Installation requirements (optional)" placeholder="Site readiness, placement questions and any installation support needed" error={errors.installationRequirements?.message} {...register("installationRequirements")} />
             </div>
 
             <Checkbox

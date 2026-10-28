@@ -9,17 +9,18 @@ export interface IQuoteRequest {
   contactPerson: string;
   role?: string;
   email: string;
-  phone?: string;
+  phone: string;
   preferredModel: (typeof QUOTE_MODELS)[number];
   quantity: number;
   expectedDailyUsage: string;
   deliveryCityPostal: string;
-  useCase: string;
-  installationRequirements: string;
+  useCase?: string;
+  installationRequirements?: string;
   consent: boolean;
   status: "new" | "in_review" | "quote_sent" | "approved" | "declined" | "closed" | "contacted";
   quotedAmount?: number;
   notes?: string;
+  user?: Types.ObjectId | null;
   assignedManager?: Types.ObjectId | null;
   assignedManagerName?: string;
   validUntil?: Date | null;
@@ -35,13 +36,13 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     contactPerson: { type: String, required: true, trim: true },
     role: { type: String, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
-    phone: { type: String, trim: true },
+    phone: { type: String, required: true, trim: true },
     preferredModel: { type: String, enum: QUOTE_MODELS, required: true },
     quantity: { type: Number, required: true, min: 1 },
     expectedDailyUsage: { type: String, required: true, trim: true },
     deliveryCityPostal: { type: String, required: true, trim: true },
-    useCase: { type: String, required: true, trim: true },
-    installationRequirements: { type: String, required: true, trim: true },
+    useCase: { type: String, trim: true, default: "" },
+    installationRequirements: { type: String, trim: true, default: "" },
     consent: { type: Boolean, required: true },
     status: {
       type: String,
@@ -51,6 +52,7 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     },
     quotedAmount: { type: Number, default: 0 },
     notes: { type: String, trim: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     assignedManager: { type: Schema.Types.ObjectId, ref: "User", default: null },
     assignedManagerName: { type: String, trim: true },
     validUntil: { type: Date, default: null },

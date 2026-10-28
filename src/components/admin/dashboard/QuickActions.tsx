@@ -11,8 +11,8 @@ export function QuickActions() {
       bgColor: "bg-[#EBF2FC]",
     },
     {
-      label: "Create Order",
-      href: "/admin/orders?action=new",
+      label: "Create Quotation",
+      href: "/admin/quotations?action=new",
       icon: FileText,
       iconColor: "text-[#16A34A]",
       bgColor: "bg-[#E8F8EE]",

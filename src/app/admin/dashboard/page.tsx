@@ -11,6 +11,8 @@ import { QuickActions } from "@/components/admin/dashboard/QuickActions";
 import { ServiceStatusChart } from "@/components/admin/dashboard/ServiceStatusChart";
 import { ImpactBanner } from "@/components/admin/dashboard/ImpactBanner";
 
+import { getSessionUser } from "@/lib/session";
+
 export const instant = false;
 
 export const metadata = {
@@ -20,12 +22,19 @@ export const metadata = {
 
 export default async function AdminDashboardPage() {
   await connection();
-  const data = await getAdminDashboardOverview();
+  const [data, user] = await Promise.all([
+    getAdminDashboardOverview(),
+    getSessionUser(),
+  ]);
+
+  const userName = user?.name || "Administrator";
+  const now = new Date();
+  const currentMonthRange = `01 ${now.toLocaleDateString("en-GB", { month: "short", year: "numeric" })} - ${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()} ${now.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
 
   return (
     <div className="space-y-6">
       {/* 1. Welcome Header */}
-      <WelcomeHeader userName="Rahul" dateRange="01 Oct 2026 - 31 Oct 2026" />
+      <WelcomeHeader userName={userName} dateRange={currentMonthRange} />
 
       {/* 2. KPI Cards Row (4 cards in consistent alignment) */}
       <KpiCards data={data.kpis} />

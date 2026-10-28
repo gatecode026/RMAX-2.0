@@ -9,13 +9,13 @@ export const quoteRequestSchema = z.object({
   contactPerson: text("Contact person"),
   role: optionalText(),
   email,
-  phone: optionalText(20).pipe(phone.optional()),
+  phone,
   preferredModel: z.enum(QUOTE_MODELS, { error: "Select a model" }),
   quantity: z.coerce.number({ error: "Enter a quantity" }).int("Enter a whole number").min(1, "At least 1").max(10000),
   expectedDailyUsage: text("Expected daily usage"),
   deliveryCityPostal: text("Delivery city & postal code"),
-  useCase: text("Use case & number of locations", 2000),
-  installationRequirements: text("Installation requirements", 2000),
+  useCase: optionalText(2000),
+  installationRequirements: optionalText(2000),
   consent: z.literal(true, { error: "Please agree to be contacted" }),
 });
 export type QuoteRequestInput = z.input<typeof quoteRequestSchema>;
@@ -68,7 +68,7 @@ export type ForgotPasswordInput = z.input<typeof forgotPasswordSchema>;
 export const profileSchema = z.object({
   name: text("Full name"),
   organization: optionalText(),
-  phone: optionalText(20).pipe(phone.optional()),
+  phone: phone.optional(),
 });
 export type ProfileInput = z.input<typeof profileSchema>;
 

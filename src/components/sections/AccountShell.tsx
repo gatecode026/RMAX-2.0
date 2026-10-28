@@ -4,12 +4,12 @@ import { Card } from "@/components/ui/Card";
 import { logoutAction } from "@/lib/actions/auth";
 import { cn } from "@/lib/cn";
 
-type Active = "overview" | "orders" | "profile";
+type Active = "overview" | "quotations" | "orders" | "profile";
 
 const ITEMS = [
-  { key: "overview", label: "Overview", href: "/account" },
-  { key: "orders", label: "My Orders", href: "/account/orders" },
-  { key: "profile", label: "Profile & addresses", href: "/account#profile" },
+  { key: "overview", label: "Account Overview", href: "/account" },
+  { key: "quotations", label: "Quotation History", href: "/account#quotations" },
+  { key: "profile", label: "Address & Mobile", href: "/account#profile" },
 ] as const;
 
 /** Sidebar + content layout used by My Account and My Orders. */

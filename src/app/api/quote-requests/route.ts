@@ -13,8 +13,37 @@ export const POST = route(async (req: Request) => {
 
   try {
     await connectDB();
-    const doc = await QuoteRequest.create(parsed.data);
-    return ok({ id: String(doc._id) }, 201);
+    const count = await QuoteRequest.countDocuments();
+    const quoteNumber = `QT-2026-${String(count + 1).padStart(3, "0")}`;
+
+    let userId: string | null = null;
+    try {
+      const { getSessionUserId } = await import("@/lib/session");
+      userId = await getSessionUserId();
+    } catch {
+      // Guest or session read without context
+    }
+
+    const doc = await QuoteRequest.create({
+      ...parsed.data,
+      quoteNumber,
+      status: "new",
+      user: userId || null,
+    });
+
+    try {
+      const { createNotification } = await import("@/lib/notifications");
+      await createNotification({
+        title: "New Institutional Quotation Request",
+        message: `${parsed.data.organizationName} (${parsed.data.contactPerson}) requested quote for ${parsed.data.preferredModel || "RMAX Solutions"}`,
+        type: "lead_created",
+        link: "/admin/quotations",
+      });
+    } catch {
+      // Non-blocking notification
+    }
+
+    return ok({ id: String(doc._id), quoteNumber }, 201);
   } catch (err) {
     if (isDatabaseUnavailable(err)) throw err;
     return fail("We could not save your request. Please try again.", 500);

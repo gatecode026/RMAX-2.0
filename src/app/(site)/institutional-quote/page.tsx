@@ -5,6 +5,8 @@ import { PageHero } from "@/components/layout/PageHero";
 import { QuoteForm } from "@/components/sections/QuoteForm";
 import { getProducts } from "@/lib/data/content";
 
+import { getCurrentUserProfile } from "@/lib/data/users";
+
 export const metadata: Metadata = {
   title: "Request Institutional Quote",
   description: "Share the scale of your requirement and we’ll help you discuss capacity, model choice and installation for your institution.",
@@ -13,11 +15,28 @@ export const metadata: Metadata = {
 type QuoteSearch = Promise<{ model?: string; qty?: string }>;
 
 async function QuoteContent({ searchParams }: { searchParams: QuoteSearch }) {
-  const [products, { model, qty }] = await Promise.all([getProducts(), searchParams]);
+  const [products, user, { model, qty }] = await Promise.all([
+    getProducts(),
+    getCurrentUserProfile(),
+    searchParams,
+  ]);
   const valid = products.some((p) => p.slug === model);
   const quantity = Math.min(Math.max(Number.parseInt(qty ?? "", 10) || 1, 1), 999);
   // The design opens on "Pro · 200–250/day".
-  return <QuoteForm products={products} initialModel={valid ? model! : "pro"} initialQuantity={quantity} />;
+  return (
+    <QuoteForm
+      products={products}
+      initialModel={valid ? model! : "pro"}
+      initialQuantity={quantity}
+      currentUser={user ? {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        organization: user.organization || "",
+      } : null}
+    />
+  );
 }
 
 export default function InstitutionalQuotePage({ searchParams }: { searchParams: QuoteSearch }) {

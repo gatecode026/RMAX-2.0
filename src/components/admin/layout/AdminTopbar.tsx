@@ -293,9 +293,9 @@ export function AdminTopbar({ onToggleMobile }: { onToggleMobile: () => void }) 
             className="flex items-center gap-2.5 rounded-xl border border-transparent p-1 transition hover:bg-gray-100 sm:border-gray-200 sm:px-2.5 sm:py-1.5"
             aria-label="User menu"
           >
-            {/* Dark Navy Avatar with Initials "SA" */}
-            <div className="flex size-9 items-center justify-center rounded-full bg-[#0B2450] text-[13px] font-bold text-white shadow-xs">
-              SA
+            {/* Dark Navy Avatar with First Letter "S" */}
+            <div className="flex size-9 items-center justify-center rounded-full bg-[#0B2450] text-[14px] font-bold text-white shadow-xs uppercase">
+              S
             </div>
             <div className="hidden text-left sm:block">
               <p className="font-jakarta text-[13px] font-bold leading-tight text-[#202A36]">Super Admin</p>

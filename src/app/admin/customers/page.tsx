@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
-import { Search, Mail, Phone, Eye, Download } from "lucide-react";
+import { Search, Mail, Phone, Eye, Download, UserPlus, X, AlertCircle } from "lucide-react";
 
 interface CustomerItem {
   id: string;
   name: string;
   initials: string;
   organization: string;
-  type: "School" | "Hospital" | "College" | "Workplace" | "Individual";
+  type: string;
   email: string;
   phone: string;
   ordersCount: number;
@@ -17,91 +17,80 @@ interface CustomerItem {
   lastActive: string;
 }
 
-const CUSTOMERS_DATA: CustomerItem[] = [
-  {
-    id: "cust-1",
-    name: "Balbir Singhania",
-    initials: "BS",
-    organization: "Singhania School, Jaipur",
-    type: "School",
-    email: "principal@singhaniaschool.org",
-    phone: "+91 94140 55667",
-    ordersCount: 4,
-    totalSpent: 26000,
-    lastActive: "25 Oct 2026",
-  },
-  {
-    id: "cust-2",
-    name: "Dr. Meera Iyer",
-    initials: "MI",
-    organization: "Sunrise Public School, Pune",
-    type: "School",
-    email: "facilities@sunrisepublic.in",
-    phone: "+91 98220 11223",
-    ordersCount: 6,
-    totalSpent: 27000,
-    lastActive: "24 Oct 2026",
-  },
-  {
-    id: "cust-3",
-    name: "Rajesh Khanna",
-    initials: "RK",
-    organization: "City Hospital, Jaipur",
-    type: "Hospital",
-    email: "hygiene@cityhospital.in",
-    phone: "+91 94140 99887",
-    ordersCount: 12,
-    totalSpent: 78000,
-    lastActive: "23 Oct 2026",
-  },
-  {
-    id: "cust-4",
-    name: "Principal N. Sharma",
-    initials: "NS",
-    organization: "Jain College, Jaipur",
-    type: "College",
-    email: "admin@jaincollege.ac.in",
-    phone: "+91 94141 22334",
-    ordersCount: 3,
-    totalSpent: 9000,
-    lastActive: "24 Oct 2026",
-  },
-  {
-    id: "cust-5",
-    name: "Dr. Ananya Rao",
-    initials: "AR",
-    organization: "CareFirst Hospital, Bengaluru",
-    type: "Hospital",
-    email: "care@carefirst.org",
-    phone: "+91 98450 33445",
-    ordersCount: 8,
-    totalSpent: 52000,
-    lastActive: "22 Oct 2026",
-  },
-  {
-    id: "cust-6",
-    name: "Amit Sharma",
-    initials: "AS",
-    organization: "Delhi Public School",
-    type: "School",
-    email: "asharma@dpsdelhi.edu.in",
-    phone: "+91 98110 23456",
-    ordersCount: 2,
-    totalSpent: 13000,
-    lastActive: "27 Oct 2026",
-  },
-];
-
 export default function AdminCustomersPage() {
-  const [customers] = useState<CustomerItem[]>(CUSTOMERS_DATA);
+  const [customers, setCustomers] = useState<CustomerItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [selectedCust, setSelectedCust] = useState<CustomerItem | null>(null);
 
-  const types = ["All", "School", "Hospital", "College", "Workplace"];
+  // New Customer Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCust, setNewCust] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    organization: "",
+    type: "School",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const types = ["All", "School", "Hospital", "College", "Workplace", "Individual"];
+
+  const fetchCustomers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/customers");
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.customers || []);
+      }
+    } catch (err) {
+      console.error("Failed to load customers:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  const handleAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCust.name || !newCust.email) {
+      setErrorMsg("Name and Email are required");
+      return;
+    }
+    setSubmitting(true);
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/admin/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCust),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to create customer");
+        setSubmitting(false);
+        return;
+      }
+
+      setShowAddModal(false);
+      setNewCust({ name: "", email: "", phone: "", organization: "", type: "School" });
+      fetchCustomers();
+    } catch {
+      setErrorMsg("Network error creating customer");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filtered = customers.filter((c) => {
-    const matchesType = filterType === "All" || c.type === filterType;
+    const matchesType = filterType === "All" || c.type.toLowerCase() === filterType.toLowerCase();
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.organization.toLowerCase().includes(search.toLowerCase()) ||
@@ -111,6 +100,7 @@ export default function AdminCustomersPage() {
   });
 
   const handleExportCSV = () => {
+    if (filtered.length === 0) return;
     const headers = ["Customer Name", "Organization", "Type", "Email", "Phone", "Orders", "Total Spent", "Last Active"];
     const rows = filtered.map((c) => [
       `"${c.name}"`,
@@ -136,19 +126,29 @@ export default function AdminCustomersPage() {
     <div>
       <AdminPageHeader
         title="Customers"
-        subtitle="Manage institutional buyers, representatives, order history, and account activity."
+        subtitle="Manage institutional buyers, representatives, quote history, and account activity directly from MongoDB."
         breadcrumbs={[
           { label: "Dashboard", href: "/admin/dashboard" },
           { label: "Customers" },
         ]}
         actions={
-          <button
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
-          >
-            <Download className="h-4 w-4 text-slate-500" />
-            Export Customers
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#10469B] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#0B2450] transition-colors"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add Customer
+            </button>
+            <button
+              onClick={handleExportCSV}
+              disabled={filtered.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 text-slate-500" />
+              Export CSV
+            </button>
+          </div>
         }
       />
 
@@ -158,19 +158,18 @@ export default function AdminCustomersPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
+            placeholder="Search by name, organization, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by customer name, school, email..."
-            className="w-full rounded-lg border border-slate-200 bg-[#F4F7FC]/50 pl-9 pr-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-[#10469B] focus:bg-white focus:outline-none"
+            className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-4 text-sm focus:border-[#10469B] focus:outline-none"
           />
         </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex flex-wrap gap-1.5">
           {types.map((t) => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                 filterType === t
                   ? "bg-[#10469B] text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -182,133 +181,259 @@ export default function AdminCustomersPage() {
         </div>
       </div>
 
-      {/* Customers Table */}
+      {/* Table */}
       <div className="overflow-hidden rounded-xl border border-[#E5EBF4] bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="border-b border-[#E5EBF4] bg-slate-50/75 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <tr>
-                <th className="py-3.5 pl-5 pr-3">Customer</th>
-                <th className="px-3 py-3.5">Organization</th>
-                <th className="px-3 py-3.5">Contact Details</th>
-                <th className="px-3 py-3.5">Orders</th>
-                <th className="px-3 py-3.5">Total Spent</th>
-                <th className="px-3 py-3.5">Last Active</th>
-                <th className="py-3.5 pl-3 pr-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5EBF4]">
-              {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center text-sm font-medium text-slate-500">
+            Loading customers from database...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="text-base font-bold text-slate-700">No Customers Found</p>
+            <p className="mt-1 text-sm text-slate-400">
+              Customers who register on the website or submit institutional quote requests will be listed here.
+            </p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#10469B] px-4 py-2 text-xs font-bold text-white hover:bg-[#0B2450]"
+            >
+              <UserPlus className="size-3.5" />
+              Add Customer Manually
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-[#E5EBF4] bg-[#F8FAFC] text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    No customers found matching your criteria.
-                  </td>
+                  <th className="px-5 py-3.5">Customer Name</th>
+                  <th className="px-5 py-3.5">Organization</th>
+                  <th className="px-5 py-3.5">Type</th>
+                  <th className="px-5 py-3.5">Contact Details</th>
+                  <th className="px-5 py-3.5 text-center">Quotes / Orders</th>
+                  <th className="px-5 py-3.5">Total Value</th>
+                  <th className="px-5 py-3.5">Last Active</th>
+                  <th className="px-5 py-3.5 text-right">Actions</th>
                 </tr>
-              ) : (
-                filtered.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 pl-5 pr-3">
+              </thead>
+              <tbody className="divide-y divide-[#E5EBF4]">
+                {filtered.map((c) => (
+                  <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-[#10469B] text-xs">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EBF2FC] text-xs font-bold text-[#10469B]">
                           {c.initials}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-800">{c.name}</div>
-                          <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                            {c.type}
-                          </span>
+                          <div className="font-semibold text-[#0B2450]">{c.name}</div>
+                          <div className="text-xs text-slate-400">ID: {c.id.slice(-6)}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-3.5">
-                      <div className="font-medium text-slate-800">{c.organization}</div>
+                    <td className="px-5 py-4 font-medium text-slate-700">{c.organization}</td>
+                    <td className="px-5 py-4">
+                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                        {c.type}
+                      </span>
                     </td>
-                    <td className="px-3 py-3.5 text-xs">
+                    <td className="px-5 py-4 text-xs">
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <Mail className="h-3 w-3 text-slate-400" />
                         {c.email}
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-400 mt-0.5">
-                        <Phone className="h-3 w-3" />
+                      <div className="mt-1 flex items-center gap-1.5 text-slate-500">
+                        <Phone className="h-3 w-3 text-slate-400" />
                         {c.phone}
                       </div>
                     </td>
-                    <td className="px-3 py-3.5 whitespace-nowrap font-medium text-slate-700">
-                      {c.ordersCount} units
-                    </td>
-                    <td className="px-3 py-3.5 whitespace-nowrap font-semibold text-slate-900">
+                    <td className="px-5 py-4 text-center font-bold text-slate-700">{c.ordersCount}</td>
+                    <td className="px-5 py-4 font-bold text-[#0B2450]">
                       ₹{c.totalSpent.toLocaleString("en-IN")}
                     </td>
-                    <td className="px-3 py-3.5 whitespace-nowrap text-xs text-slate-500">
-                      {c.lastActive}
-                    </td>
-                    <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
+                    <td className="px-5 py-4 text-xs text-slate-500">{c.lastActive}</td>
+                    <td className="px-5 py-4 text-right">
                       <button
                         onClick={() => setSelectedCust(c)}
-                        className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-                        title="View Details"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5" />
+                        Profile
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Customer Quick Modal */}
-      {selectedCust && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-bold text-[#10469B] text-sm">
-                {selectedCust.initials}
+      {/* Add Customer Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="font-jakarta text-lg font-bold text-slate-900">Add Customer</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {errorMsg && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
+                <AlertCircle className="size-4 shrink-0" />
+                <span>{errorMsg}</span>
               </div>
+            )}
+
+            <form onSubmit={handleAddCustomer} className="mt-4 space-y-3.5">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">{selectedCust.name}</h3>
-                <p className="text-xs text-slate-500">{selectedCust.organization}</p>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Customer / Contact Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCust.name}
+                  onChange={(e) => setNewCust({ ...newCust, name: e.target.value })}
+                  placeholder="e.g. Balbir Singhania"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#10469B] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={newCust.email}
+                  onChange={(e) => setNewCust({ ...newCust, email: e.target.value })}
+                  placeholder="e.g. principal@school.org"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#10469B] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={newCust.phone}
+                  onChange={(e) => setNewCust({ ...newCust, phone: e.target.value })}
+                  placeholder="+91 94140 00000"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#10469B] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    value={newCust.organization}
+                    onChange={(e) => setNewCust({ ...newCust, organization: e.target.value })}
+                    placeholder="e.g. Singhania School"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#10469B] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Institution Type
+                  </label>
+                  <select
+                    value={newCust.type}
+                    onChange={(e) => setNewCust({ ...newCust, type: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#10469B] focus:outline-none bg-white"
+                  >
+                    <option value="School">School</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="College">College</option>
+                    <option value="Workplace">Workplace</option>
+                    <option value="Individual">Individual</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-xl bg-[#10469B] px-5 py-2 text-xs font-bold text-white hover:bg-[#0B2450] disabled:opacity-50"
+                >
+                  {submitting ? "Saving..." : "Save to Database"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Detail Drawer */}
+      {selectedCust && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF2FC] text-base font-bold text-[#10469B]">
+                  {selectedCust.initials}
+                </div>
+                <div>
+                  <h3 className="font-jakarta text-lg font-bold text-slate-900">{selectedCust.name}</h3>
+                  <p className="text-xs text-slate-500">{selectedCust.organization}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedCust(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm">
+              <div className="flex justify-between border-b border-gray-50 py-2">
+                <span className="text-slate-500">Institution Type</span>
+                <span className="font-semibold text-slate-800">{selectedCust.type}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-50 py-2">
+                <span className="text-slate-500">Email</span>
+                <span className="font-semibold text-slate-800">{selectedCust.email}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-50 py-2">
+                <span className="text-slate-500">Phone</span>
+                <span className="font-semibold text-slate-800">{selectedCust.phone}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-50 py-2">
+                <span className="text-slate-500">Quotes & Orders</span>
+                <span className="font-bold text-[#10469B]">{selectedCust.ordersCount}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-50 py-2">
+                <span className="text-slate-500">Total Value</span>
+                <span className="font-bold text-emerald-600">₹{selectedCust.totalSpent.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span className="text-slate-500">Last Active</span>
+                <span className="font-semibold text-slate-800">{selectedCust.lastActive}</span>
               </div>
             </div>
 
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Email:</span>
-                <span className="font-medium text-slate-800">{selectedCust.email}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Phone:</span>
-                <span className="font-medium text-slate-800">{selectedCust.phone}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Account Type:</span>
-                <span className="font-medium text-slate-800">{selectedCust.type}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Machines Installed:</span>
-                <span className="font-bold text-slate-900">{selectedCust.ordersCount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Lifetime Purchases:</span>
-                <span className="font-bold text-[#10469B]">₹{selectedCust.totalSpent.toLocaleString("en-IN")}</span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setSelectedCust(null)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="rounded-xl bg-[#0B2450] px-5 py-2 text-xs font-bold text-white hover:bg-[#10469B]"
               >
                 Close
               </button>
-              <a
-                href={`mailto:${selectedCust.email}`}
-                className="rounded-lg bg-[#10469B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0B2450] transition-colors"
-              >
-                Email Customer
-              </a>
             </div>
           </div>
         </div>

@@ -76,6 +76,9 @@ export interface IProduct {
   highlight?: boolean;
   specs: IProductSpecs;
   sortOrder: number;
+  stock?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const specsSchema = new Schema<IProductSpecs>(
@@ -139,6 +142,7 @@ const productSchema = new Schema<IProduct>(
     highlight: { type: Boolean, default: false },
     specs: { type: specsSchema, required: true },
     sortOrder: { type: Number, default: 0, index: true },
+    stock: { type: Number, default: 25 },
   },
   { timestamps: true },
 );

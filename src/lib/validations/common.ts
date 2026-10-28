@@ -28,9 +28,14 @@ export const email = z
   .pipe(z.string().min(1, "Email is required").max(254).email("Enter a valid email address"));
 
 export const phone = z
-  .string()
+  .string({ error: "Mobile number is required" })
   .transform(cleanText)
-  .pipe(z.string().regex(/^[+()\d\s-]{7,20}$/, "Enter a valid phone number"));
+  .pipe(
+    z
+      .string()
+      .min(10, "Valid 10-digit mobile number is required")
+      .regex(/^[6-9]\d{9}$|^(\+91[\-\s]?)?[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number")
+  );
 
 export const password = z
   .string({ error: "Password is required" })

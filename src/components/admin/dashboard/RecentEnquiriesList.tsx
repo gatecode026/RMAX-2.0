@@ -23,12 +23,17 @@ export function RecentEnquiriesList({ enquiries }: RecentEnquiriesListProps) {
 
       {/* List items */}
       <div className="mt-3 divide-y divide-gray-100">
-        {enquiries.map((e) => (
-          <Link
-            key={e.id}
-            href="/admin/enquiries"
-            className="flex items-start gap-3.5 py-3 transition hover:bg-gray-50/70 first:pt-2 last:pb-1 rounded-xl px-2"
-          >
+        {enquiries.length === 0 ? (
+          <div className="py-8 text-center text-[13px] text-gray-400">
+            No customer enquiries received yet.
+          </div>
+        ) : (
+          enquiries.map((e) => (
+            <Link
+              key={e.id}
+              href="/admin/enquiries"
+              className="flex items-start gap-3.5 py-3 transition hover:bg-gray-50/70 first:pt-2 last:pb-1 rounded-xl px-2"
+            >
             {/* Initials Avatar */}
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#EBF2FC] text-[13px] font-bold text-[#10469B]">
               {e.initials}
@@ -50,7 +55,7 @@ export function RecentEnquiriesList({ enquiries }: RecentEnquiriesListProps) {
               <p className="mt-0.5 text-[12px] text-[#718096] line-clamp-1">{e.messagePreview}</p>
             </div>
           </Link>
-        ))}
+        )))}
       </div>
     </div>
   );
