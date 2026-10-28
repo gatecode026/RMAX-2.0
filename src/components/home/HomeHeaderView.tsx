@@ -8,6 +8,7 @@ import { Logo } from "@/components/layout/Logo";
 import { buttonClasses } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { ProductSearch } from "./ProductSearch";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 type Props = {
   userName: string | null;
@@ -26,6 +27,7 @@ const LINKS = [
 /** Home-page header: logo · product search · Our Product / Contact Us / About Us · Login. */
 export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: Props) {
   const pathname = usePathname();
+  const { openModal } = useAuthModal();
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const open = openedOn === pathname;
   const [isScrolled, setIsScrolled] = useState(false);
@@ -134,15 +136,16 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
               </span>
             </Link>
           ) : (
-            <Link
-              href="/login"
+            <button
+              type="button"
+              onClick={() => openModal("login")}
               className={buttonClasses({
                 size: "xs",
-                className: "h-[42px] min-w-22 shadow-xs hover:shadow-sm",
+                className: "h-[42px] min-w-22 shadow-xs hover:shadow-sm cursor-pointer",
               })}
             >
               Login
-            </Link>
+            </button>
           )}
         </nav>
 
@@ -189,9 +192,16 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
               <span>{dashboardLabel} ({userName.split(" ")[0]})</span>
             </Link>
           ) : (
-            <Link href="/login" className={buttonClasses({ size: "sm", className: "mt-3 w-full" })}>
+            <button
+              type="button"
+              onClick={() => {
+                setOpenedOn(null);
+                openModal("login");
+              }}
+              className={buttonClasses({ size: "sm", className: "mt-3 w-full cursor-pointer" })}
+            >
               Login
-            </Link>
+            </button>
           )}
         </nav>
       )}

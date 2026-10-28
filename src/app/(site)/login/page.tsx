@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { AuthShell } from "@/components/sections/AuthShell";
-import { LoginForm } from "@/components/sections/LoginForm";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Login" };
+export const metadata: Metadata = { title: "Customer Login" };
 
-export default function LoginPage() {
-  return (
-    <AuthShell
-      title="Welcome back."
-      lead="Sign in to see your orders, manage institutional delivery details and get support for your RMAX products."
-    >
-      <Suspense fallback={<div className="h-[660px] animate-pulse rounded-card bg-soft/70" />}>
-        <LoginForm />
-      </Suspense>
-    </AuthShell>
-  );
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const params = await searchParams;
+  const nextParam = params?.next ? `&next=${encodeURIComponent(params.next)}` : "";
+  redirect(`/?auth=login${nextParam}`);
 }

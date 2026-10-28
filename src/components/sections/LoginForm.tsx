@@ -24,16 +24,10 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginInput) {
     setFormError(null);
-    const res = await loginAction(values);
+    const res = await loginAction(values, { portal: "customer" });
     if (!res.ok) return setFormError(res.message);
 
-    if (res.role === "super_admin" || res.role === "admin") {
-      router.push("/admin/dashboard");
-    } else if (res.role === "manager") {
-      router.push("/manager/dashboard");
-    } else {
-      router.push(next || "/account");
-    }
+    router.push(next || "/account");
     router.refresh();
   }
 

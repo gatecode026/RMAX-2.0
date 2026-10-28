@@ -72,11 +72,14 @@ function AdminLoginForm() {
 
     setIsSubmitting(true);
     try {
-      const res = await loginAction({
-        email: email.trim(),
-        password,
-        remember: rememberMe,
-      });
+      const res = await loginAction(
+        {
+          email: email.trim(),
+          password,
+          remember: rememberMe,
+        },
+        { portal: "admin" }
+      );
 
       if (!res.ok) {
         setFormError(res.message);
