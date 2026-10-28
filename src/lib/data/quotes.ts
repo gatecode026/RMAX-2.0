@@ -1,7 +1,7 @@
 import "server-only";
 import { connectDB } from "@/lib/mongodb";
 import { QuoteRequest, type IQuoteRequest } from "@/models/QuoteRequest";
-import { getSessionUser, getSessionUserId } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
 
 export type UserQuoteDTO = {
   _id: string;

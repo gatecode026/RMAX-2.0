@@ -25,18 +25,6 @@ export type ProductDTO = IProduct & { _id: string };
 export type FaqDTO = IFaqItem & { _id: string };
 export type PolicyDTO = IPolicyPage & { _id: string };
 
-/**
- * Read content from MongoDB; if the database cannot be reached, serve the identical content
- * from the built-in seed data so every page still renders. (A failed read is never cached.)
- */
-async function withSeedFallback<T>(read: () => Promise<T>, fallback: () => T, what: string): Promise<T> {
-  try {
-    return await read();
-  } catch {
-    console.warn(`[content] Could not read ${what} from MongoDB — using built-in seed content.`);
-    return fallback();
-  }
-}
 
 // Catalogue / help / policy content changes rarely → cached for hours, refreshed on demand with cacheTag.
 

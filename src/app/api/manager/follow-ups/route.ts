@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
       upcoming: upcoming.map(formatLead),
     });
   } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
     console.error("Follow-ups GET error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

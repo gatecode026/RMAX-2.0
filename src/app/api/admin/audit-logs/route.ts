@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
     console.error("Audit log GET error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

@@ -10,14 +10,18 @@ export interface AppNotification {
   link?: string;
   read: boolean;
   createdAt: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export function useDesktopNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [permission, setPermission] = useState<NotificationPermission>("default");
-  const [isSupported, setIsSupported] = useState<boolean>(false);
+  const [permission, setPermission] = useState<NotificationPermission>(() =>
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default"
+  );
+  const [isSupported] = useState<boolean>(
+    () => typeof window !== "undefined" && "Notification" in window
+  );
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -82,7 +86,19 @@ export function useDesktopNotifications() {
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
-        const mapped: AppNotification[] = (data.notifications || []).map((n: any) => ({
+        const mapped: AppNotification[] = (data.notifications || []).map(
+          (n: {
+            _id?: string;
+            id?: string;
+            title: string;
+            message: string;
+            type: string;
+            link?: string;
+            read?: boolean;
+            isRead?: boolean;
+            createdAt: string;
+            metadata?: Record<string, unknown>;
+          }) => ({
           _id: n._id || n.id,
           title: n.title,
           message: n.message,
@@ -165,15 +181,8 @@ export function useDesktopNotifications() {
     }
   }, [fetchNotifications]);
 
-  // Setup SSE stream and initial state
+  // Setup SSE stream and fetch initial notifications
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const supported = "Notification" in window;
-      setIsSupported(supported);
-      if (supported) {
-        setPermission(Notification.permission);
-      }
-    }
 
     fetchNotifications();
 
@@ -190,20 +199,28 @@ export function useDesktopNotifications() {
         setIsConnected(true);
       };
 
-      function handleNotificationPayload(raw: any) {
-        if (!raw) return;
-        const n = raw.notification || raw;
-        if (!n || !n.title) return;
+      function handleNotificationPayload(raw: unknown) {
+        if (!raw || typeof raw !== "object") return;
+        const record = raw as Record<string, unknown>;
+        const n = (record.notification && typeof record.notification === "object"
+          ? record.notification
+          : record) as Record<string, unknown>;
+        const idVal = n._id ? String(n._id) : n.id ? String(n.id) : String(Date.now());
+        const titleVal = String(n.title);
+        const messageVal = n.message ? String(n.message) : "";
+        const typeVal = typeof n.type === "string" ? n.type : "system";
+        const linkVal = typeof n.link === "string" ? n.link : undefined;
+        const metaVal = n.metadata && typeof n.metadata === "object" ? (n.metadata as Record<string, unknown>) : undefined;
 
         const newNotif: AppNotification = {
-          _id: n._id || n.id || String(Date.now()),
-          title: n.title,
-          message: n.message,
-          type: n.type || "system",
-          link: n.link,
+          _id: idVal,
+          title: titleVal,
+          message: messageVal,
+          type: typeVal,
+          link: linkVal,
           read: false,
           createdAt: n.createdAt ? String(n.createdAt) : new Date().toISOString(),
-          metadata: n.metadata,
+          metadata: metaVal,
         };
 
         setNotifications((prev) => {
@@ -234,7 +251,7 @@ export function useDesktopNotifications() {
         }
       };
 
-      es.addEventListener("notification", (event: any) => {
+      es.addEventListener("notification", (event: MessageEvent) => {
         try {
           if (!event.data) return;
           const data = JSON.parse(event.data);

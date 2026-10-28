@@ -5,7 +5,6 @@ import type { NotificationType } from "@/lib/enums";
 
 // Global notification broker for in-process real-time Server-Sent Events (SSE)
 declare global {
-  // eslint-disable-next-line no-var
   var __notificationEmitter: EventEmitter | undefined;
 }
 
