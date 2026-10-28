@@ -66,6 +66,17 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, closeModal]);
 
+  // Lock scroll only while modal is open, and cleanly restore when closed
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.classList.remove("modal-open");
+    };
+  }, [isOpen]);
+
   return (
     <AuthModalContext.Provider value={{ isOpen, tab, openModal, closeModal, setTab }}>
       <Suspense fallback={null}>
