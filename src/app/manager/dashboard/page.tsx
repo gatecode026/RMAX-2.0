@@ -222,12 +222,23 @@ export default function ManagerDashboard() {
                         {item.institutionName || "Individual"} • {item.phone}
                       </p>
                     </div>
-                    <Link
-                      href={`/manager/leads/${item._id}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-[#10469B] hover:bg-blue-100 transition"
-                    >
-                      Open <ChevronRight className="size-3" />
-                    </Link>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.phone && (
+                        <a
+                          href={`tel:${item.phone}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                          title={`Direct call to ${item.phone}`}
+                        >
+                          <Phone className="size-3" /> Call
+                        </a>
+                      )}
+                      <Link
+                        href={`/manager/leads/${item._id}`}
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-[#10469B] hover:bg-blue-100 transition"
+                      >
+                        Open <ChevronRight className="size-3" />
+                      </Link>
+                    </div>
                   </div>
                 ))
               )}
@@ -288,12 +299,23 @@ export default function ManagerDashboard() {
                           : "Past"}
                       </p>
                     </div>
-                    <Link
-                      href={`/manager/leads/${item._id}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-red-700 transition"
-                    >
-                      Call Now <ChevronRight className="size-3" />
-                    </Link>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.phone && (
+                        <a
+                          href={`tel:${item.phone}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition"
+                          title={`Direct call to ${item.phone}`}
+                        >
+                          <Phone className="size-3" /> Call
+                        </a>
+                      )}
+                      <Link
+                        href={`/manager/leads/${item._id}`}
+                        className="inline-flex items-center gap-1 rounded-lg bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 hover:bg-red-200 transition"
+                      >
+                        Open <ChevronRight className="size-3" />
+                      </Link>
+                    </div>
                   </div>
                 ))
               )}

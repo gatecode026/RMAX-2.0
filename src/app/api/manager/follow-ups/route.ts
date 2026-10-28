@@ -25,7 +25,11 @@ export async function GET(req: NextRequest) {
     };
 
     if (!isSuperAdmin) {
-      baseQuery.assignedManager = user.id;
+      baseQuery.$or = [
+        { assignedManager: user.id },
+        { assignedManager: null },
+        { assignedManager: { $exists: false } },
+      ];
     }
 
     const [overdue, dueToday, upcoming] = await Promise.all([

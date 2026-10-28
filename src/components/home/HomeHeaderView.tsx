@@ -11,6 +11,7 @@ import { ProductSearch } from "./ProductSearch";
 
 type Props = {
   userName: string | null;
+  userRole?: string | null;
   /** The header design has no cart link; one appears only while the cart has items. */
   cartCount?: number;
   products: { slug: string; name: string; summary?: string }[];
@@ -23,7 +24,7 @@ const LINKS = [
 ] as const;
 
 /** Home-page header: logo · product search · Our Product / Contact Us / About Us · Login. */
-export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
+export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: Props) {
   const pathname = usePathname();
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const open = openedOn === pathname;
@@ -45,7 +46,21 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const account = userName ? { href: "/account", label: userName.split(" ")[0] || "Account" } : { href: "/login", label: "Login" };
+  const dashboardHref =
+    userRole === "manager"
+      ? "/manager/dashboard"
+      : userRole === "super_admin" || userRole === "admin"
+      ? "/admin/dashboard"
+      : "/account";
+
+  const dashboardLabel =
+    userRole === "manager"
+      ? "Manager Portal"
+      : userRole === "super_admin" || userRole === "admin"
+      ? "Admin Dashboard"
+      : "My Account";
+
+  const dashboardTitle = `${dashboardLabel} (${userName})`;
 
   return (
     <header
@@ -107,9 +122,9 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
           {/* Profile or Login Button - Always visible */}
           {userName ? (
             <Link
-              href="/account"
+              href={dashboardHref}
               className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3.5 shadow-xs transition hover:border-navy/40 hover:shadow-sm"
-              title={`My Account (${userName})`}
+              title={dashboardTitle}
             >
               <div className="flex size-8 items-center justify-center rounded-full bg-navy font-bold text-xs text-white uppercase shadow-xs">
                 {userName.trim().charAt(0)}
@@ -165,13 +180,13 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
           </ul>
           {userName ? (
             <Link
-              href="/account"
+              href={dashboardHref}
               className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-navy py-2.5 font-bold text-white shadow-xs"
             >
               <div className="flex size-7 items-center justify-center rounded-full bg-white/20 font-bold text-xs uppercase">
                 {userName.trim().charAt(0)}
               </div>
-              <span>My Account ({userName.split(" ")[0]})</span>
+              <span>{dashboardLabel} ({userName.split(" ")[0]})</span>
             </Link>
           ) : (
             <Link href="/login" className={buttonClasses({ size: "sm", className: "mt-3 w-full" })}>

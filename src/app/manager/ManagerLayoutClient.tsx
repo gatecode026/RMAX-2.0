@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Target,
   CalendarCheck,
+  FileText,
   User,
   LogOut,
   Bell,
@@ -29,12 +30,14 @@ interface ManagerLayoutClientProps {
     email?: string | null;
     role?: string | null;
     department?: string | null;
+    phone?: string | null;
   };
 }
 
 const MANAGER_NAV = [
   { label: "Dashboard", href: "/manager/dashboard", icon: LayoutDashboard },
   { label: "My Leads", href: "/manager/leads", icon: Target },
+  { label: "Quotations", href: "/manager/quotations", icon: FileText },
   { label: "Follow-Ups", href: "/manager/follow-ups", icon: CalendarCheck },
   { label: "My Profile", href: "/manager/profile", icon: User },
 ];

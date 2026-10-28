@@ -33,11 +33,17 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   };
 }
 
-/** For account pages: redirect to /login when not signed in. */
+/** For account pages: redirect to /login when not signed in, or redirect staff to their proper dashboard. */
 export async function requireUserId(next?: string): Promise<string> {
-  const id = await getSessionUserId();
-  if (!id) redirect(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
-  return id;
+  const user = await getSessionUser();
+  if (!user) redirect(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
+  if (user.role === "manager") {
+    redirect("/manager/dashboard");
+  }
+  if (user.role === "super_admin" || user.role === "admin") {
+    redirect("/admin/dashboard");
+  }
+  return user.id;
 }
 
 /**

@@ -48,11 +48,28 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
         }
       };
       syncVal();
+      const t1 = setTimeout(syncVal, 50);
+      const t2 = setTimeout(syncVal, 200);
+      const t3 = setTimeout(syncVal, 500);
       const node = inputRef.current;
       if (node) {
         node.addEventListener("animationstart", syncVal);
-        return () => node.removeEventListener("animationstart", syncVal);
+        node.addEventListener("change", syncVal);
+        node.addEventListener("input", syncVal);
+        return () => {
+          clearTimeout(t1);
+          clearTimeout(t2);
+          clearTimeout(t3);
+          node.removeEventListener("animationstart", syncVal);
+          node.removeEventListener("change", syncVal);
+          node.removeEventListener("input", syncVal);
+        };
       }
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
     }, [internalValue]);
 
     const setMergedRef = useCallback(
@@ -85,7 +102,7 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             defaultValue={defaultValue}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errId : undefined}
-            placeholder={effectivePlaceholder}
+            placeholder={effectivePlaceholder || " "}
             onFocus={(e) => {
               setIsFocused(true);
               setInternalValue(e.target.value || "");
@@ -107,7 +124,7 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             className={cn(
               "peer h-14 w-full rounded-input border bg-card px-4 text-body text-charcoal outline-none transition-all duration-200",
               "disabled:cursor-not-allowed disabled:bg-soft/60 disabled:text-muted",
-              !isFocused && "placeholder:text-transparent",
+              !isFocused && !hasContent && "placeholder:text-transparent",
               isFocused && "placeholder:text-muted/60",
               getBorderClasses(error),
             )}
@@ -117,15 +134,21 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             htmlFor={id}
             className={cn(
               "pointer-events-none absolute select-none whitespace-nowrap z-10 transition-all duration-200 ease-out",
-              // Active state: float when focused or has content, else rest in placeholder position
-              isFloated
-                ? "top-0 -translate-y-1/2 left-3 px-2 text-xs font-bold leading-none bg-card"
-                : "top-1/2 -translate-y-1/2 left-4 px-0 text-body font-normal bg-transparent",
+              // Default position: centered inside when empty & not focused
+              "top-1/2 -translate-y-1/2 left-4 px-0 text-body font-normal text-muted bg-transparent",
+              // Instant CSS floating triggers: when focused, filled, or autofilled, float to border!
+              "peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:left-3 peer-focus:px-1.5 peer-focus:text-xs peer-focus:font-bold peer-focus:leading-none peer-focus:bg-card peer-focus:text-navy",
+              "peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:px-1.5 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:leading-none peer-[:not(:placeholder-shown)]:bg-card",
+              "peer-autofill:top-0 peer-autofill:-translate-y-1/2 peer-autofill:left-3 peer-autofill:px-1.5 peer-autofill:text-xs peer-autofill:font-bold peer-autofill:leading-none peer-autofill:bg-card",
+              // React state trigger
+              isFloated && "top-0 -translate-y-1/2 left-3 px-1.5 text-xs font-bold leading-none bg-card",
               error
-                ? "text-danger"
+                ? "text-danger peer-focus:text-danger"
                 : isFocused
                   ? "text-navy"
-                  : "text-muted",
+                  : isFloated
+                    ? "text-navy"
+                    : "text-muted peer-focus:text-navy",
             )}
           >
             {label}

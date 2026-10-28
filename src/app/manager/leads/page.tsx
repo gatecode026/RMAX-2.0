@@ -294,14 +294,26 @@ export default function ManagerLeadsPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 pr-5 text-right">
-                        <Link
-                          href={`/manager/leads/${lead._id}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-[#10469B] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0B2450] shadow-xs transition"
-                        >
-                          Manage
-                          <ChevronRight className="size-3" />
-                        </Link>
+                      <td className="py-3.5 pr-5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {lead.phone && (
+                            <a
+                              href={`tel:${lead.phone}`}
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 shadow-xs transition"
+                              title={`Direct Call: ${lead.phone}`}
+                            >
+                              <Phone className="size-3" />
+                              Call
+                            </a>
+                          )}
+                          <Link
+                            href={`/manager/leads/${lead._id}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-[#10469B] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#0B2450] shadow-xs transition"
+                          >
+                            Manage
+                            <ChevronRight className="size-3" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );

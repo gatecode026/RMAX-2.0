@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageHero } from "@/components/layout/PageHero";
 import { AccountShell } from "@/components/sections/AccountShell";
 import { AddressCard } from "@/components/sections/AddressCard";
@@ -37,6 +38,8 @@ async function Overview() {
   await requireUserId("/account");
   const [user, quotes] = await Promise.all([getCurrentUserProfile(), listOwnedQuotes()]);
   if (!user) return null;
+  if (user.role === "manager") redirect("/manager/dashboard");
+  if (user.role === "super_admin" || user.role === "admin") redirect("/admin/dashboard");
   const ship = user.shippingAddress;
   const bill = user.billingAddress;
 

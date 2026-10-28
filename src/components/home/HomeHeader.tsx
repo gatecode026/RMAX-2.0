@@ -14,6 +14,7 @@ async function HomeHeaderDynamic() {
   return (
     <HomeHeaderView
       userName={session?.user?.name ?? null}
+      userRole={session?.user?.role ?? null}
       cartCount={cart.count}
       products={products.map((p) => ({ slug: p.slug, name: p.name, summary: p.summary }))}
     />

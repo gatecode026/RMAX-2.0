@@ -84,14 +84,25 @@ function AdminLoginForm() {
         return;
       }
 
-      // Successful login -> Redirect to admin or manager dashboard
-      let destination = nextUrl;
-      if (destination === "/login" || destination === "/admin/login") {
-        destination = res.role === "manager" ? "/manager/dashboard" : "/admin/dashboard";
-      } else if (res.role === "manager" && destination === "/admin/dashboard") {
-        destination = "/manager/dashboard";
+      // Successful login -> Direct routing based on exact role
+      if (res.role === "manager") {
+        router.push("/manager/dashboard");
+        router.refresh();
+        return;
       }
-      router.push(destination);
+      if (res.role === "super_admin" || res.role === "admin") {
+        const dest =
+          nextUrl &&
+          !nextUrl.startsWith("/account") &&
+          nextUrl !== "/admin/login" &&
+          nextUrl !== "/login"
+            ? nextUrl
+            : "/admin/dashboard";
+        router.push(dest);
+        router.refresh();
+        return;
+      }
+      router.push("/account");
       router.refresh();
     } catch {
       setFormError("Unable to connect to authentication server. Please check your connection.");
@@ -171,12 +182,12 @@ function AdminLoginForm() {
               Healthier Communities.
             </h1>
 
-            <p className="text-blue-100/90 text-sm leading-relaxed max-w-[420px] mb-7 font-normal">
+            <p className="text-blue-100/90 text-sm leading-relaxed max-w-[340px] mb-7 font-normal">
               RMAX provides advanced sanitary napkin incinerators and hygiene solutions for schools, colleges, hospitals and institutions across India.
             </p>
 
             {/* 3 Key Benefits */}
-            <div className="flex flex-col gap-4 relative z-10 max-w-[340px]">
+            <div className="flex flex-col gap-4 relative z-10 max-w-[320px]">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 backdrop-blur-xs shadow-xs">
                   <ShieldCheck className="size-5 stroke-[2.2]" />
@@ -228,16 +239,23 @@ function AdminLoginForm() {
             </div>
           </div>
 
-          {/* Machine on Pedestal (Right Bottom) */}
-          <div className="absolute right-0 bottom-0 w-[46%] max-w-[270px] pointer-events-none z-5 flex items-end justify-end" aria-hidden="true">
+          {/* Machine Showcase (Right Bottom) */}
+          <div className="absolute right-2 bottom-3 w-[44%] max-w-[250px] pointer-events-none z-5 flex flex-col items-center justify-end" aria-hidden="true">
+            {/* Ambient Cyan Glow */}
+            <div className="absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.30)_0%,transparent_75%)] blur-xl pointer-events-none" />
             <Image
-              src="/images/auth/login-pedestal-product.png"
-              alt="RMAX Commercial Incinerator on pedestal"
-              width={260}
-              height={340}
-              className="w-full h-auto object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.35)]"
+              src="/images/products/promax-transparent.png"
+              alt="RMAX Pro Max Commercial Incinerator"
+              width={240}
+              height={300}
+              className="relative z-10 w-full h-auto object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.45)]"
               priority
             />
+            {/* Glass badge tag */}
+            <div className="relative z-10 -mt-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 shadow-lg flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-bold text-white tracking-wider uppercase">Auto-Cut Ceramic</span>
+            </div>
           </div>
         </section>
 

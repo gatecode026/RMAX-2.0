@@ -23,56 +23,74 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "25", 10)), 100);
     const skip = (page - 1) * limit;
 
-    const query: Record<string, unknown> = { isArchived: false };
+    const andConditions: any[] = [{ isArchived: false }];
 
-    // Manager role is strictly sandboxed to their own assigned leads
+    // Manager sees both their assigned leads and live unassigned website leads
     if (!isSuperAdmin) {
-      query.assignedManager = user.id;
+      andConditions.push({
+        $or: [
+          { assignedManager: user.id },
+          { assignedManager: null },
+          { assignedManager: { $exists: false } },
+        ],
+      });
     } else {
       // Super Admin filters
       const managerId = searchParams.get("managerId");
       if (managerId === "unassigned") {
-        query.assignedManager = null;
+        andConditions.push({ assignedManager: null });
       } else if (managerId && managerId !== "all") {
-        query.assignedManager = managerId;
+        andConditions.push({ assignedManager: managerId });
       }
     }
 
     // Common filters
     const status = searchParams.get("status");
     if (status && status !== "all") {
-      query.status = status;
+      andConditions.push({ status });
     }
 
     const priority = searchParams.get("priority");
     if (priority && priority !== "all") {
-      query.priority = priority;
+      andConditions.push({ priority });
     }
 
     const source = searchParams.get("source");
     if (source && source !== "all") {
-      query.source = source;
+      andConditions.push({ source });
     }
 
     const search = searchParams.get("search");
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), "i");
-      query.$or = [
-        { name: regex },
-        { institution: regex },
-        { email: regex },
-        { phone: regex },
-        { leadNumber: regex },
-        { city: regex },
-      ];
+      andConditions.push({
+        $or: [
+          { name: regex },
+          { institution: regex },
+          { email: regex },
+          { phone: regex },
+          { leadNumber: regex },
+          { city: regex },
+        ],
+      });
     }
+
+    const query = andConditions.length > 1 ? { $and: andConditions } : andConditions[0] || {};
+    const managerMatch = {
+      isArchived: false,
+      $or: [
+        { assignedManager: user.id },
+        { assignedManager: null },
+        { assignedManager: { $exists: false } },
+      ],
+    };
 
     const [leads, total, counts] = await Promise.all([
       Lead.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       Lead.countDocuments(query),
       // Aggregate status counts for dashboard stats
       Lead.aggregate([
-        { $match: isSuperAdmin ? { isArchived: false } : { assignedManager: user.id, isArchived: false } },
+        { $match: isSuperAdmin ? { isArchived: false } : managerMatch },
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
     ]);
