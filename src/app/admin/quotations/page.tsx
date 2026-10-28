@@ -61,6 +61,7 @@ export default function AdminQuotationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Detail / Edit modal
   const [selectedQuote, setSelectedQuote] = useState<QuoteItem | null>(null);
@@ -88,6 +89,7 @@ export default function AdminQuotationsPage() {
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
@@ -97,9 +99,12 @@ export default function AdminQuotationsPage() {
       if (res.ok) {
         const data = await res.json();
         setQuotes(data.quotes || []);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setErrorMessage(errData.error || "Failed to load quotations. Please ensure you are logged in as an Administrator.");
       }
     } catch {
-      // Offline/error
+      setErrorMessage("Network error: Could not reach the server to load quotations.");
     } finally {
       setLoading(false);
     }
@@ -316,6 +321,21 @@ export default function AdminQuotationsPage() {
           </div>
         }
       />
+
+      {errorMessage && (
+        <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="size-5 text-amber-600 shrink-0" />
+            <p className="text-sm font-medium text-amber-900">{errorMessage}</p>
+          </div>
+          <a
+            href="/admin/login"
+            className="shrink-0 rounded-lg bg-[#10469B] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#0B2450] transition"
+          >
+            Log In as Admin
+          </a>
+        </div>
+      )}
 
       {/* Filter and Search Bar matching Website Quote Style */}
       <div className="flex flex-col gap-4 rounded-2xl border border-[#E5EBF4] bg-white p-4 shadow-xs">

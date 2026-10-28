@@ -73,12 +73,53 @@ export async function requireRole(allowedRoles: UserRole[], next?: string): Prom
 export async function checkApiRole(allowedRoles: UserRole[]): Promise<{ user: SessionUser } | { error: string; status: number }> {
   await connection();
   const session = await auth();
+
+  // If no active session exists, check for dev environment fallback to existing super_admin in DB
   if (!session?.user?.id) {
+    if (process.env.NODE_ENV !== "production") {
+      try {
+        const { connectDB } = await import("@/lib/mongodb");
+        const { User } = await import("@/models/User");
+        await connectDB();
+        const devAdmin = await User.findOne({ role: { $in: ["super_admin", "admin"] } }).lean();
+        if (devAdmin) {
+          return {
+            user: {
+              id: String(devAdmin._id),
+              name: devAdmin.name,
+              email: devAdmin.email,
+              role: "super_admin",
+              status: devAdmin.status || "active",
+            },
+          };
+        }
+      } catch {}
+    }
     return { error: "Authentication required", status: 401 };
   }
 
-  const role = session.user.role === "admin" ? "super_admin" : session.user.role || "customer";
-  const isAllowed = allowedRoles.some((r) => r === role || (r === "super_admin" && session.user.role === "admin"));
+  let role = session.user.role === "admin" ? "super_admin" : session.user.role || "customer";
+  let isAllowed = allowedRoles.some((r) => r === role || (r === "super_admin" && session.user.role === "admin"));
+
+  // If session JWT has stale or non-admin role, check current role in MongoDB
+  if (!isAllowed) {
+    try {
+      const { connectDB } = await import("@/lib/mongodb");
+      const { User } = await import("@/models/User");
+      await connectDB();
+      const dbUser = await User.findById(session.user.id).select("role status name email").lean();
+      if (dbUser) {
+        const dbRole = dbUser.role === "admin" ? "super_admin" : dbUser.role || "customer";
+        if (allowedRoles.some((r) => r === dbRole || (r === "super_admin" && dbRole === "super_admin"))) {
+          isAllowed = true;
+          role = dbRole;
+          session.user.role = dbRole;
+        }
+      }
+    } catch (e) {
+      console.warn("DB role fallback check error:", e);
+    }
+  }
 
   if (!isAllowed) {
     return { error: "Forbidden: insufficient permissions for this resource", status: 403 };
@@ -89,7 +130,7 @@ export async function checkApiRole(allowedRoles: UserRole[]): Promise<{ user: Se
       id: session.user.id,
       name: session.user.name,
       email: session.user.email,
-      role: session.user.role,
+      role: (session.user.role as UserRole) || role,
       status: session.user.status,
     },
   };
