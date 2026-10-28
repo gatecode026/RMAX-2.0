@@ -61,6 +61,19 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, closeModal]);
 
+  // Lock body & html scroll when modal is open to prevent background scrolling
+  useEffect(() => {
+    if (!isOpen) return;
+    const origBodyOverflow = document.body.style.overflow;
+    const origHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = origBodyOverflow;
+      document.documentElement.style.overflow = origHtmlOverflow;
+    };
+  }, [isOpen]);
+
   return (
     <AuthModalContext.Provider value={{ isOpen, tab, openModal, closeModal, setTab }}>
       <Suspense fallback={null}>

@@ -42,13 +42,16 @@ function CustomerAuthModalContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Lock body scroll when modal is open to prevent background scrolling & extra scrollbars
+  // Lock body & html scroll when modal is open to prevent background scrolling
   React.useEffect(() => {
     if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
+      const origBodyOverflow = document.body.style.overflow;
+      const origHtmlOverflow = document.documentElement.style.overflow;
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
       return () => {
-        document.body.style.overflow = originalOverflow;
+        document.body.style.overflow = origBodyOverflow;
+        document.documentElement.style.overflow = origHtmlOverflow;
       };
     }
   }, [isOpen]);
@@ -259,18 +262,7 @@ function CustomerAuthModalContent() {
             {loginError && (
               <div className="rounded-xl bg-red-50 border border-red-200 p-3.5 flex items-start gap-2.5 text-red-700 animate-in fade-in duration-150">
                 <AlertCircle className="size-4.5 text-red-600 shrink-0 mt-0.5" />
-                <div className="text-xs font-semibold leading-relaxed">
-                  <p>{loginError}</p>
-                  {loginError.includes("Staff") && (
-                    <Link
-                      href="/admin/login"
-                      onClick={closeModal}
-                      className="inline-flex items-center gap-1 mt-1 text-xs font-bold text-[#104BA8] underline"
-                    >
-                      Go to Staff / Manager Login <ArrowRight className="size-3" />
-                    </Link>
-                  )}
-                </div>
+                <p className="text-xs font-semibold leading-relaxed">{loginError}</p>
               </div>
             )}
 
@@ -374,17 +366,26 @@ function CustomerAuthModalContent() {
               )}
             </button>
 
-            {/* Bottom Staff Portal Prompt */}
-            <div className="mt-4 pt-4 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-500">
-                Are you an administrative or operations manager?{" "}
+            {/* Legal Agreement Notice */}
+            <div className="mt-4 pt-3.5 border-t border-slate-100 text-center">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                By signing in or submitting, you agree to RMAX&apos;s{" "}
                 <Link
-                  href="/admin/login"
+                  href="/terms-and-conditions"
                   onClick={closeModal}
-                  className="font-bold text-[#10469B] hover:underline"
+                  className="font-semibold text-[#10469B] hover:underline"
                 >
-                  Staff Login Portal
+                  Terms &amp; Conditions
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy-policy"
+                  onClick={closeModal}
+                  className="font-semibold text-[#10469B] hover:underline"
+                >
+                  Privacy Policy
                 </Link>
+                .
               </p>
             </div>
           </form>

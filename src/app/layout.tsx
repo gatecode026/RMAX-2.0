@@ -40,6 +40,7 @@ export const metadata: Metadata = {
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import { CustomerAuthModal } from "@/components/auth/CustomerAuthModal";
+import { GlobalModalScrollLock } from "@/components/ui/GlobalModalScrollLock";
 
 export const viewport: Viewport = { themeColor: "#fbf9f5" };
 
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}>
       <body className="flex min-h-dvh flex-col">
+        <GlobalModalScrollLock />
         <ToastProvider>
           <AuthModalProvider>
             {children}

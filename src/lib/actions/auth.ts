@@ -50,7 +50,7 @@ export async function loginAction(
       message:
         portal === "admin"
           ? "No administrative staff account found with this email."
-          : "No account found with this email address. Please check your spelling or register.",
+          : "User not found or invalid credentials.",
     };
   }
 
@@ -69,7 +69,7 @@ export async function loginAction(
   if (portal === "customer" && isStaff) {
     return {
       ok: false,
-      message: "This account is for staff/management. Please log in using the Staff Dashboard Login.",
+      message: "User not found or invalid credentials.",
     };
   }
 
@@ -85,7 +85,10 @@ export async function loginAction(
   if (!user.passwordHash) {
     return {
       ok: false,
-      message: "This account has no password configured. Please use password recovery.",
+      message:
+        portal === "customer"
+          ? "User not found or invalid credentials."
+          : "This account has no password configured. Please use password recovery.",
     };
   }
 
@@ -93,7 +96,10 @@ export async function loginAction(
   if (!isPasswordValid) {
     return {
       ok: false,
-      message: "Incorrect password. Please verify your credentials or use Forgot Password.",
+      message:
+        portal === "customer"
+          ? "User not found or invalid credentials."
+          : "Incorrect password. Please verify your credentials or use Forgot Password.",
     };
   }
 
