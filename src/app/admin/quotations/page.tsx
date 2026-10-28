@@ -1,28 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import { useToast } from "@/components/ui/Toast";
 import {
   Search,
   Plus,
   RefreshCw,
   Download,
-  Calendar,
-  Building2,
-  Phone,
-  Mail,
   CheckCircle2,
   Clock,
-  FileText,
   X,
   AlertCircle,
   Eye,
   Trash2,
   Save,
-  ChevronRight,
-  ShieldCheck,
   Send,
   XCircle,
+  Users,
+  CheckSquare,
+  Square,
+  AlertTriangle,
 } from "lucide-react";
 
 interface QuoteItem {
@@ -57,11 +55,28 @@ const TABS = [
 ];
 
 export default function AdminQuotationsPage() {
+  const toast = useToast();
+
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Multi-selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // SweetAlert modal state
+  const [sweetAlert, setSweetAlert] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    detail?: string;
+    confirmText?: string;
+    confirmType?: "danger" | "primary";
+    actionLoading?: boolean;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
 
   // Detail / Edit modal
   const [selectedQuote, setSelectedQuote] = useState<QuoteItem | null>(null);
@@ -101,7 +116,9 @@ export default function AdminQuotationsPage() {
         setQuotes(data.quotes || []);
       } else {
         const errData = await res.json().catch(() => ({}));
-        setErrorMessage(errData.error || "Failed to load quotations. Please ensure you are logged in as an Administrator.");
+        setErrorMessage(
+          errData.error || "Failed to load quotations. Please ensure you are logged in as an Administrator."
+        );
       }
     } catch {
       setErrorMessage("Network error: Could not reach the server to load quotations.");
@@ -116,6 +133,30 @@ export default function AdminQuotationsPage() {
     }, 250);
     return () => clearTimeout(timer);
   }, [fetchQuotes]);
+
+  // Clean up selection when quotes change
+  useEffect(() => {
+    setSelectedIds((prev) => prev.filter((id) => quotes.some((q) => q._id === id)));
+  }, [quotes]);
+
+  const allVisibleSelected = useMemo(() => {
+    if (quotes.length === 0) return false;
+    return quotes.every((q) => selectedIds.includes(q._id));
+  }, [quotes, selectedIds]);
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(quotes.map((q) => q._id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const handleOpenDetail = (quote: QuoteItem) => {
     setSelectedQuote(quote);
@@ -142,28 +183,139 @@ export default function AdminQuotationsPage() {
         const data = await res.json();
         setSelectedQuote(data.quote);
         fetchQuotes();
-        alert("Quotation updated and saved to database!");
+        toast.success("Quotation Saved", "Quotation updated and saved to database!");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error("Save Failed", err.error || "Could not update quotation.");
       }
     } catch {
-      alert("Failed to save changes.");
+      toast.error("Network Error", "Failed to save quotation changes.");
     } finally {
       setSavingAction(false);
     }
   };
 
-  const handleDelete = async (quote: QuoteItem) => {
-    if (!confirm(`Are you sure you want to delete quotation for ${quote.organizationName}?`)) return;
-    try {
-      const res = await fetch(`/api/admin/quotations/${quote._id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        if (selectedQuote?._id === quote._id) setSelectedQuote(null);
-        fetchQuotes();
-      }
-    } catch {
-      alert("Failed to delete quotation.");
-    }
+  // 1. Single quotation delete with SweetAlert
+  const triggerDeleteSingle = (quote: QuoteItem) => {
+    const quoteCode = quote.quoteNumber || `QT-${quote._id.slice(-4).toUpperCase()}`;
+    setSweetAlert({
+      open: true,
+      title: "Delete Quotation?",
+      message: `Are you sure you want to delete quotation ${quoteCode} for "${quote.organizationName}"?`,
+      detail: "This action cannot be undone and will permanently remove this record.",
+      confirmText: "Yes, Delete It",
+      confirmType: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/admin/quotations/${quote._id}`, {
+            method: "DELETE",
+          });
+          if (res.ok) {
+            toast.success("Deleted Successfully", `Quotation ${quoteCode} has been removed.`);
+            if (selectedQuote?._id === quote._id) setSelectedQuote(null);
+            setSelectedIds((prev) => prev.filter((id) => id !== quote._id));
+            fetchQuotes();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            toast.error("Delete Failed", err.error || "Could not delete quotation.");
+          }
+        } catch {
+          toast.error("Error", "Network error while deleting quotation.");
+        }
+      },
+    });
+  };
+
+  // 2. Multiple / Bulk Delete with SweetAlert
+  const triggerDeleteMultiple = () => {
+    if (selectedIds.length === 0) return;
+    const count = selectedIds.length;
+    setSweetAlert({
+      open: true,
+      title: `Delete ${count} Quotation${count > 1 ? "s" : ""}?`,
+      message: `You are about to permanently delete ${count} selected quotation request${
+        count > 1 ? "s" : ""
+      } from the database.`,
+      detail: "All selected quotes and their negotiation histories will be removed.",
+      confirmText: `Yes, Delete All (${count})`,
+      confirmType: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch("/api/admin/quotations", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: selectedIds }),
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            toast.success(
+              "Bulk Deletion Complete",
+              data.message || `Successfully removed ${count} quotation(s).`
+            );
+            setSelectedIds([]);
+            if (selectedQuote && selectedIds.includes(selectedQuote._id)) {
+              setSelectedQuote(null);
+            }
+            fetchQuotes();
+          } else {
+            toast.error("Bulk Delete Failed", data.error || "Could not complete bulk deletion.");
+          }
+        } catch {
+          toast.error("Error", "Network error during bulk deletion.");
+        }
+      },
+    });
+  };
+
+  // 3. Delete all quotations of a specific user with SweetAlert
+  const triggerDeleteUserQuotes = (email: string, contactPerson?: string) => {
+    if (!email) return;
+    const userQuotesCount = quotes.filter(
+      (q) => q.email.toLowerCase().trim() === email.toLowerCase().trim()
+    ).length;
+
+    setSweetAlert({
+      open: true,
+      title: "Delete All Quotes for this User?",
+      message: `Are you sure you want to delete ALL quotation requests submitted by "${
+        contactPerson || email
+      }" (${email})?`,
+      detail: `This will remove all current and historical quotation records associated with ${email} (${
+        userQuotesCount > 0 ? `${userQuotesCount} visible on page` : "all user quotes"
+      }).`,
+      confirmText: `Yes, Delete All for ${email}`,
+      confirmType: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch("/api/admin/quotations", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userEmail: email }),
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            toast.success(
+              "User Quotes Deleted",
+              data.message || `Deleted all quotations for ${email}.`
+            );
+            if (
+              selectedQuote &&
+              selectedQuote.email.toLowerCase().trim() === email.toLowerCase().trim()
+            ) {
+              setSelectedQuote(null);
+            }
+            setSelectedIds([]);
+            fetchQuotes();
+          } else {
+            toast.error("Deletion Failed", data.error || "Could not delete user quotations.");
+          }
+        } catch {
+          toast.error("Error", "Network error while deleting user quotations.");
+        }
+      },
+    });
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -193,10 +345,14 @@ export default function AdminQuotationsPage() {
           quotedAmount: "",
           notes: "",
         });
+        toast.success("Quotation Created", "New quotation request saved to database!");
         fetchQuotes();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error("Creation Failed", err.error || "Could not create quotation.");
       }
     } catch {
-      alert("Failed to create quotation.");
+      toast.error("Network Error", "Failed to create quotation.");
     } finally {
       setSavingAction(false);
     }
@@ -242,6 +398,7 @@ export default function AdminQuotationsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.info("Export Started", "Downloading quotations as CSV.");
   };
 
   const getStatusBadge = (status: QuoteItem["status"]) => {
@@ -384,15 +541,60 @@ export default function AdminQuotationsPage() {
         </div>
       </div>
 
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="sticky top-4 z-30 flex items-center justify-between gap-4 rounded-2xl border border-rose-200 bg-rose-50/95 px-5 py-3 shadow-lg backdrop-blur-md animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-7 items-center justify-center rounded-full bg-rose-600 font-mono text-xs font-bold text-white">
+              {selectedIds.length}
+            </span>
+            <span className="text-xs font-bold text-rose-950">
+              Quotation{selectedIds.length > 1 ? "s" : ""} selected for bulk action
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 transition"
+            >
+              Clear Selection
+            </button>
+            <button
+              onClick={triggerDeleteMultiple}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700 transition"
+            >
+              <Trash2 className="size-3.5" />
+              Delete Selected ({selectedIds.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Quotations Table */}
       <div className="overflow-hidden rounded-2xl border border-[#E5EBF4] bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="border-b border-[#E5EBF4] bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <tr>
-                <th className="py-3.5 pl-5 pr-3">Quote # & Date</th>
+                {/* Select All Checkbox */}
+                <th className="py-3.5 pl-4 pr-2 w-10 text-center">
+                  <button
+                    onClick={toggleSelectAll}
+                    className="text-slate-400 hover:text-slate-700 transition"
+                    title={allVisibleSelected ? "Deselect All" : "Select All"}
+                    aria-label="Toggle select all"
+                  >
+                    {allVisibleSelected && quotes.length > 0 ? (
+                      <CheckSquare className="size-4 text-[#10469B]" />
+                    ) : (
+                      <Square className="size-4" />
+                    )}
+                  </button>
+                </th>
+                <th className="py-3.5 pl-2 pr-3">Quote # & Date</th>
                 <th className="py-3.5 px-3">Organization</th>
-                <th className="py-3.5 px-3">Contact Person</th>
+                <th className="py-3.5 px-3">Contact Person & User</th>
                 <th className="py-3.5 px-3">Product Model</th>
                 <th className="py-3.5 px-3">Quantity</th>
                 <th className="py-3.5 px-3">Quoted Amount</th>
@@ -403,25 +605,46 @@ export default function AdminQuotationsPage() {
             <tbody className="divide-y divide-[#E5EBF4]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     <RefreshCw className="mx-auto size-6 animate-spin text-[#10469B] mb-2" />
                     Loading quotations from database...
                   </td>
                 </tr>
               ) : quotes.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     No quotations found in database matching this criteria.
                   </td>
                 </tr>
               ) : (
                 quotes.map((quote) => {
                   const quoteId = quote.quoteNumber || `QT-${quote._id.slice(-4).toUpperCase()}`;
+                  const isSelected = selectedIds.includes(quote._id);
 
                   return (
-                    <tr key={quote._id} className="hover:bg-[#F4F7FC]/50 transition-colors">
+                    <tr
+                      key={quote._id}
+                      className={`transition-colors ${
+                        isSelected ? "bg-blue-50/60" : "hover:bg-[#F4F7FC]/50"
+                      }`}
+                    >
+                      {/* Row Checkbox */}
+                      <td className="py-3.5 pl-4 pr-2 text-center">
+                        <button
+                          onClick={() => toggleSelectOne(quote._id)}
+                          className="text-slate-400 hover:text-[#10469B] transition"
+                          aria-label={`Select quotation ${quoteId}`}
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="size-4 text-[#10469B]" />
+                          ) : (
+                            <Square className="size-4" />
+                          )}
+                        </button>
+                      </td>
+
                       {/* Quote # + Date */}
-                      <td className="py-3.5 pl-5 pr-3">
+                      <td className="py-3.5 pl-2 pr-3">
                         <div className="flex flex-col">
                           <span className="font-mono text-[11px] font-bold text-[#10469B]">
                             {quoteId}
@@ -448,14 +671,16 @@ export default function AdminQuotationsPage() {
                         </div>
                       </td>
 
-                      {/* Contact Person */}
+                      {/* Contact Person & Email */}
                       <td className="py-3.5 px-3">
                         <div>
                           <p className="font-medium text-slate-800">{quote.contactPerson}</p>
                           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
                             {quote.phone && <span>{quote.phone}</span>}
                             <span>•</span>
-                            <span className="truncate max-w-[120px]">{quote.email}</span>
+                            <span className="truncate max-w-[140px]" title={quote.email}>
+                              {quote.email}
+                            </span>
                           </div>
                         </div>
                       </td>
@@ -488,18 +713,31 @@ export default function AdminQuotationsPage() {
 
                       {/* Actions */}
                       <td className="py-3.5 pr-5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Review Detail */}
                           <button
                             onClick={() => handleOpenDetail(quote)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-[#10469B]/10 px-2.5 py-1 text-[11px] font-bold text-[#10469B] hover:bg-[#10469B]/20 transition"
+                            className="inline-flex items-center gap-1 rounded-lg bg-[#10469B]/10 px-2 py-1 text-[11px] font-bold text-[#10469B] hover:bg-[#10469B]/20 transition"
+                            title="Review and Edit Quotation"
                           >
                             <Eye className="size-3" />
                             Review
                           </button>
+
+                          {/* Delete All Quotes by this User */}
                           <button
-                            onClick={() => handleDelete(quote)}
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
-                            title="Delete Quotation"
+                            onClick={() => triggerDeleteUserQuotes(quote.email, quote.contactPerson)}
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-amber-50 hover:text-amber-700 transition"
+                            title={`Delete ALL quotations from user: ${quote.email}`}
+                          >
+                            <Users className="size-3.5" />
+                          </button>
+
+                          {/* Delete This Single Quote */}
+                          <button
+                            onClick={() => triggerDeleteSingle(quote)}
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                            title="Delete this quotation"
                           >
                             <Trash2 className="size-3.5" />
                           </button>
@@ -513,6 +751,66 @@ export default function AdminQuotationsPage() {
           </table>
         </div>
       </div>
+
+      {/* SweetAlert Custom Modal */}
+      {sweetAlert && sweetAlert.open && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
+            {/* Animated Warning Icon */}
+            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-rose-100 text-rose-600 shadow-inner">
+              <AlertTriangle className="size-8 stroke-[2.2] animate-bounce" />
+            </div>
+
+            <div className="mt-4 text-center">
+              <h3 className="font-jakarta text-lg font-extrabold text-slate-900">
+                {sweetAlert.title}
+              </h3>
+              <p className="mt-2 text-xs text-slate-600 leading-relaxed font-medium">
+                {sweetAlert.message}
+              </p>
+              {sweetAlert.detail && (
+                <p className="mt-2 rounded-xl bg-slate-50 p-2.5 text-[11px] text-slate-500 border border-slate-100 leading-normal">
+                  {sweetAlert.detail}
+                </p>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setSweetAlert(null)}
+                disabled={sweetAlert.actionLoading}
+                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={sweetAlert.actionLoading}
+                onClick={async () => {
+                  setSweetAlert((prev) => (prev ? { ...prev, actionLoading: true } : null));
+                  try {
+                    await sweetAlert.onConfirm();
+                  } finally {
+                    setSweetAlert(null);
+                  }
+                }}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md transition disabled:opacity-50 ${
+                  sweetAlert.confirmType === "danger"
+                    ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20"
+                    : "bg-[#10469B] hover:bg-[#0B2450] shadow-blue-600/20"
+                }`}
+              >
+                {sweetAlert.actionLoading && (
+                  <RefreshCw className="size-3.5 animate-spin text-white" />
+                )}
+                {sweetAlert.confirmText || "Yes, Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Review & Edit Quotation Modal */}
       {selectedQuote && (
@@ -632,20 +930,32 @@ export default function AdminQuotationsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => handleDelete(selectedQuote)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:underline"
-                >
-                  <Trash2 className="size-3.5" /> Delete Quotation
-                </button>
+              {/* Actions Footer */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-slate-100">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => triggerDeleteSingle(selectedQuote)}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                  >
+                    <Trash2 className="size-3.5" /> Delete Quotation
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      triggerDeleteUserQuotes(selectedQuote.email, selectedQuote.contactPerson)
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 transition"
+                  >
+                    <Users className="size-3.5" /> Delete All Quotes from this User
+                  </button>
+                </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2 justify-end">
                   <button
                     type="button"
                     onClick={() => setSelectedQuote(null)}
-                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
                   >
                     Cancel
                   </button>
@@ -834,7 +1144,7 @@ export default function AdminQuotationsPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>

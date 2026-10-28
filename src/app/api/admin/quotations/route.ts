@@ -116,3 +116,60 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message || "Failed to create quotation" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await checkApiRole(["super_admin", "admin"]);
+    if ("error" in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { user } = authResult;
+
+    await connectDB();
+    const body = await req.json();
+    const { ids, userEmail, userId } = body;
+
+    let deleteFilter: Record<string, any> = {};
+
+    if (Array.isArray(ids) && ids.length > 0) {
+      deleteFilter = { _id: { $in: ids } };
+    } else if (userEmail && typeof userEmail === "string") {
+      deleteFilter = { email: userEmail.toLowerCase().trim() };
+    } else if (userId && typeof userId === "string") {
+      deleteFilter = { user: userId };
+    } else {
+      return NextResponse.json(
+        { error: "Must provide either ids (array of IDs) or userEmail / userId to delete." },
+        { status: 400 }
+      );
+    }
+
+    const deleteResult = await QuoteRequest.deleteMany(deleteFilter);
+
+    // Log Audit Event
+    await logAuditEvent({
+      actor: user,
+      action: "quotations_bulk_deleted",
+      entityType: "quotation",
+      entityId: "bulk-delete",
+      metadata: {
+        deletedCount: deleteResult.deletedCount,
+        filter: deleteFilter,
+        targetEmail: userEmail || undefined,
+        targetIds: ids || undefined,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      deletedCount: deleteResult.deletedCount,
+      message: `Successfully deleted ${deleteResult.deletedCount} quotation(s).`,
+    });
+  } catch (err: any) {
+    console.error("DELETE /api/admin/quotations error:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to perform bulk deletion" },
+      { status: 500 }
+    );
+  }
+}
