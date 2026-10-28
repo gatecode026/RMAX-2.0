@@ -200,9 +200,9 @@ export default function AdminServiceRequestsPage() {
         actions={
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#10469B] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#0B2450] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#10469B] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#0B2450] transition"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="size-4" />
             New Service Ticket
           </button>
         }

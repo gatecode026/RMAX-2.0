@@ -132,21 +132,21 @@ export default function AdminCustomersPage() {
           { label: "Customers" },
         ]}
         actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#10469B] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#0B2450] transition-colors"
-            >
-              <UserPlus className="h-4 w-4" />
-              Add Customer
-            </button>
+          <div className="flex items-center gap-2.5">
             <button
               onClick={handleExportCSV}
               disabled={filtered.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-50 transition"
             >
-              <Download className="h-4 w-4 text-slate-500" />
+              <Download className="size-3.5 text-slate-500" />
               Export CSV
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#10469B] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#0B2450] transition"
+            >
+              <UserPlus className="size-4" />
+              Add Customer
             </button>
           </div>
         }
