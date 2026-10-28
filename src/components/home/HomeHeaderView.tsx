@@ -67,35 +67,26 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
           <Logo />
         </div>
 
-        {/* Searchbar: When scrolled, moves to the right side! */}
-        <div
-          className={cn(
-            "hidden min-w-0 transition-all duration-300 lg:block",
-            isScrolled
-              ? "ml-auto w-full max-w-[360px]"
-              : "flex-1 max-w-[410px] xl:ml-[271px]",
-          )}
-        >
+        {/* Searchbar: Always at its natural position between Logo and Nav, with subtle shadow */}
+        <div className="hidden min-w-0 flex-1 max-w-[420px] lg:block mx-6">
           <ProductSearch items={products} />
         </div>
 
-        {/* Nav links: Visible at top, hidden when scrolled so only Logo & Searchbar show on both sides */}
+        {/* Nav links & Account/Login: Always visible on desktop */}
         <nav
           aria-label="Main"
-          className={cn(
-            "hidden items-center gap-8 transition-all duration-300 lg:flex",
-            isScrolled
-              ? "pointer-events-none hidden max-w-0 overflow-hidden opacity-0"
-              : "ml-auto opacity-100",
-          )}
+          className="ml-auto hidden items-center gap-7 lg:flex"
         >
-          <ul className="flex items-center gap-8">
+          <ul className="flex items-center gap-6 xl:gap-8">
             {LINKS.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
                   aria-current={pathname === l.href ? "page" : undefined}
-                  className={cn("text-body transition hover:text-navy", pathname === l.href ? "font-bold text-navy" : "text-muted")}
+                  className={cn(
+                    "text-body transition hover:text-navy text-[14px]",
+                    pathname === l.href ? "font-bold text-navy" : "text-muted"
+                  )}
                 >
                   {l.label}
                 </Link>
@@ -103,16 +94,21 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
             ))}
             {cartCount > 0 && (
               <li>
-                <Link href="/cart" className="text-body font-bold text-navy transition hover:underline">
+                <Link
+                  href="/cart"
+                  className="text-body font-bold text-navy transition hover:underline text-[14px]"
+                >
                   Cart · {cartCount}
                 </Link>
               </li>
             )}
           </ul>
+
+          {/* Profile or Login Button - Always visible */}
           {userName ? (
             <Link
               href="/account"
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3 shadow-2xs transition hover:border-navy/30 hover:bg-soft/50"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3.5 shadow-xs transition hover:border-navy/40 hover:shadow-sm"
               title={`My Account (${userName})`}
             >
               <div className="flex size-8 items-center justify-center rounded-full bg-navy font-bold text-xs text-white uppercase shadow-xs">
@@ -123,7 +119,13 @@ export function HomeHeaderView({ userName, products, cartCount = 0 }: Props) {
               </span>
             </Link>
           ) : (
-            <Link href="/login" className={buttonClasses({ size: "xs", className: "h-[43px] min-w-20" })}>
+            <Link
+              href="/login"
+              className={buttonClasses({
+                size: "xs",
+                className: "h-[42px] min-w-22 shadow-xs hover:shadow-sm",
+              })}
+            >
               Login
             </Link>
           )}
