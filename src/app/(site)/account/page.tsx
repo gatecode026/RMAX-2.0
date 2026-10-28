@@ -139,12 +139,6 @@ async function Overview() {
                         {q.quotedAmount && q.quotedAmount > 0 ? formatINR(q.quotedAmount) : "Pending Review"}
                       </span>
                     </div>
-                    <Link
-                      href="/contact"
-                      className="inline-flex text-xs font-semibold text-navy underline underline-offset-4 hover:text-navy/80"
-                    >
-                      Enquire about this quote →
-                    </Link>
                   </div>
                 </div>
               ))}
