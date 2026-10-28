@@ -82,8 +82,18 @@ export function useDesktopNotifications() {
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
+        const mapped: AppNotification[] = (data.notifications || []).map((n: any) => ({
+          _id: n._id || n.id,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          link: n.link,
+          read: Boolean(n.read ?? n.isRead),
+          createdAt: n.createdAt,
+          metadata: n.metadata,
+        }));
+        setNotifications(mapped);
+        setUnreadCount(Number(data.unreadCount) || 0);
       }
     } catch {
       // Offline or network error
@@ -117,18 +127,19 @@ export function useDesktopNotifications() {
 
   // Mark single notification read
   const markAsRead = useCallback(async (id: string) => {
+    if (!id) return;
+    // Optimistic UI update
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+    );
+    setUnreadCount((c) => Math.max(0, c - 1));
+
     try {
-      const res = await fetch("/api/notifications", {
+      await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notificationId: id }),
+        body: JSON.stringify({ id, notificationId: id }),
       });
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((n) => (n._id === id ? { ...n, read: true } : n))
-        );
-        setUnreadCount((c) => Math.max(0, c - 1));
-      }
     } catch {
       // Network error
     }
@@ -136,20 +147,23 @@ export function useDesktopNotifications() {
 
   // Mark all notifications read
   const markAllAsRead = useCallback(async () => {
+    // Optimistic UI update: instantly clear all unread dots and count
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+
     try {
       const res = await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markAll: true }),
+        body: JSON.stringify({ markAll: true, markAllAsRead: true }),
       });
-      if (res.ok) {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-        setUnreadCount(0);
+      if (!res.ok) {
+        fetchNotifications();
       }
     } catch {
-      // Network error
+      fetchNotifications();
     }
-  }, []);
+  }, [fetchNotifications]);
 
   // Setup SSE stream and initial state
   useEffect(() => {
@@ -176,31 +190,59 @@ export function useDesktopNotifications() {
         setIsConnected(true);
       };
 
+      function handleNotificationPayload(raw: any) {
+        if (!raw) return;
+        const n = raw.notification || raw;
+        if (!n || !n.title) return;
+
+        const newNotif: AppNotification = {
+          _id: n._id || n.id || String(Date.now()),
+          title: n.title,
+          message: n.message,
+          type: n.type || "system",
+          link: n.link,
+          read: false,
+          createdAt: n.createdAt ? String(n.createdAt) : new Date().toISOString(),
+          metadata: n.metadata,
+        };
+
+        setNotifications((prev) => {
+          if (prev.some((existing) => existing._id === newNotif._id)) return prev;
+          return [newNotif, ...prev];
+        });
+        setUnreadCount((c) => c + 1);
+
+        playChime();
+        triggerDesktopNotification({
+          title: newNotif.title,
+          message: newNotif.message,
+          link: newNotif.link,
+        });
+      }
+
       es.onmessage = (event) => {
         try {
+          if (!event.data || event.data === "keep-alive") return;
           const data = JSON.parse(event.data);
-          if (data.type === "connected") {
+          if (data.type === "connected" || data === "connected") {
             setIsConnected(true);
             return;
           }
+          handleNotificationPayload(data);
+        } catch {
+          // Parse error or non-json message
+        }
+      };
 
-          if (data.type === "new_notification" && data.notification) {
-            const newNotif: AppNotification = data.notification;
-            setNotifications((prev) => [newNotif, ...prev]);
-            setUnreadCount((c) => c + 1);
-
-            // Play sound and show desktop alert
-            playChime();
-            triggerDesktopNotification({
-              title: newNotif.title,
-              message: newNotif.message,
-              link: newNotif.link,
-            });
-          }
+      es.addEventListener("notification", (event: any) => {
+        try {
+          if (!event.data) return;
+          const data = JSON.parse(event.data);
+          handleNotificationPayload(data);
         } catch {
           // Parse error
         }
-      };
+      });
 
       es.onerror = () => {
         setIsConnected(false);

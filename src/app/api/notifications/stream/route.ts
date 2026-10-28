@@ -16,8 +16,8 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
-      // Send initial keep-alive ping
-      controller.enqueue(encoder.encode(`event: ping\ndata: "connected"\n\n`));
+      // Send initial connection event
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "connected" })}\n\n`));
 
       const onNotification = (notif: INotification & { _id?: unknown }) => {
         try {
@@ -28,20 +28,31 @@ export async function GET(req: NextRequest) {
           const isTargeted =
             recId === userId ||
             target === "all" ||
-            target === roleTarget;
+            target === roleTarget ||
+            ((user.role === "super_admin" || user.role === "admin") && target === "super_admin");
 
           if (isTargeted) {
-            const payload = {
-              id: notif._id ? String(notif._id) : undefined,
+            const notifItem = {
+              _id: notif._id ? String(notif._id) : String(Date.now()),
+              id: notif._id ? String(notif._id) : String(Date.now()),
               title: notif.title,
               message: notif.message,
               type: notif.type,
               entityType: notif.entityType,
               entityId: notif.entityId,
               link: notif.link,
+              read: false,
+              isRead: false,
               createdAt: notif.createdAt || new Date(),
             };
-            controller.enqueue(encoder.encode(`event: notification\ndata: ${JSON.stringify(payload)}\n\n`));
+            const jsonStr = JSON.stringify({
+              type: "new_notification",
+              notification: notifItem,
+            });
+            // Send standard message event so default EventSource.onmessage catches it
+            controller.enqueue(encoder.encode(`data: ${jsonStr}\n\n`));
+            // Also send named event for addEventListener("notification")
+            controller.enqueue(encoder.encode(`event: notification\ndata: ${jsonStr}\n\n`));
           }
         } catch {
           // Stream might be closed
@@ -53,11 +64,11 @@ export async function GET(req: NextRequest) {
       // Periodic heartbeat to prevent timeout on proxies
       const heartbeatInterval = setInterval(() => {
         try {
-          controller.enqueue(encoder.encode(`event: ping\ndata: "keep-alive"\n\n`));
+          controller.enqueue(encoder.encode(`: keep-alive\n\n`));
         } catch {
           clearInterval(heartbeatInterval);
         }
-      }, 25000);
+      }, 20000);
 
       req.signal.addEventListener("abort", () => {
         notificationEmitter.off("notification", onNotification);

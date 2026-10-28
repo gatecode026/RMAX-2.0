@@ -60,12 +60,53 @@ export const POST = route(async (req: Request) => {
 
     const doc: any = await QuoteRequest.create(payload);
 
+    // Auto-create Lead in pipeline so it appears in both Admin and Manager lead dashboards
+    try {
+      const { Lead } = await import("@/models/Lead");
+      const { Counter } = await import("@/models/Counter");
+      const counter = await Counter.findByIdAndUpdate(
+        "leadNumber",
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      const seq = (counter?.seq || 1) + 1000;
+      const leadNumber = `LD-${seq}`;
+
+      await Lead.create({
+        leadNumber,
+        name: parsed.data.contactPerson,
+        institution: parsed.data.organizationName,
+        institutionType: parsed.data.institutionType || "Other",
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+        source: "institutional_quote",
+        status: "new",
+        priority: "high",
+        preferredModel: parsed.data.preferredModel,
+        quantity: parsed.data.quantity,
+        city: parsed.data.deliveryCityPostal,
+        notes: `Institutional Quote Request #${quoteNumber}. Daily usage: ${parsed.data.expectedDailyUsage}. Requirement: ${parsed.data.useCase || "Institutional Sanitary Hygiene"}`,
+        activities: [
+          {
+            type: "note",
+            description: `Quote request #${quoteNumber} submitted via website for ${parsed.data.quantity} unit(s) of ${parsed.data.preferredModel}.`,
+            performedByName: parsed.data.contactPerson,
+            createdAt: new Date(),
+          },
+        ],
+      });
+    } catch (leadErr) {
+      console.warn("Lead auto-creation skipped:", leadErr);
+    }
+
+    // Broadcast alert to both Super Admin and Managers
     try {
       const { createNotification } = await import("@/lib/notifications");
       await createNotification({
         title: "New Institutional Quotation Request",
-        message: `${parsed.data.organizationName} (${parsed.data.contactPerson}) requested quote for ${parsed.data.preferredModel || "RMAX Solutions"}`,
+        message: `${parsed.data.organizationName} (${parsed.data.contactPerson}) requested quote for ${parsed.data.preferredModel || "RMAX Solutions"} (Qty: ${parsed.data.quantity})`,
         type: "lead_created",
+        targetRole: "all",
         link: "/admin/quotations",
       });
     } catch (notifErr) {

@@ -221,7 +221,10 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
                     {unreadCount > 0 && (
                       <button
                         type="button"
-                        onClick={markAllAsRead}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAllAsRead();
+                        }}
                         className="flex items-center gap-1 text-[11px] font-semibold text-[#10469B] hover:underline"
                       >
                         <CheckCheck className="size-3.5" /> Mark all read
