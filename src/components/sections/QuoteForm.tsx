@@ -14,6 +14,7 @@ import { INSTITUTION_TYPES } from "@/lib/enums";
 import { applyFieldErrors, requestJson } from "@/lib/client-api";
 import { formatINR } from "@/lib/format";
 import type { ProductDTO } from "@/lib/data/content";
+import { useToast } from "@/components/ui/Toast";
 
 export function QuoteForm({
   products,
@@ -57,16 +58,20 @@ export function QuoteForm({
   const selected = useWatch({ control, name: "preferredModel" });
   const preview = products.find((p) => p.slug === selected) ?? products.find((p) => p.slug === initialModel) ?? products[0];
 
+  const { success, error: toastError } = useToast();
+
   async function onSubmit(values: QuoteRequestData) {
     setFormError(null);
     const res = await requestJson("/api/quote-requests", "POST", values);
     if (res.ok) {
       setDone(true);
+      success("Quote Request Sent", "Thank you! Your quotation proposal request has been received.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     applyFieldErrors(setError, res.fields);
     setFormError(res.message);
+    toastError("Submission Error", res.message || "Could not submit quotation request.");
   }
 
   return (

@@ -13,8 +13,17 @@ export const POST = route(async (req: Request) => {
 
   try {
     await connectDB();
-    const count = await QuoteRequest.countDocuments();
-    const quoteNumber = `QT-2026-${String(count + 1).padStart(3, "0")}`;
+    
+    // Robust quote number generation using nextSequence
+    let quoteNumber = `QT-2026-${Date.now().toString().slice(-4)}`;
+    try {
+      const { nextSequence } = await import("@/models/Counter");
+      const seq = await nextSequence("quote_number");
+      quoteNumber = `QT-2026-${String(seq).padStart(3, "0")}`;
+    } catch {
+      const count = await QuoteRequest.countDocuments();
+      quoteNumber = `QT-2026-${String(count + 1).padStart(3, "0")}`;
+    }
 
     let userId: string | null = null;
     try {
@@ -24,12 +33,32 @@ export const POST = route(async (req: Request) => {
       // Guest or session read without context
     }
 
-    const doc = await QuoteRequest.create({
-      ...parsed.data,
+    let userObjectId = null;
+    if (userId) {
+      const mongoose = await import("mongoose");
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    }
+
+    const payload = {
+      organizationName: parsed.data.organizationName,
+      institutionType: parsed.data.institutionType,
+      contactPerson: parsed.data.contactPerson,
+      role: parsed.data.role || "",
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      preferredModel: parsed.data.preferredModel,
+      quantity: parsed.data.quantity,
+      expectedDailyUsage: parsed.data.expectedDailyUsage,
+      deliveryCityPostal: parsed.data.deliveryCityPostal,
+      useCase: parsed.data.useCase || "",
+      installationRequirements: parsed.data.installationRequirements || "",
+      consent: parsed.data.consent,
       quoteNumber,
-      status: "new",
-      user: userId || null,
-    });
+      status: "new" as const,
+      user: userObjectId,
+    };
+
+    const doc: any = await QuoteRequest.create(payload);
 
     try {
       const { createNotification } = await import("@/lib/notifications");
@@ -39,13 +68,15 @@ export const POST = route(async (req: Request) => {
         type: "lead_created",
         link: "/admin/quotations",
       });
-    } catch {
-      // Non-blocking notification
+    } catch (notifErr) {
+      console.warn("Notification skipped:", notifErr);
     }
 
     return ok({ id: String(doc._id), quoteNumber }, 201);
-  } catch (err) {
+  } catch (err: any) {
+    console.error("POST /api/quote-requests error:", err);
     if (isDatabaseUnavailable(err)) throw err;
-    return fail("We could not save your request. Please try again.", 500);
+    const detail = err?.message ? `: ${err.message}` : "";
+    return fail(`We could not save your request${detail}. Please try again.`, 500);
   }
 });
