@@ -17,7 +17,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { loginAction } from "@/lib/actions/auth";
-import styles from "./login.module.css";
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -132,16 +131,26 @@ function AdminLoginForm() {
   }
 
   return (
-    <div className={styles.pageRoot}>
-      <div className={styles.loginWrapper}>
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 font-sans text-[#10213F]"
+      style={{
+        background:
+          "radial-gradient(circle at 8% 12%, rgba(190, 222, 255, 0.45) 0%, transparent 45%), radial-gradient(circle at 92% 88%, rgba(195, 225, 255, 0.45) 0%, transparent 45%), #EAF3FF",
+      }}
+    >
+      <div className="w-full max-w-[1140px] mx-auto flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-6 lg:gap-9">
         {/* ========================================================
             LEFT PROMOTIONAL PANEL
             ======================================================== */}
-        <section className={styles.promoPanel} aria-label="RMAX Institutional Solutions">
-          <div className={styles.ambientGlow} />
+        <section
+          className="hidden lg:flex flex-col justify-between flex-1 min-w-0 max-w-[610px] rounded-[28px] bg-gradient-to-br from-[#0C4394] via-[#09377C] to-[#072558] shadow-[0_20px_50px_-10px_rgba(9,43,96,0.28)] relative overflow-hidden p-9 xl:p-11 text-white"
+          aria-label="RMAX Institutional Solutions"
+        >
+          {/* Subtle ambient glow */}
+          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.22)_0%,transparent_70%)] pointer-events-none" />
 
           {/* Top Branding & Messaging */}
-          <div className={styles.promoHeader}>
+          <div className="relative z-10">
             <div className="flex items-center gap-2">
               <Image
                 src="/images/logo-white.png"
@@ -149,78 +158,84 @@ function AdminLoginForm() {
                 width={120}
                 height={36}
                 priority
-                className={styles.logoWhite}
+                className="h-9 w-auto object-contain"
               />
             </div>
 
-            <span className={styles.sectionBadge}>
+            <span className="inline-block mt-6 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-bold tracking-wider uppercase backdrop-blur-xs">
               Institutional Hygiene Solutions
             </span>
 
-            <h1 className={styles.promoHeading}>
+            <h1 className="text-white text-3xl xl:text-4xl font-extrabold leading-[1.15] tracking-tight mt-4 mb-3">
               Cleaner Campuses.<br />
               Healthier Communities.
             </h1>
 
-            <p className={styles.promoDescription}>
+            <p className="text-blue-100/90 text-sm leading-relaxed max-w-[420px] mb-7 font-normal">
               RMAX provides advanced sanitary napkin incinerators and hygiene solutions for schools, colleges, hospitals and institutions across India.
             </p>
 
             {/* 3 Key Benefits */}
-            <div className={styles.benefitsList}>
-              <div className={styles.benefitItem}>
-                <div className={styles.benefitIconCircle}>
+            <div className="flex flex-col gap-4 relative z-10 max-w-[340px]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 backdrop-blur-xs shadow-xs">
                   <ShieldCheck className="size-5 stroke-[2.2]" />
                 </div>
-                <div className={styles.benefitText}>
-                  <span className={styles.benefitTitle}>Safe &amp; Hygienic Disposal</span>
-                  <span className={styles.benefitSubtitle}>Environment-friendly solutions</span>
+                <div className="flex flex-col">
+                  <span className="text-white text-[14px] font-bold leading-tight">Safe &amp; Hygienic Disposal</span>
+                  <span className="text-blue-200/80 text-[12px] mt-0.5">Environment-friendly solutions</span>
                 </div>
               </div>
 
-              <div className={styles.benefitItem}>
-                <div className={styles.benefitIconCircle}>
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 backdrop-blur-xs shadow-xs">
                   <Building2 className="size-5 stroke-[2.2]" />
                 </div>
-                <div className={styles.benefitText}>
-                  <span className={styles.benefitTitle}>Trusted by 20K+ Institutions</span>
-                  <span className={styles.benefitSubtitle}>Across India</span>
+                <div className="flex flex-col">
+                  <span className="text-white text-[14px] font-bold leading-tight">Trusted by 20K+ Institutions</span>
+                  <span className="text-blue-200/80 text-[12px] mt-0.5">Across India</span>
                 </div>
               </div>
 
-              <div className={styles.benefitItem}>
-                <div className={styles.benefitIconCircle}>
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 backdrop-blur-xs shadow-xs">
                   <Leaf className="size-5 stroke-[2.2]" />
                 </div>
-                <div className={styles.benefitText}>
-                  <span className={styles.benefitTitle}>Sustainable &amp; Compliant</span>
-                  <span className={styles.benefitSubtitle}>Supports cleaner, greener campuses</span>
+                <div className="flex flex-col">
+                  <span className="text-white text-[14px] font-bold leading-tight">Sustainable &amp; Compliant</span>
+                  <span className="text-blue-200/80 text-[12px] mt-0.5">Supports cleaner, greener campuses</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Trust Cluster & Machine Visual */}
-          <div className={styles.trustCluster}>
-            <div className={styles.avatarGroup} aria-hidden="true">
-              <div className={styles.avatarCircle} style={{ backgroundColor: "#2563EB" }}>SC</div>
-              <div className={styles.avatarCircle} style={{ backgroundColor: "#0D9488" }}>CL</div>
-              <div className={styles.avatarCircle} style={{ backgroundColor: "#7C3AED" }}>HP</div>
+          {/* Bottom Trust Cluster */}
+          <div className="flex items-center gap-3 mt-8 relative z-10">
+            <div className="flex items-center -space-x-2" aria-hidden="true">
+              <div className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-extrabold text-white shadow-xs bg-[#2563EB]">
+                SC
+              </div>
+              <div className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-extrabold text-white shadow-xs bg-[#0D9488]">
+                CL
+              </div>
+              <div className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-extrabold text-white shadow-xs bg-[#7C3AED]">
+                HP
+              </div>
             </div>
-            <div className={styles.trustInfo}>
-              <span className={styles.trustTitle}>20,000+ institutions trust RMAX</span>
-              <span className={styles.trustSubtitle}>Schools &bull; Colleges &bull; Hospitals &bull; Offices</span>
+            <div className="flex flex-col">
+              <span className="text-white text-[12.5px] font-bold leading-tight">20,000+ institutions trust RMAX</span>
+              <span className="text-blue-200/80 text-[11px] leading-tight mt-0.5">Schools &bull; Colleges &bull; Hospitals &bull; Offices</span>
             </div>
           </div>
 
           {/* Machine on Pedestal (Right Bottom) */}
-          <div className={styles.productVisual} aria-hidden="true">
+          <div className="absolute right-0 bottom-0 w-[46%] max-w-[270px] pointer-events-none z-5 flex items-end justify-end" aria-hidden="true">
             <Image
               src="/images/auth/login-pedestal-product.png"
               alt="RMAX Commercial Incinerator on pedestal"
               width={260}
               height={340}
-              className={styles.productImage}
+              className="w-full h-auto object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.35)]"
               priority
             />
           </div>
@@ -229,42 +244,45 @@ function AdminLoginForm() {
         {/* ========================================================
             RIGHT LOGIN CARD
             ======================================================== */}
-        <main className={styles.loginCard} aria-labelledby="admin-login-title">
+        <main
+          className="w-full lg:flex-1 max-w-[480px] bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-10px_rgba(16,70,155,0.12),0_2px_8px_rgba(0,0,0,0.03)] border border-[#EBF1F8] p-7 sm:p-10 flex flex-col justify-center"
+          aria-labelledby="admin-login-title"
+        >
           <div className="flex justify-center mb-1">
             <Image
               src="/images/logo.png"
               alt="RMAX"
               width={110}
               height={32}
-              className={styles.cardLogo}
+              className="h-8 sm:h-9 w-auto mx-auto object-contain"
               priority
             />
           </div>
 
-          <h2 id="admin-login-title" className={styles.cardTitle}>
+          <h2 id="admin-login-title" className="text-[#0A2656] text-2xl sm:text-[26px] font-extrabold text-center mt-4 mb-0 tracking-tight">
             Welcome Back
           </h2>
-          <p className={styles.cardSubtitle}>
+          <p className="text-[#71819D] text-[13.5px] text-center mt-1 mb-6 font-medium">
             Login to your RMAX Admin Panel
           </p>
 
           {/* Error Banner */}
           {formError && (
-            <div role="alert" className={styles.errorBanner} style={{ marginBottom: "16px" }}>
+            <div role="alert" className="bg-red-50 border border-red-200 text-red-600 text-[12.5px] font-semibold p-3 rounded-xl flex items-center gap-2 mb-4">
               <AlertCircle className="size-4 shrink-0" />
               <span>{formError}</span>
             </div>
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} noValidate className={styles.loginForm}>
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 w-full">
             {/* Email Address */}
-            <div className={styles.fieldGroup}>
-              <label htmlFor="admin-email" className={styles.fieldLabel}>
+            <div className="flex flex-col">
+              <label htmlFor="admin-email" className="text-[12.5px] font-semibold text-[#10213F] mb-1.5">
                 Email Address
               </label>
-              <div className={styles.inputWrapper}>
-                <Mail className={styles.inputIconLeft} />
+              <div className="relative flex items-center w-full">
+                <Mail className="absolute left-3.5 text-slate-400 pointer-events-none size-4.5" />
                 <input
                   id="admin-email"
                   type="email"
@@ -277,26 +295,30 @@ function AdminLoginForm() {
                       setValidationErrors((prev) => ({ ...prev, email: undefined }));
                     }
                   }}
-                  className={`${styles.inputField} ${validationErrors.email ? styles.inputError : ""}`}
+                  className={`w-full h-11.5 rounded-xl border ${
+                    validationErrors.email
+                      ? "border-red-500 bg-red-50/50 focus:ring-red-500/15"
+                      : "border-[#D7E1EF] bg-slate-50/80 focus:border-[#104BA8] focus:bg-white focus:ring-[#104BA8]/10"
+                  } pl-10 pr-3.5 text-[13.5px] text-slate-900 placeholder:text-slate-400 transition-all focus:ring-3 outline-none`}
                   aria-invalid={Boolean(validationErrors.email)}
                   aria-describedby={validationErrors.email ? "admin-email-error" : undefined}
                   disabled={isSubmitting}
                 />
               </div>
               {validationErrors.email && (
-                <span id="admin-email-error" className={styles.fieldErrorMessage}>
+                <span id="admin-email-error" className="text-red-600 text-[11.5px] font-medium mt-1">
                   {validationErrors.email}
                 </span>
               )}
             </div>
 
             {/* Password */}
-            <div className={styles.fieldGroup}>
-              <label htmlFor="admin-password" className={styles.fieldLabel}>
+            <div className="flex flex-col">
+              <label htmlFor="admin-password" className="text-[12.5px] font-semibold text-[#10213F] mb-1.5">
                 Password
               </label>
-              <div className={styles.inputWrapper}>
-                <Lock className={styles.inputIconLeft} />
+              <div className="relative flex items-center w-full">
+                <Lock className="absolute left-3.5 text-slate-400 pointer-events-none size-4.5" />
                 <input
                   id="admin-password"
                   type={showPassword ? "text" : "password"}
@@ -309,7 +331,11 @@ function AdminLoginForm() {
                       setValidationErrors((prev) => ({ ...prev, password: undefined }));
                     }
                   }}
-                  className={`${styles.inputField} ${validationErrors.password ? styles.inputError : ""}`}
+                  className={`w-full h-11.5 rounded-xl border ${
+                    validationErrors.password
+                      ? "border-red-500 bg-red-50/50 focus:ring-red-500/15"
+                      : "border-[#D7E1EF] bg-slate-50/80 focus:border-[#104BA8] focus:bg-white focus:ring-[#104BA8]/10"
+                  } pl-10 pr-10 text-[13.5px] text-slate-900 placeholder:text-slate-400 transition-all focus:ring-3 outline-none`}
                   aria-invalid={Boolean(validationErrors.password)}
                   aria-describedby={validationErrors.password ? "admin-password-error" : undefined}
                   disabled={isSubmitting}
@@ -317,7 +343,7 @@ function AdminLoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className={styles.passwordToggle}
+                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-600 transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={0}
                 >
@@ -329,20 +355,20 @@ function AdminLoginForm() {
                 </button>
               </div>
               {validationErrors.password && (
-                <span id="admin-password-error" className={styles.fieldErrorMessage}>
+                <span id="admin-password-error" className="text-red-600 text-[11.5px] font-medium mt-1">
                   {validationErrors.password}
                 </span>
               )}
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className={styles.optionsRow}>
-              <label className={styles.rememberLabel}>
+            <div className="flex items-center justify-between mt-0.5 mb-1">
+              <label className="flex items-center gap-2 text-slate-600 cursor-pointer text-[12.5px] font-medium select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className={styles.checkboxInput}
+                  className="size-4 rounded border-slate-300 text-[#104BA8] accent-[#104BA8] cursor-pointer"
                   disabled={isSubmitting}
                 />
                 <span>Keep me signed in</span>
@@ -356,7 +382,7 @@ function AdminLoginForm() {
                   setForgotError(null);
                   setForgotModalOpen(true);
                 }}
-                className={styles.forgotLink}
+                className="text-[#104BA8] font-semibold text-[12.5px] hover:underline hover:text-[#092B60] transition-colors cursor-pointer bg-transparent border-none p-0"
               >
                 Forgot Password?
               </button>
@@ -366,11 +392,11 @@ function AdminLoginForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={styles.loginButton}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-[#104BA8] to-[#092B60] text-white text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(16,75,168,0.25)] hover:shadow-[0_8px_22px_rgba(16,75,168,0.35)] hover:-translate-y-0.5 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <div className={styles.buttonSpinner} />
+                  <div className="size-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   <span>Signing in...</span>
                 </>
               ) : (
@@ -383,17 +409,17 @@ function AdminLoginForm() {
           </form>
 
           {/* OR Divider */}
-          <div className={styles.dividerRow}>
-            <div className={styles.dividerLine} />
-            <span className={styles.dividerText}>OR</span>
-            <div className={styles.dividerLine} />
+          <div className="flex items-center my-3.5 text-center">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">OR</span>
+            <div className="flex-1 h-px bg-slate-200" />
           </div>
 
           {/* Google Sign In Button */}
           <button
             type="button"
             onClick={() => setGoogleNoticeOpen(true)}
-            className={styles.googleButton}
+            className="w-full h-11 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-[13px] font-semibold flex items-center justify-center gap-2.5 transition-all shadow-xs cursor-pointer"
           >
             <svg className="size-4" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -417,7 +443,7 @@ function AdminLoginForm() {
           </button>
 
           {/* Footer Note */}
-          <footer className={styles.cardFooter}>
+          <footer className="text-center text-[11.5px] text-slate-400 mt-6 font-medium">
             &copy; 2026 RMAX Solutions. All rights reserved.
           </footer>
         </main>
@@ -428,34 +454,34 @@ function AdminLoginForm() {
           ======================================================== */}
       {forgotModalOpen && (
         <div
-          className={styles.modalBackdrop}
+          className="fixed inset-0 z-50 bg-[#0A214B]/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
           role="dialog"
           aria-modal="true"
           aria-labelledby="forgot-modal-title"
           onClick={() => setForgotModalOpen(false)}
         >
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 id="forgot-modal-title" className={styles.modalTitle}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-7 relative animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 id="forgot-modal-title" className="text-[19px] font-extrabold text-[#0A2656]">
                 Recover Password
               </h3>
               <button
                 type="button"
                 onClick={() => setForgotModalOpen(false)}
-                className={styles.closeButton}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 aria-label="Close dialog"
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            <p className={styles.modalText}>
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
               Enter your registered administrative email address. A password recovery link will be sent to reset your credentials.
             </p>
 
             {forgotSuccess ? (
               <div>
-                <div className={styles.successBanner}>
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-[13px] font-medium p-3.5 rounded-xl mb-4 leading-snug">
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="size-5 shrink-0 text-emerald-600 mt-0.5" />
                     <div>
@@ -469,26 +495,26 @@ function AdminLoginForm() {
                 <button
                   type="button"
                   onClick={() => setForgotModalOpen(false)}
-                  className={styles.loginButton}
+                  className="w-full h-11 rounded-xl bg-[#104BA8] hover:bg-[#092B60] text-white text-[14px] font-bold transition-colors cursor-pointer"
                 >
                   Return to Login
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleForgotSubmit}>
+              <form onSubmit={handleForgotSubmit} className="flex flex-col gap-4">
                 {forgotError && (
-                  <div className={styles.errorBanner} style={{ marginBottom: "12px" }}>
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-[12.5px] font-semibold p-3 rounded-xl flex items-center gap-2">
                     <AlertCircle className="size-4 shrink-0" />
                     <span>{forgotError}</span>
                   </div>
                 )}
 
-                <div className={styles.fieldGroup} style={{ marginBottom: "16px" }}>
-                  <label htmlFor="recovery-email" className={styles.fieldLabel}>
+                <div className="flex flex-col">
+                  <label htmlFor="recovery-email" className="text-[12.5px] font-semibold text-[#10213F] mb-1.5">
                     Email Address
                   </label>
-                  <div className={styles.inputWrapper}>
-                    <Mail className={styles.inputIconLeft} />
+                  <div className="relative flex items-center w-full">
+                    <Mail className="absolute left-3.5 text-slate-400 pointer-events-none size-4.5" />
                     <input
                       id="recovery-email"
                       type="email"
@@ -496,7 +522,7 @@ function AdminLoginForm() {
                       placeholder="Enter your administrative email"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      className={styles.inputField}
+                      className="w-full h-11 rounded-xl border border-[#D7E1EF] bg-slate-50/80 pl-10 pr-3.5 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:border-[#104BA8] focus:bg-white focus:ring-3 focus:ring-[#104BA8]/10 outline-none transition-all"
                       disabled={forgotLoading}
                     />
                   </div>
@@ -505,11 +531,11 @@ function AdminLoginForm() {
                 <button
                   type="submit"
                   disabled={forgotLoading}
-                  className={styles.loginButton}
+                  className="w-full h-11.5 rounded-xl bg-gradient-to-r from-[#104BA8] to-[#092B60] text-white text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(16,75,168,0.25)] hover:shadow-[0_8px_22px_rgba(16,75,168,0.35)] transition-all cursor-pointer disabled:opacity-70"
                 >
                   {forgotLoading ? (
                     <>
-                      <div className={styles.buttonSpinner} />
+                      <div className="size-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                       <span>Sending link...</span>
                     </>
                   ) : (
@@ -527,35 +553,35 @@ function AdminLoginForm() {
           ======================================================== */}
       {googleNoticeOpen && (
         <div
-          className={styles.modalBackdrop}
+          className="fixed inset-0 z-50 bg-[#0A214B]/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
           role="dialog"
           aria-modal="true"
           aria-labelledby="google-modal-title"
           onClick={() => setGoogleNoticeOpen(false)}
         >
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 id="google-modal-title" className={styles.modalTitle}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-7 relative animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 id="google-modal-title" className="text-[19px] font-extrabold text-[#0A2656]">
                 Google Authentication
               </h3>
               <button
                 type="button"
                 onClick={() => setGoogleNoticeOpen(false)}
-                className={styles.closeButton}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 aria-label="Close dialog"
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            <p className={styles.modalText}>
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
               Google OAuth is managed through institutional Single Sign-On (SSO). To access the RMAX Admin Dashboard, please sign in with your authorized admin email address and password.
             </p>
 
             <button
               type="button"
               onClick={() => setGoogleNoticeOpen(false)}
-              className={styles.loginButton}
+              className="w-full h-11.5 rounded-xl bg-gradient-to-r from-[#104BA8] to-[#092B60] text-white text-[14px] font-bold transition-all shadow-md cursor-pointer"
             >
               Sign In with Credentials
             </button>
@@ -568,9 +594,20 @@ function AdminLoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className={styles.pageRoot} />}>
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen w-full flex items-center justify-center bg-[#EAF3FF]"
+          style={{
+            background:
+              "radial-gradient(circle at 8% 12%, rgba(190, 222, 255, 0.45) 0%, transparent 45%), radial-gradient(circle at 92% 88%, rgba(195, 225, 255, 0.45) 0%, transparent 45%), #EAF3FF",
+          }}
+        >
+          <div className="size-10 animate-spin rounded-full border-3 border-[#10469B] border-t-transparent" />
+        </div>
+      }
+    >
       <AdminLoginForm />
     </Suspense>
   );
 }
-
