@@ -41,6 +41,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import { CustomerAuthModal } from "@/components/auth/CustomerAuthModal";
 import { GlobalModalScrollLock } from "@/components/ui/GlobalModalScrollLock";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const viewport: Viewport = { themeColor: "#fbf9f5" };
 
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CustomerAuthModal />
           </AuthModalProvider>
         </ToastProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
