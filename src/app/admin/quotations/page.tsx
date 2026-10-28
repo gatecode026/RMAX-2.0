@@ -180,8 +180,7 @@ export default function AdminQuotationsPage() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setSelectedQuote(data.quote);
+        setSelectedQuote(null);
         fetchQuotes();
         toast.success("Quotation Saved", "Quotation updated and saved to database!");
       } else {
@@ -818,8 +817,16 @@ export default function AdminQuotationsPage() {
 
       {/* Review & Edit Quotation Modal */}
       {selectedQuote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div
+          onClick={() => {
+            if (!savingAction) setSelectedQuote(null);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs cursor-pointer animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto cursor-default animate-in zoom-in-95 duration-200"
+          >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
