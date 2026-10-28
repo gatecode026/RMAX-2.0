@@ -294,10 +294,10 @@ export default function AdminUsersPage() {
                     <td className="py-3.5 pl-5 pr-3">
                       <div className="flex items-center gap-2.5">
                         <div className="flex size-8 items-center justify-center rounded-full bg-[#10469B] text-xs font-bold text-white">
-                          {manager.name.slice(0, 2).toUpperCase()}
+                          {(manager.name || "M").slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900 text-[13px]">{manager.name}</p>
+                          <p className="font-semibold text-slate-900 text-[13px]">{manager.name || "Unnamed Manager"}</p>
                           <div className="flex items-center gap-1 text-[11px] text-slate-400">
                             <Mail className="size-3" />
                             {manager.email}
@@ -310,7 +310,7 @@ export default function AdminUsersPage() {
                     <td className="py-3.5 px-3">
                       <div>
                         <span className="rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 uppercase">
-                          {manager.role.replace("_", " ")}
+                          {(manager.role || "manager").replace("_", " ")}
                         </span>
                         <p className="mt-0.5 text-[11px] text-slate-500">
                           {manager.department || "Lead Operations"}

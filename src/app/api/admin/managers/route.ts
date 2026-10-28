@@ -39,14 +39,18 @@ export async function GET() {
       const stats = statsMap.get(String(m._id)) || { totalAssigned: 0, contacted: 0, converted: 0 };
       const convRate = stats.totalAssigned > 0 ? Math.round((stats.converted / stats.totalAssigned) * 100) : 0;
       return {
+        _id: String(m._id),
         id: String(m._id),
         name: m.name,
         email: m.email,
+        role: "manager",
         phone: m.phone || "Not set",
         department: m.department || "Sales & Institutional",
         status: m.status || "active",
         lastLoginAt: m.lastLoginAt,
         createdAt: m.createdAt,
+        assignedLeadsCount: stats.totalAssigned,
+        convertedLeadsCount: stats.converted,
         totalAssigned: stats.totalAssigned,
         contacted: stats.contacted,
         converted: stats.converted,
