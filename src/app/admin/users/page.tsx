@@ -17,7 +17,10 @@ import {
   Target,
   X,
   AlertCircle,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 interface ManagerItem {
   _id: string;
@@ -33,6 +36,7 @@ interface ManagerItem {
 }
 
 export default function AdminUsersPage() {
+  const toast = useToast();
   const [managers, setManagers] = useState<ManagerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -44,6 +48,13 @@ export default function AdminUsersPage() {
   const [newPassword, setNewPassword] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // SweetAlert modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    manager: ManagerItem;
+    deleting: boolean;
+  } | null>(null);
 
   const [newManager, setNewManager] = useState({
     name: "",
@@ -145,12 +156,41 @@ export default function AdminUsersPage() {
       if (res.ok) {
         setResetPasswordModalUser(null);
         setNewPassword("");
-        alert("Password reset successfully.");
+        toast.success("Password Updated", "Manager password was successfully updated.");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error("Update Failed", err.error || "Could not update password.");
       }
     } catch {
-      // Error
+      toast.error("Error", "Network error while updating password.");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const confirmDeleteManager = async () => {
+    if (!deleteModal?.manager) return;
+    const target = deleteModal.manager;
+    setDeleteModal((prev) => (prev ? { ...prev, deleting: true } : null));
+
+    try {
+      const res = await fetch(`/api/admin/managers/${target._id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        toast.success("Manager Deleted", data.message || `Manager ${target.name} was removed.`);
+        setDeleteModal(null);
+        fetchManagers();
+      } else {
+        toast.error("Delete Failed", data.error || "Could not delete manager account.");
+        setDeleteModal((prev) => (prev ? { ...prev, deleting: false } : null));
+      }
+    } catch {
+      toast.error("Error", "Network error while deleting manager.");
+      setDeleteModal((prev) => (prev ? { ...prev, deleting: false } : null));
     }
   };
 
@@ -364,7 +404,7 @@ export default function AdminUsersPage() {
 
                     {/* Actions */}
                     <td className="py-3.5 pr-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/admin/leads?managerId=${manager._id}`}
                           title="View Assigned Leads"
@@ -382,6 +422,19 @@ export default function AdminUsersPage() {
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
                         >
                           <KeyRound className="size-4" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            setDeleteModal({
+                              open: true,
+                              manager,
+                              deleting: false,
+                            })
+                          }
+                          title={`Delete Manager: ${manager.name}`}
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                        >
+                          <Trash2 className="size-4" />
                         </button>
                       </div>
                     </td>
@@ -570,6 +623,54 @@ export default function AdminUsersPage() {
                   {actionLoading ? "Updating..." : "Update Password"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SweetAlert Delete Confirmation Modal */}
+      {deleteModal && deleteModal.open && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
+            {/* Animated Warning Icon */}
+            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-rose-100 text-rose-600 shadow-inner">
+              <AlertTriangle className="size-8 stroke-[2.2] animate-bounce" />
+            </div>
+
+            <div className="mt-4 text-center">
+              <h3 className="font-jakarta text-lg font-extrabold text-slate-900">
+                Delete Manager Account?
+              </h3>
+              <p className="mt-2 text-xs text-slate-600 leading-relaxed font-medium">
+                Are you sure you want to remove{" "}
+                <span className="font-bold text-slate-900">{deleteModal.manager.name}</span> (
+                {deleteModal.manager.email}) from the management team?
+              </p>
+              <div className="mt-3 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500 border border-slate-100 text-left">
+                <p>• The manager will no longer be able to log in to the manager portal.</p>
+                <p className="mt-1">• Any active leads assigned to this manager will be safely unassigned for reassignment.</p>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setDeleteModal(null)}
+                disabled={deleteModal.deleting}
+                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteModal.deleting}
+                onClick={confirmDeleteManager}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-700 disabled:opacity-50 transition"
+              >
+                {deleteModal.deleting && <RefreshCw className="size-3.5 animate-spin text-white" />}
+                Yes, Delete Manager
+              </button>
             </div>
           </div>
         </div>

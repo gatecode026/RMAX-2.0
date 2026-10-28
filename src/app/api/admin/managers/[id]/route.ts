@@ -90,3 +90,61 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const authResult = await checkApiRole(["super_admin", "admin"]);
+    if ("error" in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { user: currentAdmin } = authResult;
+    const { id } = await params;
+
+    await connectDB();
+    const manager = await User.findById(id);
+
+    if (!manager) {
+      return NextResponse.json({ error: "Manager account not found" }, { status: 404 });
+    }
+
+    if (manager.role !== "manager") {
+      return NextResponse.json({ error: "Only manager accounts can be deleted from here" }, { status: 400 });
+    }
+
+    // Unassign leads previously assigned to this manager so they don't remain in limbo
+    const { Lead } = await import("@/models/Lead");
+    await Lead.updateMany(
+      { assignedManager: manager._id },
+      { $unset: { assignedManager: 1, assignedManagerName: 1 } }
+    );
+
+    // Delete manager user
+    await User.findByIdAndDelete(id);
+
+    await logAuditEvent({
+      actor: currentAdmin,
+      action: "MANAGER_DELETED",
+      entityType: "manager",
+      entityId: String(id),
+      metadata: { name: manager.name, email: manager.email, department: manager.department },
+    });
+
+    await createNotification({
+      targetRole: "super_admin",
+      title: "Manager Account Deleted",
+      message: `${manager.name} (${manager.email}) was removed from the manager team`,
+      type: "manager_action",
+      entityType: "user",
+      entityId: String(id),
+      link: `/admin/users`,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Manager ${manager.name} was successfully removed.`,
+    });
+  } catch (error) {
+    console.error("Manager deletion error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
