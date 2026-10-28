@@ -25,6 +25,7 @@ async function QuoteContent({ searchParams }: { searchParams: QuoteSearch }) {
   // The design opens on "Pro · 200–250/day".
   return (
     <QuoteForm
+      key={`${valid ? model! : "pro"}-${quantity}`}
       products={products}
       initialModel={valid ? model! : "pro"}
       initialQuantity={quantity}

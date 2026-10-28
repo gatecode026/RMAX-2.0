@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -46,7 +46,6 @@ export function QuoteForm({
   const [submittedQuoteNumber, setSubmittedQuoteNumber] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
-
   const hasAllDetails = Boolean(
     currentUser &&
     currentUser.name?.trim() &&
@@ -93,6 +92,23 @@ export function QuoteForm({
       installationRequirements: "",
     },
   });
+
+  // Automatically reset submitted state and sync model when user switches between product quote requests
+  useEffect(() => {
+    if (initialModel) {
+      setFastModel(initialModel);
+      setValue("preferredModel", initialModel as any);
+      setDone(false);
+      setSubmittedQuoteNumber(null);
+    }
+  }, [initialModel, setValue]);
+
+  useEffect(() => {
+    if (initialQuantity) {
+      setFastQuantity(initialQuantity);
+      setValue("quantity", initialQuantity);
+    }
+  }, [initialQuantity, setValue]);
 
   const selectedInForm = useWatch({ control, name: "preferredModel" });
   const activeModelSlug = (hasAllDetails && !showManualForm) ? fastModel : (selectedInForm || initialModel || products[0]?.slug);
