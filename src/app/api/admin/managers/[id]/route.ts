@@ -98,7 +98,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
     const { user: currentAdmin } = authResult;
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams?.id;
+
+    if (!id) {
+      return NextResponse.json({ error: "Manager ID is required" }, { status: 400 });
+    }
 
     await connectDB();
     const manager = await User.findById(id);
@@ -108,43 +113,63 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     if (manager.role !== "manager") {
-      return NextResponse.json({ error: "Only manager accounts can be deleted from here" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only manager accounts can be deleted from this portal" },
+        { status: 400 }
+      );
     }
 
-    // Unassign leads previously assigned to this manager so they don't remain in limbo
-    const { Lead } = await import("@/models/Lead");
-    await Lead.updateMany(
-      { assignedManager: manager._id },
-      { $unset: { assignedManager: 1, assignedManagerName: 1 } }
-    );
+    // Safely unassign leads previously assigned to this manager
+    try {
+      const { Lead } = await import("@/models/Lead");
+      await Lead.updateMany(
+        { assignedManager: manager._id },
+        { $unset: { assignedManager: 1, assignedManagerName: 1 } }
+      );
+    } catch (leadErr) {
+      console.warn("Could not unassign leads for manager:", leadErr);
+    }
 
     // Delete manager user
     await User.findByIdAndDelete(id);
 
-    await logAuditEvent({
-      actor: currentAdmin,
-      action: "MANAGER_DELETED",
-      entityType: "manager",
-      entityId: String(id),
-      metadata: { name: manager.name, email: manager.email, department: manager.department },
-    });
+    // Safely log audit event without throwing
+    try {
+      await logAuditEvent({
+        actor: currentAdmin,
+        action: "MANAGER_DELETED",
+        entityType: "manager",
+        entityId: String(id),
+        metadata: { name: manager.name, email: manager.email, department: manager.department },
+      });
+    } catch (auditErr) {
+      console.warn("Audit log failed during manager delete:", auditErr);
+    }
 
-    await createNotification({
-      targetRole: "super_admin",
-      title: "Manager Account Deleted",
-      message: `${manager.name} (${manager.email}) was removed from the manager team`,
-      type: "manager_action",
-      entityType: "user",
-      entityId: String(id),
-      link: `/admin/users`,
-    });
+    // Safely create super_admin notification without throwing
+    try {
+      await createNotification({
+        targetRole: "super_admin",
+        title: "Manager Account Deleted",
+        message: `${manager.name} (${manager.email}) was removed from the manager team`,
+        type: "manager_action",
+        entityType: "user",
+        entityId: String(id),
+        link: `/admin/users`,
+      });
+    } catch (notifErr) {
+      console.warn("Notification failed during manager delete:", notifErr);
+    }
 
     return NextResponse.json({
       success: true,
       message: `Manager ${manager.name} was successfully removed.`,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Manager deletion error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete manager account." },
+      { status: 500 }
+    );
   }
 }

@@ -171,10 +171,11 @@ export default function AdminUsersPage() {
   const confirmDeleteManager = async () => {
     if (!deleteModal?.manager) return;
     const target = deleteModal.manager;
+    const managerId = target._id || (target as any).id;
     setDeleteModal((prev) => (prev ? { ...prev, deleting: true } : null));
 
     try {
-      const res = await fetch(`/api/admin/managers/${target._id}`, {
+      const res = await fetch(`/api/admin/managers/${managerId}`, {
         method: "DELETE",
       });
 
@@ -185,11 +186,11 @@ export default function AdminUsersPage() {
         setDeleteModal(null);
         fetchManagers();
       } else {
-        toast.error("Delete Failed", data.error || "Could not delete manager account.");
+        toast.error("Delete Failed", data.error || `Could not delete ${target.name}. Status: ${res.status}`);
         setDeleteModal((prev) => (prev ? { ...prev, deleting: false } : null));
       }
-    } catch {
-      toast.error("Error", "Network error while deleting manager.");
+    } catch (err: any) {
+      toast.error("Error", err?.message || "Network error while deleting manager.");
       setDeleteModal((prev) => (prev ? { ...prev, deleting: false } : null));
     }
   };
