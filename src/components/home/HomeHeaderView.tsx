@@ -34,7 +34,7 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
+      setIsScrolled(window.scrollY > 80);
     };
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -65,102 +65,113 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
   const dashboardTitle = `${dashboardLabel} (${userName})`;
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 transition-all duration-300",
-        isScrolled
-          ? "border-b border-line/60 bg-canvas/95 backdrop-blur-md shadow-[0_2px_12px_rgb(35_42_50/0.05)]"
-          : "bg-transparent",
-      )}
-    >
+    <>
+      {/* ========================================================
+          FLOATING SEARCH BAR ON SCROLL
+          Only the search bar appears when scrolled; full navbar stays at top.
+          ======================================================== */}
       <div
         className={cn(
-          "mx-auto flex w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-12 xl:px-16 transition-all duration-300",
-          isScrolled ? "h-16" : "h-(--header-height)",
+          "fixed top-3.5 left-1/2 -translate-x-1/2 z-50 w-full max-w-[460px] px-4 transition-all duration-300",
+          isScrolled
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-5 pointer-events-none"
         )}
+        aria-hidden={!isScrolled}
       >
-        {/* Left Side: Logo */}
-        <div className="shrink-0">
-          <Logo />
-        </div>
-
-        {/* Searchbar: Always at its natural position between Logo and Nav, with subtle shadow */}
-        <div className="hidden min-w-0 flex-1 max-w-[420px] lg:block mx-6">
+        <div className="rounded-full bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0_41_112/0.16)] border border-line p-0.5">
           <ProductSearch items={products} />
         </div>
-
-        {/* Nav links & Account/Login: Always visible on desktop */}
-        <nav
-          aria-label="Main"
-          className="ml-auto hidden items-center gap-7 lg:flex"
-        >
-          <ul className="flex items-center gap-6 xl:gap-8">
-            {LINKS.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  aria-current={pathname === l.href ? "page" : undefined}
-                  className={cn(
-                    "text-body transition hover:text-navy text-[14px]",
-                    pathname === l.href ? "font-bold text-navy" : "text-muted"
-                  )}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-            {cartCount > 0 && (
-              <li>
-                <Link
-                  href="/cart"
-                  className="text-body font-bold text-navy transition hover:underline text-[14px]"
-                >
-                  Cart · {cartCount}
-                </Link>
-              </li>
-            )}
-          </ul>
-
-          {/* Profile or Login Button - Always visible */}
-          {userName ? (
-            <Link
-              href={dashboardHref}
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3.5 shadow-xs transition hover:border-navy/40 hover:shadow-sm"
-              title={dashboardTitle}
-            >
-              <div className="flex size-8 items-center justify-center rounded-full bg-navy font-bold text-xs text-white uppercase shadow-xs">
-                {userName.trim().charAt(0)}
-              </div>
-              <span className="font-semibold text-charcoal text-xs">
-                {userName.split(" ")[0]}
-              </span>
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => openModal("login")}
-              className={buttonClasses({
-                size: "xs",
-                className: "h-[42px] min-w-22 shadow-xs hover:shadow-sm cursor-pointer",
-              })}
-            >
-              Login
-            </button>
-          )}
-        </nav>
-
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          className="ml-auto inline-flex size-11 items-center justify-center rounded-full border border-line bg-card text-navy lg:hidden"
-          aria-expanded={open}
-          aria-controls="home-mobile-menu"
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpenedOn(open ? null : pathname)}
-        >
-          {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
-        </button>
       </div>
+
+      {/* ========================================================
+          MAIN NAVBAR
+          Visible at top of page. Search bar grouped together with nav links.
+          ======================================================== */}
+      <header className="relative z-40 bg-transparent transition-all duration-300">
+        <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-12 xl:px-16">
+          {/* Left Side: Logo */}
+          <div className="shrink-0">
+            <Logo />
+          </div>
+
+          {/* Right Side: Search bar together with Nav links & Profile/Login */}
+          <div className="ml-auto hidden items-center gap-5 xl:gap-7 lg:flex">
+            {/* Searchbar adjacent to navlinks */}
+            <div className="w-[230px] xl:w-[270px] shrink-0">
+              <ProductSearch items={products} />
+            </div>
+
+            {/* Nav links & Account/Login: Always visible on desktop */}
+            <nav aria-label="Main" className="flex items-center gap-5 xl:gap-7">
+              <ul className="flex items-center gap-5 xl:gap-7">
+                {LINKS.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      aria-current={pathname === l.href ? "page" : undefined}
+                      className={cn(
+                        "text-body transition hover:text-navy text-[14px]",
+                        pathname === l.href ? "font-bold text-navy" : "text-muted"
+                      )}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+                {cartCount > 0 && (
+                  <li>
+                    <Link
+                      href="/cart"
+                      className="text-body font-bold text-navy transition hover:underline text-[14px]"
+                    >
+                      Cart · {cartCount}
+                    </Link>
+                  </li>
+                )}
+              </ul>
+
+              {/* Profile or Login Button */}
+              {userName ? (
+                <Link
+                  href={dashboardHref}
+                  className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3.5 shadow-xs transition hover:border-navy/40 hover:shadow-sm"
+                  title={dashboardTitle}
+                >
+                  <div className="flex size-8 items-center justify-center rounded-full bg-navy font-bold text-xs text-white uppercase shadow-xs">
+                    {userName.trim().charAt(0)}
+                  </div>
+                  <span className="font-semibold text-charcoal text-xs">
+                    {userName.split(" ")[0]}
+                  </span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openModal("login")}
+                  className={buttonClasses({
+                    size: "xs",
+                    className: "h-[42px] min-w-22 shadow-xs hover:shadow-sm cursor-pointer",
+                  })}
+                >
+                  Login
+                </button>
+              )}
+            </nav>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="ml-auto inline-flex size-11 items-center justify-center rounded-full border border-line bg-card text-navy lg:hidden"
+            aria-expanded={open}
+            aria-controls="home-mobile-menu"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpenedOn(open ? null : pathname)}
+          >
+            {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
+          </button>
+        </div>
 
       {open && (
         <nav id="home-mobile-menu" aria-label="Mobile" className="border-t border-line bg-canvas px-5 pb-6 sm:px-8 lg:hidden">
@@ -206,5 +217,6 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
         </nav>
       )}
     </header>
+    </>
   );
 }
