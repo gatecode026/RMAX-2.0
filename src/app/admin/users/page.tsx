@@ -175,9 +175,16 @@ export default function AdminUsersPage() {
     setDeleteModal((prev) => (prev ? { ...prev, deleting: true } : null));
 
     try {
-      const res = await fetch(`/api/admin/managers/${managerId}`, {
+      // Try path endpoint first, fallback to query param if needed
+      let res = await fetch(`/api/admin/managers/${managerId}`, {
         method: "DELETE",
       });
+
+      if (!res.ok && res.status === 404) {
+        res = await fetch(`/api/admin/managers?id=${managerId}`, {
+          method: "DELETE",
+        });
+      }
 
       const data = await res.json().catch(() => ({}));
 
@@ -631,8 +638,27 @@ export default function AdminUsersPage() {
 
       {/* SweetAlert Delete Confirmation Modal */}
       {deleteModal && deleteModal.open && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
+        <div
+          onClick={() => {
+            if (!deleteModal.deleting) setDeleteModal(null);
+          }}
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md rounded-3xl bg-white p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100 cursor-default"
+          >
+            {/* Top Close Button (X) */}
+            <button
+              type="button"
+              onClick={() => setDeleteModal(null)}
+              disabled={deleteModal.deleting}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg transition disabled:opacity-50"
+              aria-label="Close dialog"
+            >
+              <X className="size-5" />
+            </button>
+
             {/* Animated Warning Icon */}
             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-rose-100 text-rose-600 shadow-inner">
               <AlertTriangle className="size-8 stroke-[2.2] animate-bounce" />
@@ -659,7 +685,7 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={() => setDeleteModal(null)}
                 disabled={deleteModal.deleting}
-                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -667,7 +693,7 @@ export default function AdminUsersPage() {
                 type="button"
                 disabled={deleteModal.deleting}
                 onClick={confirmDeleteManager}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-700 disabled:opacity-50 transition"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 hover:bg-rose-700 disabled:opacity-50 transition cursor-pointer"
               >
                 {deleteModal.deleting && <RefreshCw className="size-3.5 animate-spin text-white" />}
                 Yes, Delete Manager

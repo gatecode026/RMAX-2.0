@@ -139,3 +139,92 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await checkApiRole(["super_admin", "admin"]);
+    if ("error" in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { user: currentAdmin } = authResult;
+
+    let id: string | null = null;
+    const { searchParams } = new URL(req.url);
+    id = searchParams.get("id");
+
+    if (!id) {
+      const body = await req.json().catch(() => ({}));
+      id = body?.id || body?.managerId;
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: "Manager ID is required" }, { status: 400 });
+    }
+
+    await connectDB();
+    const manager = await User.findById(id);
+
+    if (!manager) {
+      return NextResponse.json({ error: "Manager account not found" }, { status: 404 });
+    }
+
+    if (manager.role !== "manager") {
+      return NextResponse.json(
+        { error: "Only manager accounts can be deleted from this portal" },
+        { status: 400 }
+      );
+    }
+
+    // Safely unassign leads previously assigned to this manager
+    try {
+      await Lead.updateMany(
+        { assignedManager: manager._id },
+        { $unset: { assignedManager: 1, assignedManagerName: 1 } }
+      );
+    } catch (leadErr) {
+      console.warn("Could not unassign leads for manager:", leadErr);
+    }
+
+    // Delete manager user
+    await User.findByIdAndDelete(id);
+
+    // Safely log audit event
+    try {
+      await logAuditEvent({
+        actor: currentAdmin,
+        action: "MANAGER_DELETED",
+        entityType: "manager",
+        entityId: String(id),
+        metadata: { name: manager.name, email: manager.email, department: manager.department },
+      });
+    } catch (auditErr) {
+      console.warn("Audit log failed during manager delete:", auditErr);
+    }
+
+    // Safely create notification
+    try {
+      await createNotification({
+        targetRole: "super_admin",
+        title: "Manager Account Deleted",
+        message: `${manager.name} (${manager.email}) was removed from the manager team`,
+        type: "manager_action",
+        entityType: "user",
+        entityId: String(id),
+        link: `/admin/users`,
+      });
+    } catch (notifErr) {
+      console.warn("Notification failed during manager delete:", notifErr);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Manager ${manager.name} was successfully removed.`,
+    });
+  } catch (error: any) {
+    console.error("Manager deletion error:", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete manager account." },
+      { status: 500 }
+    );
+  }
+}
