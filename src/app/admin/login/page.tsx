@@ -85,8 +85,14 @@ function AdminLoginForm() {
         return;
       }
 
-      // Successful login -> Redirect to admin dashboard
-      router.push(nextUrl);
+      // Successful login -> Redirect to admin or manager dashboard
+      let destination = nextUrl;
+      if (destination === "/login" || destination === "/admin/login") {
+        destination = res.role === "manager" ? "/manager/dashboard" : "/admin/dashboard";
+      } else if (res.role === "manager" && destination === "/admin/dashboard") {
+        destination = "/manager/dashboard";
+      }
+      router.push(destination);
       router.refresh();
     } catch {
       setFormError("Unable to connect to authentication server. Please check your connection.");

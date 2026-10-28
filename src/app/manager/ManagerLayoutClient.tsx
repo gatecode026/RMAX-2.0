@@ -58,9 +58,9 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
 
   const handleSignOut = async () => {
     try {
-      await logoutAction();
-    } catch {
-      router.push("/login");
+      await logoutAction("/admin/login");
+    } finally {
+      window.location.href = "/admin/login";
     }
   };
 

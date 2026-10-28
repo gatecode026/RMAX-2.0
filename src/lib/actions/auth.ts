@@ -28,6 +28,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
   }
 }
 
-export async function logoutAction() {
-  await signOut({ redirectTo: "/" });
+export async function logoutAction(redirectTo?: string | FormData) {
+  const target = typeof redirectTo === "string" ? redirectTo : "/";
+  await signOut({ redirectTo: target });
 }

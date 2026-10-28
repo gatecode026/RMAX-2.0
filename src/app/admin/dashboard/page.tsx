@@ -11,7 +11,7 @@ import { QuickActions } from "@/components/admin/dashboard/QuickActions";
 import { ServiceStatusChart } from "@/components/admin/dashboard/ServiceStatusChart";
 import { ImpactBanner } from "@/components/admin/dashboard/ImpactBanner";
 
-import { getSessionUser } from "@/lib/session";
+import { requireRole } from "@/lib/session";
 
 export const instant = false;
 
@@ -22,10 +22,8 @@ export const metadata = {
 
 export default async function AdminDashboardPage() {
   await connection();
-  const [data, user] = await Promise.all([
-    getAdminDashboardOverview(),
-    getSessionUser(),
-  ]);
+  const user = await requireRole(["super_admin", "admin"]);
+  const data = await getAdminDashboardOverview();
 
   const userName = user?.name || "Administrator";
   const now = new Date();

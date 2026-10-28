@@ -74,27 +74,8 @@ export async function checkApiRole(allowedRoles: UserRole[]): Promise<{ user: Se
   await connection();
   const session = await auth();
 
-  // If no active session exists, check for dev environment fallback to existing super_admin in DB
+  // If no active session exists, reject immediately
   if (!session?.user?.id) {
-    if (process.env.NODE_ENV !== "production") {
-      try {
-        const { connectDB } = await import("@/lib/mongodb");
-        const { User } = await import("@/models/User");
-        await connectDB();
-        const devAdmin = await User.findOne({ role: { $in: ["super_admin", "admin"] } }).lean();
-        if (devAdmin) {
-          return {
-            user: {
-              id: String(devAdmin._id),
-              name: devAdmin.name,
-              email: devAdmin.email,
-              role: "super_admin",
-              status: devAdmin.status || "active",
-            },
-          };
-        }
-      } catch {}
-    }
     return { error: "Authentication required", status: 401 };
   }
 

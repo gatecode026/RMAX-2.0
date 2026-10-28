@@ -77,9 +77,9 @@ export function AdminTopbar({ onToggleMobile }: { onToggleMobile: () => void }) 
 
   const handleSignOut = async () => {
     try {
-      await logoutAction();
-    } catch {
-      router.push("/login");
+      await logoutAction("/admin/login");
+    } finally {
+      window.location.href = "/admin/login";
     }
   };
 

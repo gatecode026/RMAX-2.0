@@ -9,7 +9,7 @@ export default async function ManagerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireRole(["manager", "super_admin", "admin"], "/login");
+  const user = await requireRole(["manager", "super_admin", "admin"]);
 
   return (
     <Suspense
