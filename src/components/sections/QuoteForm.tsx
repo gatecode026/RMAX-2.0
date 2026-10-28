@@ -16,6 +16,21 @@ import { formatINR } from "@/lib/format";
 import type { ProductDTO } from "@/lib/data/content";
 import { useToast } from "@/components/ui/Toast";
 
+interface UserProfileProp {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  organization?: string;
+  department?: string;
+  shippingAddress?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  } | null;
+}
+
 export function QuoteForm({
   products,
   initialModel,
@@ -25,21 +40,41 @@ export function QuoteForm({
   products: ProductDTO[];
   initialModel?: string;
   initialQuantity?: number;
-  currentUser?: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    organization?: string;
-  } | null;
+  currentUser?: UserProfileProp | null;
 }) {
   const [done, setDone] = useState(false);
+  const [submittedQuoteNumber, setSubmittedQuoteNumber] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
+
+  const hasAllDetails = Boolean(
+    currentUser &&
+    currentUser.name?.trim() &&
+    currentUser.email?.trim() &&
+    currentUser.phone?.trim() &&
+    currentUser.organization?.trim()
+  );
+
+  // Fast quote state for logged-in users with all details
+  const [fastModel, setFastModel] = useState<string>(initialModel || products[0]?.slug || "pro");
+  const [fastQuantity, setFastQuantity] = useState<number>(initialQuantity || 1);
+  const [fastInstitutionType, setFastInstitutionType] = useState<string>(INSTITUTION_TYPES[0]);
+  const [fastDailyUsage, setFastDailyUsage] = useState<string>("100–250 napkins/day");
+  const [fastDeliveryCityPostal, setFastDeliveryCityPostal] = useState<string>(() => {
+    if (currentUser?.shippingAddress?.city && currentUser?.shippingAddress?.postalCode) {
+      return `${currentUser.shippingAddress.city}, ${currentUser.shippingAddress.postalCode}`;
+    }
+    return currentUser?.shippingAddress?.city || "";
+  });
+  const [fastSubmitting, setFastSubmitting] = useState(false);
+
+  // Standard form hook for guest or manual entry
   const {
     register,
     handleSubmit,
     setError,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<QuoteRequestInput, unknown, QuoteRequestData>({
     resolver: zodResolver(quoteRequestSchema),
@@ -49,21 +84,75 @@ export function QuoteForm({
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
       preferredModel: (initialModel || "") as QuoteRequestInput["preferredModel"],
-      quantity: initialQuantity,
+      quantity: initialQuantity || 1,
+      expectedDailyUsage: "100–250 napkins/day",
+      deliveryCityPostal: currentUser?.shippingAddress?.city
+        ? `${currentUser.shippingAddress.city}, ${currentUser.shippingAddress.postalCode || ""}`
+        : "",
       useCase: "",
       installationRequirements: "",
     },
   });
 
-  const selected = useWatch({ control, name: "preferredModel" });
-  const preview = products.find((p) => p.slug === selected) ?? products.find((p) => p.slug === initialModel) ?? products[0];
+  const selectedInForm = useWatch({ control, name: "preferredModel" });
+  const activeModelSlug = (hasAllDetails && !showManualForm) ? fastModel : (selectedInForm || initialModel || products[0]?.slug);
+  const preview = products.find((p) => p.slug === activeModelSlug) ?? products.find((p) => p.slug === initialModel) ?? products[0];
 
   const { success, error: toastError } = useToast();
 
+  // Fast quote submission for logged in users with complete details
+  async function handleFastSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!currentUser) return;
+    setFormError(null);
+
+    const deliveryLoc = fastDeliveryCityPostal.trim() ||
+      (currentUser.shippingAddress?.city
+        ? `${currentUser.shippingAddress.city}, ${currentUser.shippingAddress.postalCode || ""}`
+        : "Direct Institutional Delivery");
+
+    const payload: QuoteRequestData = {
+      organizationName: currentUser.organization || "Institutional Client",
+      institutionType: (fastInstitutionType || INSTITUTION_TYPES[0]) as any,
+      contactPerson: currentUser.name,
+      role: currentUser.department || "Procurement",
+      email: currentUser.email,
+      phone: currentUser.phone || "",
+      preferredModel: fastModel as any,
+      quantity: Math.max(1, Number(fastQuantity) || 1),
+      expectedDailyUsage: fastDailyUsage || "100–250 napkins/day",
+      deliveryCityPostal: deliveryLoc,
+      useCase: "Institutional Sanitary Hygiene requirement",
+      installationRequirements: "Standard site installation",
+      consent: true,
+    };
+
+    setFastSubmitting(true);
+    try {
+      const res = await requestJson<{ id: string; quoteNumber: string }>("/api/quote-requests", "POST", payload);
+      if (res.ok) {
+        setSubmittedQuoteNumber(res.data?.quoteNumber || null);
+        setDone(true);
+        success(
+          "Quote Request Received!",
+          `Quotation #${res.data?.quoteNumber || "QT-2026"} has been created and linked to your profile.`
+        );
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      setFormError(res.message);
+      toastError("Submission Error", res.message || "Could not submit quotation request.");
+    } finally {
+      setFastSubmitting(false);
+    }
+  }
+
+  // Standard form submission
   async function onSubmit(values: QuoteRequestData) {
     setFormError(null);
-    const res = await requestJson("/api/quote-requests", "POST", values);
+    const res = await requestJson<{ id: string; quoteNumber: string }>("/api/quote-requests", "POST", values);
     if (res.ok) {
+      setSubmittedQuoteNumber(res.data?.quoteNumber || null);
       setDone(true);
       success("Quote Request Sent", "Thank you! Your quotation proposal request has been received.");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -78,17 +167,273 @@ export function QuoteForm({
     <div className="grid gap-6 lg:grid-cols-[1fr_366px]">
       {done ? (
         <Card className="p-7 md:p-8" role="status">
-          <Pill tone="success">Request sent</Pill>
-          <h2 className="mt-4 text-title">Thank you. Your quote request has been received.</h2>
+          <div className="flex items-center gap-3">
+            <Pill tone="success">Request Received</Pill>
+            {submittedQuoteNumber && (
+              <span className="font-heading font-bold text-navy text-sm">
+                Quote #{submittedQuoteNumber}
+              </span>
+            )}
+          </div>
+          <h2 className="mt-4 text-title">Thank you! Your quotation request has been received.</h2>
           <p className="mt-3 text-body text-muted">
-            Our team will be in touch to discuss capacity, model choice and installation for your institution.
+            Our institutional team will review your requirements and prepare a formal proposal.
+            {currentUser && " This request is now tracked in your Quotation History."}
           </p>
-          <Link href="/compare-models" className="mt-6 inline-block font-bold text-navy underline underline-offset-4">
-            Back to compare models
-          </Link>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            {currentUser && (
+              <Link
+                href="/account#quotations"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-navy px-6 font-semibold text-sm text-white shadow-xs transition hover:bg-navy/90"
+              >
+                View Quotation History →
+              </Link>
+            )}
+            <Link
+              href="/compare-models"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-line bg-white px-5 font-semibold text-sm text-charcoal hover:bg-soft"
+            >
+              Back to compare models
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setDone(false);
+                setSubmittedQuoteNumber(null);
+              }}
+              className="font-semibold text-navy text-sm underline underline-offset-4"
+            >
+              Submit another quote
+            </button>
+          </div>
+        </Card>
+      ) : hasAllDetails && !showManualForm ? (
+        /* FAST QUOTE VIEW FOR USERS WITH COMPLETE PROFILE */
+        <Card className="p-7 md:p-8">
+          {/* Verified user details badge */}
+          <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs">
+                  ✓
+                </span>
+                <span className="font-heading font-bold text-emerald-950 text-sm">
+                  Verified Account Profile Attached
+                </span>
+              </div>
+              <Link
+                href="/account"
+                className="font-semibold text-xs text-navy underline underline-offset-4 hover:text-navy/80"
+              >
+                Edit in Profile →
+              </Link>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 text-xs">
+              <div>
+                <span className="text-muted block">Organization</span>
+                <span className="font-semibold text-charcoal text-sm">{currentUser?.organization}</span>
+              </div>
+              <div>
+                <span className="text-muted block">Contact Person</span>
+                <span className="font-semibold text-charcoal text-sm">{currentUser?.name}</span>
+              </div>
+              <div>
+                <span className="text-muted block">Mobile Number</span>
+                <span className="font-semibold text-charcoal text-sm">{currentUser?.phone}</span>
+              </div>
+              <div>
+                <span className="text-muted block">Email Address</span>
+                <span className="font-semibold text-charcoal text-sm">{currentUser?.email}</span>
+              </div>
+            </div>
+
+            <div className="mt-3.5 pt-3 border-t border-emerald-200/60 flex items-center justify-between">
+              <p className="text-xs text-muted">
+                Need to submit for a different branch or client?
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowManualForm(true)}
+                className="text-xs font-semibold text-navy underline hover:text-navy/80"
+              >
+                Switch to full form
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Requirement Selection Form */}
+          <form onSubmit={handleFastSubmit} className="flex flex-col gap-6">
+            <div>
+              <h2 className="text-title">Select Machine &amp; Requirements</h2>
+              <p className="text-body-sm text-muted mt-1">
+                Choose the model and volume for your institutional proposal.
+              </p>
+            </div>
+
+            {/* Model Selector Pills */}
+            <div className="space-y-2">
+              <label className="block font-semibold text-sm text-charcoal">
+                Preferred Model *
+              </label>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                {products.map((p) => {
+                  const isSelected = fastModel === p.slug;
+                  return (
+                    <button
+                      type="button"
+                      key={p.slug}
+                      onClick={() => setFastModel(p.slug)}
+                      className={`flex flex-col items-start rounded-xl border p-3.5 text-left transition ${
+                        isSelected
+                          ? "border-navy bg-navy/5 ring-2 ring-navy/20 shadow-xs"
+                          : "border-line bg-white hover:border-navy/40"
+                      }`}
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <span className="font-heading font-bold text-sm text-charcoal">{p.name}</span>
+                        {isSelected && <span className="text-xs font-bold text-navy">● Selected</span>}
+                      </div>
+                      <span className="text-xs text-muted mt-1">{p.specs.dailyCapacity}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setFastModel("help-me-choose")}
+                  className={`flex flex-col items-start rounded-xl border p-3.5 text-left transition ${
+                    fastModel === "help-me-choose"
+                      ? "border-navy bg-navy/5 ring-2 ring-navy/20 shadow-xs"
+                      : "border-line bg-white hover:border-navy/40"
+                  }`}
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <span className="font-heading font-bold text-sm text-charcoal">Help me choose</span>
+                    {fastModel === "help-me-choose" && <span className="text-xs font-bold text-navy">● Selected</span>}
+                  </div>
+                  <span className="text-xs text-muted mt-1">Our engineer will recommend best fit</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quantity & Usage */}
+            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <div>
+                <label className="block font-semibold text-sm text-charcoal mb-2">
+                  Quantity Required *
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFastQuantity((q) => Math.max(1, q - 1))}
+                    className="flex size-11 items-center justify-center rounded-xl border border-line bg-white font-bold text-charcoal shadow-xs transition hover:bg-soft"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={999}
+                    value={fastQuantity}
+                    onChange={(e) => setFastQuantity(Math.max(1, Number(e.target.value) || 1))}
+                    className="h-11 w-24 rounded-xl border border-line bg-white text-center font-heading font-bold text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFastQuantity((q) => q + 1)}
+                    className="flex size-11 items-center justify-center rounded-xl border border-line bg-white font-bold text-charcoal shadow-xs transition hover:bg-soft"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-sm text-charcoal mb-2">
+                  Institution Type *
+                </label>
+                <select
+                  value={fastInstitutionType}
+                  onChange={(e) => setFastInstitutionType(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                >
+                  {INSTITUTION_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Daily usage & Delivery destination */}
+            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <div>
+                <label className="block font-semibold text-sm text-charcoal mb-2">
+                  Expected Daily Usage
+                </label>
+                <select
+                  value={fastDailyUsage}
+                  onChange={(e) => setFastDailyUsage(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                >
+                  <option value="Up to 100 napkins/day">Up to 100 napkins/day</option>
+                  <option value="100–250 napkins/day">100–250 napkins/day</option>
+                  <option value="250–500 napkins/day">250–500 napkins/day</option>
+                  <option value="500+ napkins/day">500+ napkins/day</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-sm text-charcoal mb-2">
+                  Delivery City &amp; Postal Code *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Mumbai, 400001"
+                  value={fastDeliveryCityPostal}
+                  onChange={(e) => setFastDeliveryCityPostal(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {formError && (
+              <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
+                {formError}
+              </p>
+            )}
+
+            <div>
+              <Button type="submit" disabled={fastSubmitting} className="w-full sm:w-auto px-8">
+                {fastSubmitting ? "Submitting Quotation Request…" : "Submit Institutional Quotation Request"}
+              </Button>
+              <p className="mt-2 text-xs text-muted">
+                Proposal will be sent to {currentUser?.email} and tracked directly in your account.
+              </p>
+            </div>
+          </form>
         </Card>
       ) : (
+        /* STANDARD FORM VIEW FOR GUESTS OR MANUAL ENTRY */
         <Card className="p-7 md:p-8">
+          {hasAllDetails && showManualForm && (
+            <div className="mb-6 flex items-center justify-between rounded-xl border border-line bg-soft/70 p-3.5">
+              <span className="text-xs text-muted font-medium">
+                Showing full entry form.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowManualForm(false)}
+                className="text-xs font-semibold text-navy underline hover:text-navy/80"
+              >
+                ← Back to 1-Click Quick Quote
+              </button>
+            </div>
+          )}
+
           {!currentUser && (
             <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 sm:flex-row sm:items-center">
               <div className="flex items-center gap-3">
@@ -110,6 +455,17 @@ export function QuoteForm({
               >
                 Log In / Register
               </Link>
+            </div>
+          )}
+
+          {currentUser && !hasAllDetails && (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
+              <p className="font-semibold text-charcoal text-sm">
+                Complete your details below
+              </p>
+              <p className="text-xs text-muted mt-0.5">
+                Please provide your organization name and 10-digit mobile number to complete your institutional quote request.
+              </p>
             </div>
           )}
 

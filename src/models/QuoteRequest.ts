@@ -41,8 +41,8 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     quantity: { type: Number, required: true, min: 1 },
     expectedDailyUsage: { type: String, required: true, trim: true },
     deliveryCityPostal: { type: String, required: true, trim: true },
-    useCase: { type: String, trim: true, default: "" },
-    installationRequirements: { type: String, trim: true, default: "" },
+    useCase: { type: String, trim: true, default: "Institutional sanitary disposal", required: false },
+    installationRequirements: { type: String, trim: true, default: "Standard installation", required: false },
     consent: { type: Boolean, required: true },
     status: {
       type: String,
@@ -61,6 +61,10 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
 );
 
 quoteRequestSchema.index({ createdAt: -1 });
+
+if ((models as Record<string, any>).QuoteRequest) {
+  delete (models as Record<string, any>).QuoteRequest;
+}
 
 export const QuoteRequest: Model<IQuoteRequest> =
   models.QuoteRequest || model<IQuoteRequest>("QuoteRequest", quoteRequestSchema);

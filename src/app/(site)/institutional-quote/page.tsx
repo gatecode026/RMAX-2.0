@@ -34,6 +34,8 @@ async function QuoteContent({ searchParams }: { searchParams: QuoteSearch }) {
         email: user.email,
         phone: user.phone || "",
         organization: user.organization || "",
+        department: user.department || "",
+        shippingAddress: user.shippingAddress || null,
       } : null}
     />
   );
