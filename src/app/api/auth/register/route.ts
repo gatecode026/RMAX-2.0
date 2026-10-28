@@ -11,12 +11,12 @@ export const POST = route(async (req: Request) => {
   if ("response" in parsedBody) return parsedBody.response;
   const parsed = registerSchema.safeParse(parsedBody.body);
   if (!parsed.success) return zodFail(parsed.error);
-  const { name, email, organization, password } = parsed.data;
+  const { name, email, phone, organization, password } = parsed.data;
 
   try {
     await connectDB();
     const passwordHash = await bcrypt.hash(password, 12);
-    await User.create({ name, email, organization, passwordHash });
+    await User.create({ name, email, phone, organization, passwordHash });
     return ok({ email }, 201);
   } catch (err) {
     if (isDuplicateKey(err)) {

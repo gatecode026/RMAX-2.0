@@ -37,12 +37,16 @@ export const metadata: Metadata = {
   },
 };
 
+import { ToastProvider } from "@/components/ui/Toast";
+
 export const viewport: Viewport = { themeColor: "#fbf9f5" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}>
-      <body className="flex min-h-dvh flex-col">{children}</body>
+      <body className="flex min-h-dvh flex-col">
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

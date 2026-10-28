@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
 import { Search, Mail, Phone, Eye, Download, UserPlus, X, AlertCircle } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 interface CustomerItem {
   id: string;
@@ -57,6 +58,8 @@ export default function AdminCustomersPage() {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  const { success, error } = useToast();
+
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCust.name || !newCust.email) {
@@ -75,15 +78,18 @@ export default function AdminCustomersPage() {
       const data = await res.json();
       if (!res.ok) {
         setErrorMsg(data.error || "Failed to create customer");
+        error("Creation Failed", data.error || "Failed to create customer");
         setSubmitting(false);
         return;
       }
 
       setShowAddModal(false);
       setNewCust({ name: "", email: "", phone: "", organization: "", type: "School" });
+      success("Customer Created", `${newCust.name} has been added to the database.`);
       fetchCustomers();
     } catch {
       setErrorMsg("Network error creating customer");
+      error("Network Error", "Unable to create customer at this time.");
     } finally {
       setSubmitting(false);
     }

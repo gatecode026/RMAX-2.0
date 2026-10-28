@@ -41,6 +41,7 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-5 flex flex-col gap-5">
         <TextInput label="Full name *" autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextInput label="Email address *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+        <TextInput label="Mobile Number *" type="tel" autoComplete="tel" placeholder="10-digit mobile number" error={errors.phone?.message} {...register("phone")} />
         <TextInput label="Organization (optional)" autoComplete="organization" error={errors.organization?.message} {...register("organization")} />
         <TextInput
           label="Password *"

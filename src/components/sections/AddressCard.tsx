@@ -11,6 +11,7 @@ import { Pill } from "@/components/ui/Pill";
 import { INDIAN_STATES } from "@/lib/constants";
 import { applyFieldErrors, requestJson } from "@/lib/client-api";
 import { addressSchema, type AddressInput } from "@/lib/validations/schemas";
+import { useToast } from "@/components/ui/Toast";
 
 type Props = {
   kind: "shipping" | "billing";
@@ -34,17 +35,21 @@ export function AddressCard({ kind, initial, sameAsShipping = true, actionLabel,
     formState: { errors, isSubmitting },
   } = useForm<AddressInput>({ resolver: zodResolver(addressSchema), defaultValues: { country: "India", ...initial } });
 
+  const { success, error } = useToast();
+
   async function save(values: AddressInput | null) {
     setFormError(null);
     const body = kind === "shipping" ? { shippingAddress: values } : { billingSameAsShipping: same, ...(values ? { billingAddress: values } : {}) };
     const res = await requestJson("/api/account/addresses", "PATCH", body);
     if (res.ok) {
       setEditing(false);
+      success("Address Saved", kind === "shipping" ? "Delivery address updated successfully." : "Billing address updated successfully.");
       router.refresh();
       return;
     }
     applyFieldErrors(setError, res.fields);
     setFormError(res.message);
+    error("Save Failed", res.message || "Failed to save address");
   }
 
   const onSubmit = handleSubmit((values) => save(kind === "billing" && same ? null : values));

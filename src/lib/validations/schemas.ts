@@ -50,6 +50,7 @@ export const registerSchema = z
   .object({
     name: text("Full name"),
     email,
+    phone,
     organization: optionalText(),
     password,
     confirmPassword: z.string().min(1, "Confirm your password"),
