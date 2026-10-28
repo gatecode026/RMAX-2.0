@@ -573,12 +573,12 @@ export default function AdminQuotationsPage() {
 
       {/* Quotations Table */}
       <div className="overflow-hidden rounded-2xl border border-[#E5EBF4] bg-white shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="border-b border-[#E5EBF4] bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full min-w-[1050px] text-left text-xs text-slate-600">
+            <thead className="border-b border-[#E5EBF4] bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <tr>
                 {/* Select All Checkbox */}
-                <th className="py-3.5 pl-4 pr-2 w-10 text-center">
+                <th className="py-3.5 pl-4 pr-2 w-10 text-center whitespace-nowrap">
                   <button
                     onClick={toggleSelectAll}
                     className="text-slate-400 hover:text-slate-700 transition"
@@ -592,27 +592,27 @@ export default function AdminQuotationsPage() {
                     )}
                   </button>
                 </th>
-                <th className="py-3.5 pl-2 pr-3">Quote # & Date</th>
-                <th className="py-3.5 px-3">Organization</th>
-                <th className="py-3.5 px-3">Contact Person & User</th>
-                <th className="py-3.5 px-3">Product Model</th>
-                <th className="py-3.5 px-3">Quantity</th>
-                <th className="py-3.5 px-3">Quoted Amount</th>
-                <th className="py-3.5 px-3">Status</th>
-                <th className="py-3.5 pr-5 text-right">Actions</th>
+                <th className="py-3.5 pl-2 pr-4 whitespace-nowrap">Quote # & Date</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Organization</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Contact Person & User</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Product Model</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Quantity</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Quoted Amount</th>
+                <th className="py-3.5 px-4 whitespace-nowrap">Status</th>
+                <th className="py-3.5 pr-5 pl-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5EBF4]">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400 whitespace-nowrap">
                     <RefreshCw className="mx-auto size-6 animate-spin text-[#10469B] mb-2" />
                     Loading quotations from database...
                   </td>
                 </tr>
               ) : quotes.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400 whitespace-nowrap">
                     No quotations found in database matching this criteria.
                   </td>
                 </tr>
@@ -629,7 +629,7 @@ export default function AdminQuotationsPage() {
                       }`}
                     >
                       {/* Row Checkbox */}
-                      <td className="py-3.5 pl-4 pr-2 text-center">
+                      <td className="py-3.5 pl-4 pr-2 text-center whitespace-nowrap">
                         <button
                           onClick={() => toggleSelectOne(quote._id)}
                           className="text-slate-400 hover:text-[#10469B] transition"
@@ -643,13 +643,14 @@ export default function AdminQuotationsPage() {
                         </button>
                       </td>
 
-                      {/* Quote # + Date */}
-                      <td className="py-3.5 pl-2 pr-3">
-                        <div className="flex flex-col">
-                          <span className="font-mono text-[11px] font-bold text-[#10469B]">
+                      {/* Quote # + Date (Single line) */}
+                      <td className="py-3.5 pl-2 pr-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[#10469B]">
                             {quoteId}
                           </span>
-                          <span className="text-[11px] text-slate-400 mt-0.5">
+                          <span className="text-[11px] text-slate-400">
+                            •{" "}
                             {new Date(quote.createdAt).toLocaleDateString([], {
                               month: "short",
                               day: "numeric",
@@ -659,65 +660,68 @@ export default function AdminQuotationsPage() {
                         </div>
                       </td>
 
-                      {/* Organization */}
-                      <td className="py-3.5 px-3">
-                        <div>
-                          <p className="font-semibold text-slate-900 text-[13px]">
+                      {/* Organization (Single line) */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 text-xs">
                             {quote.organizationName}
-                          </p>
-                          <span className="inline-block mt-0.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                          </span>
+                          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                             {quote.institutionType}
                           </span>
                         </div>
                       </td>
 
-                      {/* Contact Person & Email */}
-                      <td className="py-3.5 px-3">
-                        <div>
-                          <p className="font-medium text-slate-800">{quote.contactPerson}</p>
-                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-                            {quote.phone && <span>{quote.phone}</span>}
-                            <span>•</span>
-                            <span className="truncate max-w-[140px]" title={quote.email}>
-                              {quote.email}
-                            </span>
-                          </div>
+                      {/* Contact Person & Email (Single line) */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-medium text-slate-800">{quote.contactPerson}</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-slate-500 font-mono text-[11px]" title={quote.email}>
+                            {quote.email}
+                          </span>
+                          {quote.phone && (
+                            <>
+                              <span className="text-slate-300">•</span>
+                              <span className="text-slate-400 text-[11px]">{quote.phone}</span>
+                            </>
+                          )}
                         </div>
                       </td>
 
                       {/* Product Model */}
-                      <td className="py-3.5 px-3">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className="rounded-md bg-blue-50 px-2 py-0.5 font-bold uppercase text-[11px] text-[#10469B]">
                           {quote.preferredModel}
                         </span>
                       </td>
 
                       {/* Quantity */}
-                      <td className="py-3.5 px-3 font-semibold text-slate-800 font-jakarta">
+                      <td className="py-3.5 px-4 font-semibold text-slate-800 font-jakarta whitespace-nowrap">
                         {quote.quantity} units
                       </td>
 
                       {/* Quoted Amount */}
-                      <td className="py-3.5 px-3">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         {quote.quotedAmount ? (
-                          <span className="font-mono text-[13px] font-bold text-slate-900">
+                          <span className="font-mono text-xs font-bold text-slate-900">
                             ₹{quote.quotedAmount.toLocaleString("en-IN")}
                           </span>
                         ) : (
-                          <span className="text-slate-400 italic">Not Quoted Yet</span>
+                          <span className="text-slate-400 italic text-[11px]">Not Quoted Yet</span>
                         )}
                       </td>
 
                       {/* Status */}
-                      <td className="py-3.5 px-3">{getStatusBadge(quote.status)}</td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">{getStatusBadge(quote.status)}</td>
 
                       {/* Actions */}
-                      <td className="py-3.5 pr-5 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="py-3.5 pr-5 pl-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
                           {/* Review Detail */}
                           <button
                             onClick={() => handleOpenDetail(quote)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-[#10469B]/10 px-2 py-1 text-[11px] font-bold text-[#10469B] hover:bg-[#10469B]/20 transition"
+                            className="inline-flex items-center gap-1 rounded-lg bg-[#10469B]/10 px-2.5 py-1 text-[11px] font-bold text-[#10469B] hover:bg-[#10469B]/20 transition"
                             title="Review and Edit Quotation"
                           >
                             <Eye className="size-3" />
