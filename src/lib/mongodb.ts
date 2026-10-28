@@ -5,7 +5,7 @@ import mongoose from "mongoose";
  * and on serverless every invocation may reuse a warm instance — keeping the
  * connection promise on `globalThis` avoids opening a new pool each time.
  *
- * When MongoDB is unreachable the connection fails fast (2.5 s) and further
+ * When MongoDB is unreachable the connection fails fast and further
  * attempts are skipped for a short cool-down, so pages can fall back to the
  * built-in seed content instead of hanging.
  */
@@ -44,15 +44,34 @@ export function isDatabaseUnavailable(err: unknown): boolean {
 export async function connectDB(): Promise<typeof mongoose> {
   const uri = process.env.MONGODB_URI;
   if (!uri) throw new DatabaseUnavailableError("MONGODB_URI is not set. Copy .env.example to .env.local and set it.");
-  if (cache.conn) return cache.conn;
+
+  // If connection is already alive and active, reuse immediately without reconnecting
+  if (cache.conn && mongoose.connection.readyState === 1) {
+    return cache.conn;
+  }
+
+  // If previous connection dropped, reset cache to establish fresh connection
+  if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
+    cache.conn = null;
+    cache.promise = null;
+  }
+
   if (cache.failedAt && Date.now() - cache.failedAt < RETRY_AFTER_MS) throw new DatabaseUnavailableError();
 
-  cache.promise ??= mongoose.connect(uri, { bufferCommands: false, maxPoolSize: 10, serverSelectionTimeoutMS: 2500 });
+  cache.promise ??= mongoose.connect(uri, {
+    bufferCommands: false,
+    maxPoolSize: 10,
+    minPoolSize: 2, // Keeps warm connections ready so requests don't suffer a 1s handshake delay
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  });
+
   try {
     cache.conn = await cache.promise;
     cache.failedAt = 0;
     cache.warned = false;
   } catch {
+    cache.conn = null;
     cache.promise = null;
     cache.failedAt = Date.now();
     if (!cache.warned) {

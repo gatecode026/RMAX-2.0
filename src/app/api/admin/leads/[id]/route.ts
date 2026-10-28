@@ -227,6 +227,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await lead.save();
 
+    const changeParts: string[] = [];
+    if (status && status !== previousStatus) changeParts.push(`status changed from ${previousStatus} to ${status}`);
+    if (assignedManagerId !== undefined && lead.assignedManagerName !== previousManagerName) {
+      changeParts.push(`reassigned to ${lead.assignedManagerName || "Unassigned"}`);
+    }
+    if (priority) changeParts.push(`priority set to ${priority}`);
+    if (notes) changeParts.push(`note added`);
+    const detailsStr = changeParts.length > 0 ? changeParts.join(", ") : "Lead details updated";
+
     // Log audit event
     await logAuditEvent({
       actor: user,
@@ -235,9 +244,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       entityId: String(lead._id),
       metadata: {
         leadNumber: lead.leadNumber,
+        name: lead.name,
         statusChanged: status !== previousStatus ? { from: previousStatus, to: status } : null,
         reassigned: assignedManagerId !== undefined ? { from: previousManagerName, to: lead.assignedManagerName } : null,
         action,
+        details: `${user.name} (${user.role}) updated lead ${lead.leadNumber} (${lead.name}): ${detailsStr}`,
       },
     });
 
@@ -250,11 +261,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authResult = await checkApiRole(["super_admin", "admin"]);
+    const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
     const { user } = authResult;
+    const isSuperAdmin = user.role === "super_admin" || user.role === "admin";
     const { id } = await params;
 
     await connectDB();
@@ -263,26 +275,43 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
-    // Soft delete / archive
-    lead.isArchived = true;
-    lead.activities.push({
-      type: "status_change",
-      description: `Lead archived by Super Admin ${user.name}`,
-      performedBy: user.id as unknown as import("mongoose").Types.ObjectId,
-      performedByName: user.name || "Super Admin",
-      createdAt: new Date(),
-    });
-    await lead.save();
+    // Role check: Managers can only delete leads assigned to them or unassigned leads
+    if (!isSuperAdmin && lead.assignedManager && String(lead.assignedManager) !== user.id) {
+      return NextResponse.json({ error: "Forbidden: You are not authorized to delete this lead" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const permanent = searchParams.get("permanent") === "true";
+
+    if (permanent) {
+      await Lead.findByIdAndDelete(id);
+    } else {
+      // Archive / Soft delete so audit history is preserved
+      lead.isArchived = true;
+      lead.activities.push({
+        type: "status_change",
+        description: `Lead deleted by ${user.name} (${user.role})`,
+        performedBy: user.id as unknown as import("mongoose").Types.ObjectId,
+        performedByName: user.name || "User",
+        createdAt: new Date(),
+      });
+      await lead.save();
+    }
 
     await logAuditEvent({
       actor: user,
-      action: "LEAD_ARCHIVED",
+      action: "LEAD_DELETED",
       entityType: "lead",
       entityId: String(lead._id),
-      metadata: { leadNumber: lead.leadNumber, name: lead.name },
+      metadata: {
+        leadNumber: lead.leadNumber,
+        name: lead.name,
+        permanent,
+        details: `${user.name} (${user.role}) deleted lead record ${lead.leadNumber} (${lead.name})`,
+      },
     });
 
-    return NextResponse.json({ success: true, message: "Lead archived successfully" });
+    return NextResponse.json({ success: true, message: "Lead deleted successfully" });
   } catch (error) {
     console.error("Lead DELETE error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

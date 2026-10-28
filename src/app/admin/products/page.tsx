@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
@@ -91,7 +91,19 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const categories = ["All", "Incinerator", "Vending Machine"];
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("rmax_admin_products");
+      if (stored) {
+        const custom = JSON.parse(stored) as ProductRow[];
+        setProducts([...custom, ...INITIAL_PRODUCTS.filter((p) => !custom.some((c) => c.slug === p.slug))]);
+      }
+    } catch (e) {
+      console.error("Failed to load products from storage:", e);
+    }
+  }, []);
+
+  const categories = ["All", "Incinerator", "Vending Machine", "Sanitary Dispenser", "Accessories"];
 
   const filtered = products.filter((p) => {
     const matchesCategory = selectedCategory === "All" || p.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -103,7 +115,20 @@ export default function AdminProductsPage() {
   });
 
   const handleDelete = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    fetch(`/api/admin/products/${id}`, { method: "DELETE" }).catch(console.error);
+    setProducts((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      try {
+        const stored = localStorage.getItem("rmax_admin_products");
+        if (stored) {
+          const custom = (JSON.parse(stored) as ProductRow[]).filter((p) => p.id !== id);
+          localStorage.setItem("rmax_admin_products", JSON.stringify(custom));
+        }
+      } catch (e) {
+        console.error("Failed to update storage after delete:", e);
+      }
+      return next;
+    });
     setDeleteId(null);
   };
 
@@ -148,7 +173,7 @@ export default function AdminProductsPage() {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap ${
                 selectedCategory === cat
                   ? "bg-[#10469B] text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -160,22 +185,22 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="overflow-hidden rounded-xl border border-[#E5EBF4] bg-white shadow-sm">
+      {/* Products Table Card */}
+      <div className="rounded-xl border border-[#E5EBF4] bg-white shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="border-b border-[#E5EBF4] bg-slate-50/75 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#F4F7FC]/70 border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="py-3.5 pl-5 pr-3">Product</th>
                 <th className="px-3 py-3.5">Category</th>
-                <th className="px-3 py-3.5">Key Specs</th>
+                <th className="px-3 py-3.5">Specs & Capacity</th>
                 <th className="px-3 py-3.5">Price (INR)</th>
                 <th className="px-3 py-3.5">Stock</th>
                 <th className="px-3 py-3.5">Status</th>
                 <th className="py-3.5 pl-3 pr-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E5EBF4]">
+            <tbody className="divide-y divide-slate-100 text-slate-700">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
@@ -192,6 +217,7 @@ export default function AdminProductsPage() {
                             src={product.image}
                             alt={product.name}
                             fill
+                            unoptimized
                             className="object-contain"
                             sizes="48px"
                           />

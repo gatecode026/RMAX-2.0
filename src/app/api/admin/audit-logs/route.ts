@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
 
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "30", 10)), 100);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "40", 10)), 100);
     const skip = (page - 1) * limit;
 
     const query: Record<string, unknown> = {};
@@ -32,7 +32,14 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search");
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), "i");
-      query.$or = [{ actorName: regex }, { action: regex }, { entityId: regex }];
+      query.$or = [
+        { actorName: regex },
+        { action: regex },
+        { entityId: regex },
+        { "metadata.details": regex },
+        { "metadata.name": regex },
+        { "metadata.productName": regex },
+      ];
     }
 
     const [logs, total] = await Promise.all([
@@ -43,14 +50,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       logs: logs.map((l) => ({
         id: String(l._id),
-        actorName: l.actorName,
+        _id: String(l._id),
+        actorName: l.actorName || "System",
         actorEmail: l.actorEmail,
-        actorRole: l.actorRole,
+        actorRole: l.actorRole || "system",
         action: l.action,
         entityType: l.entityType,
         entityId: l.entityId,
         metadata: l.metadata,
+        details: l.metadata?.details || l.metadata,
         timestamp: l.timestamp,
+        createdAt: l.timestamp,
       })),
       pagination: {
         page,

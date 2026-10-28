@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import ProductImageUploader from "@/components/admin/products/ProductImageUploader";
 import { ArrowLeft, Save, ExternalLink, CheckCircle2 } from "lucide-react";
 import { products as seedProducts } from "@/data/seed";
 
@@ -14,11 +14,20 @@ export default function AdminProductDetailPage() {
 
   const seed = seedProducts.find((p) => p.slug === idOrSlug) || seedProducts[2];
 
+  const defaultImage =
+    seed.slug === "basic"
+      ? "/images/products/list-basic.png"
+      : seed.slug === "pro"
+      ? "/images/products/list-pro.png"
+      : seed.slug === "pro-max"
+      ? "/images/products/list-pro-max.png"
+      : "/images/products/pad-vending.png";
+
   const [formData, setFormData] = useState({
     name: seed.name,
     title: seed.title,
     slug: seed.slug,
-    category: seed.category,
+    category: seed.category as string,
     price: seed.price,
     originalPrice: seed.originalPrice || seed.price * 2,
     dailyCapacity: seed.specs.dailyCapacity,
@@ -27,24 +36,36 @@ export default function AdminProductDetailPage() {
     summary: seed.summary,
     stock: 28,
     status: "Active",
+    image: defaultImage,
   });
 
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+
+    try {
+      const stored = localStorage.getItem("rmax_admin_products");
+      if (stored) {
+        const list = JSON.parse(stored) as Array<Record<string, unknown>>;
+        const idx = list.findIndex((p) => p.slug === formData.slug || p.id === formData.slug);
+        if (idx >= 0) {
+          list[idx] = {
+            ...list[idx],
+            ...formData,
+            gallery: galleryImages,
+          };
+          localStorage.setItem("rmax_admin_products", JSON.stringify(list));
+        }
+      }
+    } catch (err) {
+      console.error("Local storage update error:", err);
+    }
+
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };
-
-  const productImage =
-    seed.slug === "basic"
-      ? "/images/products/list-basic.png"
-      : seed.slug === "pro"
-      ? "/images/products/list-pro.png"
-      : seed.slug === "pro-max"
-      ? "/images/products/list-pro-max.png"
-      : "/images/products/pad-vending.png";
 
   return (
     <div>
@@ -80,7 +101,7 @@ export default function AdminProductDetailPage() {
       {savedSuccess && (
         <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
           <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-          Product specifications and pricing updated successfully!
+          Product specifications, visual media, and pricing updated successfully!
         </div>
       )}
 
@@ -106,7 +127,7 @@ export default function AdminProductDetailPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Model Code
+                    Model Name
                   </label>
                   <input
                     type="text"
@@ -121,8 +142,8 @@ export default function AdminProductDetailPage() {
                   </label>
                   <input
                     type="text"
-                    disabled
                     value={formData.slug}
+                    readOnly
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-500 font-mono"
                   />
                 </div>
@@ -130,7 +151,19 @@ export default function AdminProductDetailPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Institutional Summary
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#10469B] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Summary Description
                 </label>
                 <textarea
                   rows={3}
@@ -142,7 +175,7 @@ export default function AdminProductDetailPage() {
             </div>
           </div>
 
-          {/* Specifications */}
+          {/* Technical Specs */}
           <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">
             <h2 className="text-base font-bold text-[#0B2450] mb-4">Technical Specifications</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -225,26 +258,12 @@ export default function AdminProductDetailPage() {
 
         {/* Right Col: Media Preview & Actions */}
         <div className="space-y-6">
-          <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-[#0B2450] mb-4">Product Visual</h2>
-            <div className="flex justify-center rounded-lg border border-slate-100 bg-[#F4F7FC] p-6">
-              <div className="relative h-48 w-48">
-                <Image
-                  src={productImage}
-                  alt={formData.title}
-                  fill
-                  className="object-contain"
-                  sizes="192px"
-                />
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Active on Storefront
-              </span>
-            </div>
-          </div>
+          <ProductImageUploader
+            value={formData.image}
+            onChange={(img) => setFormData((prev) => ({ ...prev, image: img }))}
+            gallery={galleryImages}
+            onGalleryChange={setGalleryImages}
+          />
 
           <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm space-y-4">
             <h2 className="text-base font-bold text-[#0B2450]">Save Changes</h2>

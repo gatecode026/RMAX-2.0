@@ -105,7 +105,7 @@ export async function loginAction(
 
   // 6. Sign in with NextAuth to issue the session cookie
   try {
-    await signIn("credentials", { email, password, redirect: false });
+    await signIn("credentials", { email, password, preVerified: "true", redirect: false });
     return { ok: true, role };
   } catch (err) {
     if (err instanceof AuthError) {

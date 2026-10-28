@@ -22,6 +22,7 @@ import {
   MessageSquare,
   FileText,
   X,
+  Trash2,
 } from "lucide-react";
 
 interface ManagerOption {
@@ -74,6 +75,8 @@ export default function SuperAdminLeadsPage() {
   // Modals & Drawers
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
+  const [deleteLeadItem, setDeleteLeadItem] = useState<LeadItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [reassignModalLead, setReassignModalLead] = useState<LeadItem | null>(null);
   const [selectedManagerId, setSelectedManagerId] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
@@ -141,7 +144,18 @@ export default function SuperAdminLeadsPage() {
     const timeout = setTimeout(() => {
       fetchLeads();
     }, 250);
-    return () => clearTimeout(timeout);
+
+    const handleLiveSync = () => {
+      fetchLeads();
+    };
+    window.addEventListener("rmax:lead_updated", handleLiveSync);
+    const interval = setInterval(fetchLeads, 10000);
+
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("rmax:lead_updated", handleLiveSync);
+      clearInterval(interval);
+    };
   }, [fetchLeads]);
 
   // Handle Lead Creation
@@ -208,6 +222,30 @@ export default function SuperAdminLeadsPage() {
   };
 
   // Add Note / Activity to Selected Lead
+  const handleDeleteLead = async () => {
+    if (!deleteLeadItem) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${deleteLeadItem._id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setLeads((prev) => prev.filter((l) => l._id !== deleteLeadItem._id));
+        if (selectedLead?._id === deleteLeadItem._id) {
+          setSelectedLead(null);
+        }
+        setDeleteLeadItem(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete lead");
+      }
+    } catch {
+      alert("Error deleting lead");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleAddNote = async () => {
     if (!selectedLead || !newNote.trim()) return;
     setActionLoading(true);
@@ -632,6 +670,13 @@ export default function SuperAdminLeadsPage() {
                             View
                             <ChevronRight className="size-3" />
                           </button>
+                          <button
+                            onClick={() => setDeleteLeadItem(lead)}
+                            title="Delete Lead"
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1029,6 +1074,45 @@ export default function SuperAdminLeadsPage() {
                   Post
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Lead Confirmation Modal */}
+      {deleteLeadItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3 text-red-600">
+              <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="size-5" />
+              </div>
+              <div>
+                <h3 className="font-jakarta text-base font-bold text-slate-900">Delete Lead Record</h3>
+                <p className="text-xs text-slate-500">{deleteLeadItem.leadNumber}</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to delete lead <strong className="text-slate-900">{deleteLeadItem.name}</strong> from{" "}
+              <strong className="text-slate-900">{deleteLeadItem.institutionName || "customer"}</strong>?
+            </p>
+            <div className="mt-6 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteLeadItem(null)}
+                disabled={isDeleting}
+                className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteLead}
+                disabled={isDeleting}
+                className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete Lead"}
+              </button>
             </div>
           </div>
         </div>

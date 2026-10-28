@@ -18,6 +18,7 @@ import {
   Save,
   ChevronRight,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 
 interface ActivityItem {
@@ -55,6 +56,8 @@ export default function ManagerLeadDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form states
   const [status, setStatus] = useState("");
@@ -96,6 +99,26 @@ export default function ManagerLeadDetailPage() {
   useEffect(() => {
     fetchLead();
   }, [fetchLead]);
+
+  const handleDeleteLead = async () => {
+    if (!lead) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${lead._id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        router.push("/manager/leads");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete lead");
+      }
+    } catch {
+      alert("Error deleting lead");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Update Status & Priority & Follow Up Date
   const handleUpdatePipeline = async () => {
@@ -217,9 +240,18 @@ export default function ManagerLeadDetailPage() {
         >
           <ArrowLeft className="size-4" /> Back to My Leads
         </Link>
-        <span className="font-mono text-xs font-bold text-[#10469B] bg-blue-50 px-2.5 py-1 rounded-md">
-          {lead.leadNumber}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/70 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
+          >
+            <Trash2 className="size-3.5" /> Delete Lead
+          </button>
+          <span className="font-mono text-xs font-bold text-[#10469B] bg-blue-50 px-2.5 py-1 rounded-md">
+            {lead.leadNumber}
+          </span>
+        </div>
       </div>
 
       {/* Hero Header Card */}
@@ -524,6 +556,44 @@ export default function ManagerLeadDetailPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Lead Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3 text-red-600">
+              <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="size-5" />
+              </div>
+              <div>
+                <h3 className="font-jakarta text-base font-bold text-slate-900">Delete Lead Record</h3>
+                <p className="text-xs text-slate-500">{lead.leadNumber}</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to delete lead <strong className="text-slate-900">{lead.name}</strong>? This action will remove the lead from your active pipeline.
+            </p>
+            <div className="mt-6 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteLead}
+                disabled={isDeleting}
+                className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete Lead"}
+              </button>
+            </div>
           </div>
         </div>
       )}

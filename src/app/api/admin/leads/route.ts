@@ -262,29 +262,16 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    // Notify assigned manager or super admins
-    if (assignedManager) {
-      await createNotification({
-        recipientId: String(assignedManager),
-        targetRole: "manager",
-        title: "New Lead Assigned",
-        message: `${name} from ${institution} (${priority.toUpperCase()} Priority)`,
-        type: "lead_assigned",
-        entityType: "lead",
-        entityId: String(lead._id),
-        link: `/manager/leads/${lead._id}`,
-      });
-    } else {
-      await createNotification({
-        targetRole: "super_admin",
-        title: "New Unassigned Lead",
-        message: `${name} from ${institution} requires manager assignment`,
-        type: "lead_created",
-        entityType: "lead",
-        entityId: String(lead._id),
-        link: `/admin/leads`,
-      });
-    }
+    // Notify both managers and super admins
+    await createNotification({
+      targetRole: "all",
+      title: assignedManager ? `New Lead Assigned: ${leadNumber}` : `New Lead Created: ${leadNumber}`,
+      message: `${name} (${institution}) • Mobile: ${phone} • ${priority.toUpperCase()} Priority${assignedManagerName ? ` • Assigned to ${assignedManagerName}` : " • Unassigned"}`,
+      type: assignedManager ? "lead_assigned" : "lead_created",
+      entityType: "lead",
+      entityId: String(lead._id),
+      link: "/admin/leads",
+    });
 
     // Log audit event
     await logAuditEvent({

@@ -9,10 +9,8 @@ declare global {
 }
 
 export const notificationEmitter = globalThis.__notificationEmitter || new EventEmitter();
-notificationEmitter.setMaxListeners(100);
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__notificationEmitter = notificationEmitter;
-}
+notificationEmitter.setMaxListeners(200);
+globalThis.__notificationEmitter = notificationEmitter;
 
 export interface CreateNotificationParams {
   recipientId?: string | null;

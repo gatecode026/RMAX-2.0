@@ -11,6 +11,10 @@ export const POST = route(async (req: Request) => {
   const parsed = quoteRequestSchema.safeParse(parsedBody.body);
   if (!parsed.success) return zodFail(parsed.error);
 
+  if (parsed.data.websiteUrl && parsed.data.websiteUrl.trim().length > 0) {
+    return fail("Request blocked by security filter.", 400);
+  }
+
   try {
     await connectDB();
     
@@ -111,6 +115,48 @@ export const POST = route(async (req: Request) => {
       });
     } catch (notifErr) {
       console.warn("Notification skipped:", notifErr);
+    }
+
+    // Record Audit Trail
+    try {
+      const { logAuditEvent } = await import("@/lib/audit");
+      await logAuditEvent({
+        action: "QUOTATION_REQUESTED",
+        entityType: "quotation",
+        entityId: String(doc._id),
+        metadata: {
+          quoteNumber,
+          organizationName: parsed.data.organizationName,
+          contactPerson: parsed.data.contactPerson,
+          phone: parsed.data.phone,
+          preferredModel: parsed.data.preferredModel,
+          quantity: parsed.data.quantity,
+          details: `Quotation #${quoteNumber} requested by ${parsed.data.contactPerson} (${parsed.data.organizationName}, Mobile: ${parsed.data.phone}) for ${parsed.data.quantity}x ${parsed.data.preferredModel}`,
+        },
+      });
+    } catch (auditErr) {
+      console.warn("Audit log skipped:", auditErr);
+    }
+
+    // Record Audit Trail
+    try {
+      const { logAuditEvent } = await import("@/lib/audit");
+      await logAuditEvent({
+        action: "QUOTATION_REQUESTED",
+        entityType: "quotation",
+        entityId: String(doc._id),
+        metadata: {
+          quoteNumber,
+          organizationName: parsed.data.organizationName,
+          contactPerson: parsed.data.contactPerson,
+          phone: parsed.data.phone,
+          preferredModel: parsed.data.preferredModel,
+          quantity: parsed.data.quantity,
+          details: `Quotation #${quoteNumber} requested by ${parsed.data.contactPerson} (${parsed.data.organizationName}, Mobile: ${parsed.data.phone}) for ${parsed.data.quantity}x ${parsed.data.preferredModel}`,
+        },
+      });
+    } catch (auditErr) {
+      console.warn("Audit log skipped:", auditErr);
     }
 
     return ok({ id: String(doc._id), quoteNumber }, 201);

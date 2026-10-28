@@ -99,7 +99,7 @@ export function useDesktopNotifications() {
             createdAt: string;
             metadata?: Record<string, unknown>;
           }) => ({
-          _id: n._id || n.id,
+          _id: n._id || n.id || String(Date.now()),
           title: n.title,
           message: n.message,
           type: n.type,
@@ -128,7 +128,6 @@ export function useDesktopNotifications() {
       const res = await Notification.requestPermission();
       setPermission(res);
       if (res === "granted") {
-        // Test notification
         triggerDesktopNotification({
           title: "Desktop Alerts Active",
           message: "You will now receive instant desktop notifications for lead activities and assignments.",
@@ -144,7 +143,6 @@ export function useDesktopNotifications() {
   // Mark single notification read
   const markAsRead = useCallback(async (id: string) => {
     if (!id) return;
-    // Optimistic UI update
     setNotifications((prev) =>
       prev.map((n) => (n._id === id ? { ...n, read: true } : n))
     );
@@ -163,7 +161,6 @@ export function useDesktopNotifications() {
 
   // Mark all notifications read
   const markAllAsRead = useCallback(async () => {
-    // Optimistic UI update: instantly clear all unread dots and count
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
 
@@ -181,9 +178,8 @@ export function useDesktopNotifications() {
     }
   }, [fetchNotifications]);
 
-  // Setup SSE stream and fetch initial notifications
+  // Setup SSE stream and periodic polling for zero-refresh real-time updates
   useEffect(() => {
-
     fetchNotifications();
 
     // SSE connection function
@@ -235,6 +231,12 @@ export function useDesktopNotifications() {
           message: newNotif.message,
           link: newNotif.link,
         });
+
+        // Broadcast to application window so lead tables and statistics update LIVE without refreshing
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("rmax:notification", { detail: newNotif }));
+          window.dispatchEvent(new CustomEvent("rmax:lead_updated", { detail: newNotif }));
+        }
       }
 
       es.onmessage = (event) => {
@@ -264,13 +266,17 @@ export function useDesktopNotifications() {
       es.onerror = () => {
         setIsConnected(false);
         es.close();
-        // Reconnect after 6 seconds
         if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = setTimeout(connectSSE, 6000);
       };
     }
 
     connectSSE();
+
+    // Continuous background synchronization (every 10 seconds)
+    const pollInterval = setInterval(() => {
+      fetchNotifications();
+    }, 10000);
 
     return () => {
       if (eventSourceRef.current) {
@@ -279,6 +285,7 @@ export function useDesktopNotifications() {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
+      clearInterval(pollInterval);
     };
   }, [fetchNotifications, playChime, triggerDesktopNotification]);
 

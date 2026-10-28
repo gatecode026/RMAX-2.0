@@ -22,7 +22,11 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
     formState: { errors, isSubmitting },
   } = useForm<ContactInput, unknown, ContactData>({
     resolver: zodResolver(contactSchema),
-    defaultValues: { enquiryType: "" as ContactInput["enquiryType"], model: "" },
+    defaultValues: {
+      enquiryType: "" as ContactInput["enquiryType"],
+      model: "",
+      websiteUrl: "",
+    },
   });
 
   async function onSubmit(values: ContactData) {
@@ -53,6 +57,16 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
     <Card className="p-7 md:p-8">
       <h2 className="text-title">Send us a message</h2>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 flex flex-col gap-5">
+        {/* Hidden Honeypot Anti-Bot Field */}
+        <input
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          style={{ display: "none" }}
+          aria-hidden="true"
+          {...register("websiteUrl")}
+        />
+
         <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
           <SelectInput label="Enquiry type *" error={errors.enquiryType?.message} defaultValue="" {...register("enquiryType")}>
             <option value="" disabled>
@@ -72,15 +86,15 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
               </option>
             ))}
           </SelectInput>
-          <TextInput label="Full name *" autoComplete="name" error={errors.name?.message} {...register("name")} />
-          <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
-          <TextInput label="Phone (optional)" type="tel" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
+          <TextInput label="Full name *" autoComplete="name" placeholder="Enter your full name" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Email *" type="email" autoComplete="email" placeholder="name@institution.edu / work" error={errors.email?.message} {...register("email")} />
+          <TextInput label="Mobile Number *" type="tel" placeholder="10-digit Indian mobile number" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
           <TextInput label="Order reference (optional)" placeholder="e.g. RMAX-DEMO-001" error={errors.orderReference?.message} {...register("orderReference")} />
           <TextArea
             className="md:col-span-2"
             label="Message *"
-            placeholder="Include your model, order reference and symptoms for a service question"
-            hint="Do not include passwords or full payment details."
+            placeholder="Include your model, institution/facility details, or symptoms for a service request (min 10 chars)..."
+            hint="Do not include passwords or sensitive personal financial details."
             error={errors.message?.message}
             {...register("message")}
           />

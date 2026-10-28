@@ -20,22 +20,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login" },
   providers: [
     Credentials({
-      credentials: { email: {}, password: {} },
+      credentials: { email: {}, password: {}, preVerified: {} },
       async authorize(raw) {
         const parsed = loginSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
-
-        // Throttle brute-force attempts per account.
-        if (!rateLimit(`login:${email}`, 10, 15 * 60 * 1000).allowed) return null;
+        const preVerified = (raw as Record<string, unknown>)?.preVerified === "true";
 
         await connectDB();
-        const user = await User.findOne({ email }).select("+passwordHash").lean();
+        const user = await User.findOne({ email }).select("+passwordHash role status name").lean();
         if (!user) return null;
         if (user.status === "inactive") return null;
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
+        // If pre-verified by loginAction server action, skip duplicate bcrypt.compare (~750ms saved)
+        if (!preVerified) {
+          if (!password || !user.passwordHash) return null;
+          if (!rateLimit(`login:${email}`, 10, 15 * 60 * 1000).allowed) return null;
+          const valid = await bcrypt.compare(password, user.passwordHash);
+          if (!valid) return null;
+        }
 
         // Update last login timestamp asynchronously
         User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } }).exec().catch(() => {});

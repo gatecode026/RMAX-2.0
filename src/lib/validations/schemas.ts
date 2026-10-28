@@ -1,39 +1,77 @@
 import { z } from "zod";
 import { CONTACT_MODELS, ENQUIRY_TYPES, INSTITUTION_TYPES, QUOTE_MODELS } from "@/lib/enums";
-import { email, optionalText, password, phone, text } from "./common";
+import { cleanText, email, optionalText, password, phone, text } from "./common";
 
 /* ---------- Institutional quote ---------- */
 export const quoteRequestSchema = z.object({
-  organizationName: text("Organization name"),
+  organizationName: text("Organization name", 150),
   institutionType: z.enum(INSTITUTION_TYPES, { error: "Select an institution type" }),
-  contactPerson: text("Contact person"),
-  role: optionalText(),
+  contactPerson: z
+    .string({ error: "Contact person is required" })
+    .transform(cleanText)
+    .pipe(z.string().min(2, "Contact person name is required").max(100)),
+  role: optionalText(80),
   email,
   phone,
   preferredModel: z.enum(QUOTE_MODELS, { error: "Select a model" }),
-  quantity: z.coerce.number({ error: "Enter a quantity" }).int("Enter a whole number").min(1, "At least 1").max(10000),
-  expectedDailyUsage: text("Expected daily usage"),
-  deliveryCityPostal: text("Delivery city & postal code"),
+  quantity: z.coerce
+    .number({ error: "Enter a quantity" })
+    .int("Enter a whole number")
+    .min(1, "At least 1 unit is required")
+    .max(10000, "Quantity cannot exceed 10,000"),
+  expectedDailyUsage: text("Expected daily usage", 100),
+  deliveryCityPostal: text("Delivery city & postal code", 100),
   useCase: optionalText(2000),
   installationRequirements: optionalText(2000),
   consent: z.literal(true, { error: "Please agree to be contacted" }),
+  websiteUrl: z.string().optional(),
 });
 export type QuoteRequestInput = z.input<typeof quoteRequestSchema>;
 export type QuoteRequestData = z.output<typeof quoteRequestSchema>;
 
 /* ---------- Contact ---------- */
 export const contactSchema = z.object({
-  name: text("Full name"),
+  name: z
+    .string({ error: "Full name is required" })
+    .transform(cleanText)
+    .pipe(
+      z
+        .string()
+        .min(2, "Name must be at least 2 characters")
+        .max(100, "Name cannot exceed 100 characters")
+        .regex(/^[a-zA-Zs.'-]+$/, "Name should only contain letters and standard characters")
+    ),
   email,
-  phone: optionalText(20).pipe(phone.optional()),
-  enquiryType: z.enum(ENQUIRY_TYPES, { error: "Choose Sales or Service" }),
+  phone,
+  enquiryType: z.enum(ENQUIRY_TYPES, { error: "Please select either Sales or Service" }),
   model: z
     .enum([...CONTACT_MODELS, ""])
     .optional()
     .transform((v) => v || undefined),
-  orderReference: optionalText(40),
-  message: text("Message", 2000),
-  consent: z.literal(true, { error: "Please agree to be contacted" }),
+  orderReference: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined ? undefined : cleanText(v)))
+    .pipe(
+      z
+        .string()
+        .max(40, "Order reference cannot exceed 40 characters")
+        .regex(/^[A-Za-z0-9\-_#\s/]*$/, "Order reference contains invalid characters")
+        .optional()
+    )
+    .transform((v) => (v ? v : undefined)),
+  message: z
+    .string({ error: "Message is required" })
+    .transform(cleanText)
+    .pipe(
+      z
+        .string()
+        .min(10, "Please enter at least 10 characters describing your enquiry")
+        .max(2000, "Message cannot exceed 2000 characters")
+    ),
+  consent: z.literal(true, { error: "Please agree to be contacted to submit your message" }),
+  // Anti-bot honeypot
+  websiteUrl: z.string().optional(),
 });
 export type ContactInput = z.input<typeof contactSchema>;
 export type ContactData = z.output<typeof contactSchema>;

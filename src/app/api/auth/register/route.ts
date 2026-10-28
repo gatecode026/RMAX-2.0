@@ -15,7 +15,8 @@ export const POST = route(async (req: Request) => {
 
   try {
     await connectDB();
-    const passwordHash = await bcrypt.hash(password, 12);
+    // 10 rounds of bcrypt is OWASP compliant, cryptographically secure and 4x faster than 12
+    const passwordHash = await bcrypt.hash(password, 10);
     await User.create({ name, email, phone, organization, passwordHash });
     return ok({ email }, 201);
   } catch (err) {

@@ -87,6 +87,12 @@ function AdminLoginForm() {
         return;
       }
 
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+        document.body.classList.remove("modal-open");
+      }
+
       // Successful login -> Direct routing based on exact role
       if (res.role === "manager") {
         router.push("/manager/dashboard");

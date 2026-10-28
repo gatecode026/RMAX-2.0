@@ -42,19 +42,7 @@ function CustomerAuthModalContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Lock body & html scroll when modal is open to prevent background scrolling
-  React.useEffect(() => {
-    if (isOpen) {
-      const origBodyOverflow = document.body.style.overflow;
-      const origHtmlOverflow = document.documentElement.style.overflow;
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = origBodyOverflow;
-        document.documentElement.style.overflow = origHtmlOverflow;
-      };
-    }
-  }, [isOpen]);
+
 
   // Status states
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -103,6 +91,7 @@ function CustomerAuthModalContent() {
     setTimeout(() => {
       closeModal();
       resetLoginForm();
+      if (typeof document !== "undefined") { document.body.style.overflow = ""; document.documentElement.style.overflow = ""; document.body.classList.remove("modal-open"); }
       setAuthSuccess(null);
       if (nextParam && !nextParam.startsWith("/admin") && !nextParam.startsWith("/manager")) {
         router.push(nextParam);
@@ -139,6 +128,7 @@ function CustomerAuthModalContent() {
     setTimeout(() => {
       closeModal();
       resetRegForm();
+      if (typeof document !== "undefined") { document.body.style.overflow = ""; document.documentElement.style.overflow = ""; document.body.classList.remove("modal-open"); }
       setAuthSuccess(null);
       if (nextParam && !nextParam.startsWith("/admin") && !nextParam.startsWith("/manager")) {
         router.push(nextParam);

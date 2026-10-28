@@ -2,17 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import ProductImageUploader, { PRESET_IMAGES } from "@/components/admin/products/ProductImageUploader";
 import { ArrowLeft, Save, CheckCircle2, AlertCircle } from "lucide-react";
-
-const IMAGE_OPTIONS = [
-  { label: "Basic Incinerator (Blue Cabinet)", src: "/images/products/list-basic.png" },
-  { label: "Pro Incinerator (Blue Cabinet)", src: "/images/products/list-pro.png" },
-  { label: "Pro-Max Incinerator (Heavy Blue)", src: "/images/products/list-pro-max.png" },
-  { label: "Vending Machine (Off-white)", src: "/images/products/pad-vending.png" },
-];
 
 export default function AdminProductCreatePage() {
   const router = useRouter();
@@ -30,9 +23,11 @@ export default function AdminProductCreatePage() {
     warranty: "1 year",
     summary: "",
     stock: "25",
-    image: IMAGE_OPTIONS[1].src,
+    image: PRESET_IMAGES[1].src,
     status: "Active",
   });
+
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
   const [features, setFeatures] = useState({
     autoCutoff: true,
@@ -41,6 +36,7 @@ export default function AdminProductCreatePage() {
     wallMountable: true,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -71,12 +67,44 @@ export default function AdminProductCreatePage() {
       setErrorMsg("Valid price in INR is required.");
       return;
     }
+    if (!formData.image.trim()) {
+      setErrorMsg("Please select or upload a product image.");
+      return;
+    }
 
     setErrorMsg("");
+    setIsSubmitting(true);
+
+    const newProduct = {
+      id: `prod-${Date.now()}`,
+      slug: formData.slug || handleSlugGenerate(formData.name),
+      name: formData.name,
+      title: formData.shortName || formData.name,
+      category: formData.category,
+      price: Number(formData.price),
+      originalPrice: formData.originalPrice ? Number(formData.originalPrice) : Number(formData.price) * 2,
+      dailyCapacity: formData.dailyCapacity || "Standard capacity",
+      power: formData.power,
+      weight: formData.weight,
+      stock: Number(formData.stock) || 0,
+      status: formData.status as "Active" | "Draft",
+      image: formData.image,
+      gallery: galleryImages,
+    };
+
+    try {
+      const stored = localStorage.getItem("rmax_admin_products");
+      const list = stored ? JSON.parse(stored) : [];
+      list.unshift(newProduct);
+      localStorage.setItem("rmax_admin_products", JSON.stringify(list));
+    } catch (err) {
+      console.error("Failed to save product locally:", err);
+    }
+
     setSavedSuccess(true);
     setTimeout(() => {
       router.push("/admin/products");
-    }, 1500);
+    }, 1200);
   };
 
   return (
@@ -103,7 +131,7 @@ export default function AdminProductCreatePage() {
       {savedSuccess && (
         <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
           <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-          Product successfully created! Redirecting to products list...
+          Product successfully created with custom media! Redirecting to products list...
         </div>
       )}
 
@@ -135,7 +163,7 @@ export default function AdminProductCreatePage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                     Short Name / Display Title
@@ -148,6 +176,23 @@ export default function AdminProductCreatePage() {
                     className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#10469B] focus:outline-none"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Category *
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#10469B] focus:outline-none"
+                  >
+                    <option value="Incinerator">Incinerator</option>
+                    <option value="Vending Machine">Vending Machine</option>
+                    <option value="Sanitary Dispenser">Sanitary Dispenser</option>
+                    <option value="Accessories">Accessories & Spares</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                     URL Slug *
@@ -325,43 +370,13 @@ export default function AdminProductCreatePage() {
 
         {/* Right Col: Media & Publication */}
         <div className="space-y-6">
-          {/* Product Image Selection */}
-          <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-[#0B2450] mb-3">Product Image</h2>
-            <div className="mb-4 flex justify-center rounded-lg border border-dashed border-slate-200 bg-[#F4F7FC]/70 p-4">
-              <div className="relative h-44 w-44">
-                <Image
-                  src={formData.image}
-                  alt="Product preview"
-                  fill
-                  className="object-contain"
-                  sizes="176px"
-                />
-              </div>
-            </div>
-
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-              Select Preset Brand Asset
-            </label>
-            <div className="space-y-2">
-              {IMAGE_OPTIONS.map((opt) => (
-                <label
-                  key={opt.src}
-                  onClick={() => setFormData({ ...formData, image: opt.src })}
-                  className={`flex items-center gap-3 rounded-lg border p-2 cursor-pointer transition-colors ${
-                    formData.image === opt.src
-                      ? "border-[#10469B] bg-blue-50/50"
-                      : "border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-white p-1 border border-slate-100">
-                    <Image src={opt.src} alt={opt.label} fill className="object-contain" sizes="40px" />
-                  </div>
-                  <span className="text-xs font-medium text-slate-700">{opt.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          {/* Comprehensive Product Image Uploader with Drag & Drop, URL & Presets */}
+          <ProductImageUploader
+            value={formData.image}
+            onChange={(img) => setFormData((prev) => ({ ...prev, image: img }))}
+            gallery={galleryImages}
+            onGalleryChange={setGalleryImages}
+          />
 
           {/* Status and Action */}
           <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm space-y-4">
@@ -383,10 +398,11 @@ export default function AdminProductCreatePage() {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#10469B] px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#0B2450] transition-colors"
+                disabled={isSubmitting}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#10469B] px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#0B2450] disabled:opacity-50 transition-colors"
               >
                 <Save className="h-4 w-4" />
-                Save & Publish Product
+                {isSubmitting ? "Saving Product..." : "Save & Publish Product"}
               </button>
             </div>
           </div>

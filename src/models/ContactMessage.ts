@@ -4,7 +4,7 @@ import { CONTACT_MODELS, ENQUIRY_TYPES } from "@/lib/enums";
 export interface IContactMessage {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   enquiryType: (typeof ENQUIRY_TYPES)[number];
   model?: (typeof CONTACT_MODELS)[number];
   orderReference?: string;
@@ -19,7 +19,7 @@ const contactMessageSchema = new Schema<IContactMessage>(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
-    phone: { type: String, trim: true },
+    phone: { type: String, required: true, trim: true },
     enquiryType: { type: String, enum: ENQUIRY_TYPES, required: true, index: true },
     model: { type: String, enum: CONTACT_MODELS },
     orderReference: { type: String, trim: true },

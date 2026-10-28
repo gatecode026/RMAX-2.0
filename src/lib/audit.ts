@@ -2,31 +2,38 @@ import { connectDB } from "@/lib/mongodb";
 import { AuditLog } from "@/models/AuditLog";
 import type { SessionUser } from "@/lib/session";
 
-interface LogActionParams {
+export interface LogActionParams {
   actor?: SessionUser | null;
   action: string;
-  entityType: "lead" | "user" | "manager" | "order" | "quotation" | "system";
+  entityType: "lead" | "product" | "inventory" | "user" | "manager" | "order" | "quotation" | "system" | string;
   entityId?: string;
   metadata?: Record<string, unknown>;
+  details?: string;
   ipAddress?: string;
   userAgent?: string;
 }
 
 /**
  * Record an immutable audit event in MongoDB.
- * Catches and logs errors without breaking primary execution flow.
+ * Captures who performed the action, exact timestamp, entity affected, and readable description.
  */
 export async function logAuditEvent({
   actor,
   action,
   entityType,
   entityId,
-  metadata,
+  metadata = {},
+  details,
   ipAddress,
   userAgent,
 }: LogActionParams): Promise<void> {
   try {
     await connectDB();
+    const finalMetadata: Record<string, unknown> = { ...metadata };
+    if (details && !finalMetadata.details) {
+      finalMetadata.details = details;
+    }
+
     await AuditLog.create({
       actor: actor?.id ? actor.id : null,
       actorName: actor?.name || "System",
@@ -35,7 +42,7 @@ export async function logAuditEvent({
       action,
       entityType,
       entityId,
-      metadata,
+      metadata: finalMetadata,
       ipAddress,
       userAgent,
       timestamp: new Date(),
@@ -45,12 +52,6 @@ export async function logAuditEvent({
   }
 }
 
-export async function logAction(
-  params: LogActionParams & { details?: string }
-): Promise<void> {
-  return logAuditEvent({
-    ...params,
-    metadata: params.metadata || (params.details ? { details: params.details } : undefined),
-  });
+export async function logAction(params: LogActionParams): Promise<void> {
+  return logAuditEvent(params);
 }
-
