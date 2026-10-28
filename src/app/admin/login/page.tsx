@@ -271,11 +271,11 @@ function AdminLoginForm() {
         >
           <div className="flex justify-center mb-1">
             <Image
-              src="/images/logo.png"
-              alt="RMAX"
-              width={110}
-              height={32}
-              className="h-8 sm:h-9 w-auto mx-auto object-contain"
+              src="/images/logo-navy.png"
+              alt="RMAX Solutions"
+              width={1155}
+              height={371}
+              className="h-9 sm:h-10 w-auto mx-auto object-contain"
               priority
             />
           </div>

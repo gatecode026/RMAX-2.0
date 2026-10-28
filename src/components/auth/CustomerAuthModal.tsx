@@ -42,6 +42,17 @@ function CustomerAuthModalContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Lock body scroll when modal is open to prevent background scrolling & extra scrollbars
+  React.useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Status states
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -150,14 +161,14 @@ function CustomerAuthModalContent() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#0A214B]/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#0A214B]/60 backdrop-blur-xs overflow-y-auto no-scrollbar animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
       onClick={closeModal}
     >
       <div
-        className="relative w-full max-w-[480px] bg-white rounded-3xl shadow-[0_25px_60px_-15px_rgba(10,33,75,0.28)] border border-slate-100 p-6 sm:p-8 my-auto animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto"
+        className="relative w-full max-w-[480px] bg-white rounded-3xl shadow-[0_25px_60px_-15px_rgba(10,33,75,0.28)] border border-slate-100 p-6 sm:p-8 my-auto animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto no-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -173,11 +184,11 @@ function CustomerAuthModalContent() {
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
           <Image
-            src="/images/logo.png"
+            src="/images/logo-navy.png"
             alt="RMAX Solutions"
-            width={120}
-            height={36}
-            className="h-8 w-auto object-contain mb-3"
+            width={1155}
+            height={371}
+            className="h-10 sm:h-11 w-auto object-contain mb-3"
             priority
           />
           <h2 id="auth-modal-title" className="text-xl sm:text-2xl font-extrabold text-[#0A2656]">
