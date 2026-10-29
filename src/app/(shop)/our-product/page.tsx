@@ -15,7 +15,7 @@ export default async function OurProductPage() {
     <>
       <section className="mx-auto grid w-full max-w-(--container-page) items-center gap-8 px-5 pt-4 sm:px-8 md:pt-8 lg:grid-cols-[1fr_630px] lg:gap-12 lg:px-12 xl:px-16 xl:pt-[64px]">
         <div>
-          <h1 className="font-jakarta text-[36px]/[44px] font-bold tracking-[-0.01em] text-charcoal md:text-[52px]/[64px]">
+          <h1 className="font-heading text-[36px]/[44px] font-extrabold tracking-[-1.5px] text-charcoal md:text-[52px]/[64px]">
             Sanitary disposal to GPS trackers for your bussiness needs.
           </h1>
           <p className="mt-5 max-w-[600px] text-body text-muted">

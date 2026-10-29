@@ -78,22 +78,22 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3.5 rounded-2xl p-4 shadow-2xl backdrop-blur-md transition-all duration-300 animate-in slide-in-from-top-4 fade-in border ${
+            className={`pointer-events-auto flex items-start gap-3.5 rounded-action p-4 shadow-2xl backdrop-blur-md transition-all duration-300 animate-in slide-in-from-top-4 fade-in border ${
               t.type === "success"
-                ? "bg-white/95 text-slate-800 border-emerald-500/30 shadow-emerald-500/10"
+                ? "bg-card/95 text-charcoal border-success/30 shadow-success/10"
                 : t.type === "error"
-                ? "bg-white/95 text-slate-800 border-rose-500/30 shadow-rose-500/10"
-                : "bg-white/95 text-slate-800 border-blue-500/30 shadow-blue-500/10"
+                ? "bg-card/95 text-charcoal border-danger/30 shadow-danger/10"
+                : "bg-card/95 text-charcoal border-line shadow-card"
             }`}
           >
             {/* Sweet Alert Icon Circle */}
             <div
               className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm ${
                 t.type === "success"
-                  ? "bg-emerald-500"
+                  ? "bg-success"
                   : t.type === "error"
-                  ? "bg-rose-500"
-                  : "bg-[#10469B]"
+                  ? "bg-danger"
+                  : "bg-navy"
               }`}
             >
               {t.type === "success" && <CheckCircle2 className="size-5 stroke-[2.5]" />}
@@ -102,11 +102,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex-1 min-w-0 pt-0.5">
-              <p className="font-jakarta font-bold text-sm text-slate-900 leading-tight">
+              <p className="font-heading font-extrabold text-sm text-charcoal leading-tight">
                 {t.title}
               </p>
               {t.message && (
-                <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                <p className="mt-1 text-xs text-muted leading-relaxed">
                   {t.message}
                 </p>
               )}
@@ -114,7 +114,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
             <button
               onClick={() => removeToast(t.id)}
-              className="shrink-0 text-slate-400 hover:text-slate-600 transition p-1 -mr-1 -mt-1 rounded-lg"
+              className="shrink-0 text-muted hover:text-charcoal transition p-1 -mr-1 -mt-1 rounded-sm"
               aria-label="Close notification"
             >
               <X className="size-4" />

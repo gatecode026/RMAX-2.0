@@ -45,7 +45,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             </p>
           ) : null}
           <div className="flex flex-wrap items-baseline gap-2.5">
-            <span className="font-jakarta text-[36px]/[44px] md:text-[40px]/[48px] font-extrabold tracking-[-0.01em] text-charcoal">
+            <span className="font-heading text-section md:text-[40px]/[48px] font-extrabold tracking-[-1px] text-charcoal">
               {formatINR(totalPrice)}
             </span>
             {qty > 1 && (

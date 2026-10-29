@@ -33,7 +33,7 @@ function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
           />
         )}
         {t.product && (
-          <span className="absolute top-4 left-4 z-10 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
+          <span className="absolute top-4 left-4 z-10 inline-flex items-center rounded-full bg-navy px-4 py-1.5 text-[12px] font-extrabold text-white shadow-xs">
             {t.product}
           </span>
         )}
@@ -44,18 +44,18 @@ function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
         {/* Large White Quote Mark */}
         <QuoteMark className="absolute top-8 right-8 size-12 text-white/90 lg:top-10 lg:right-10 lg:size-14" fill="currentColor" />
 
-        <blockquote className="font-jakarta text-[24px] sm:text-[30px] lg:text-[34px] font-bold leading-[1.25] tracking-tight text-white max-w-[620px]">
+        <blockquote className="font-heading text-[24px] sm:text-[30px] lg:text-[34px] font-bold leading-[1.25] tracking-tight text-white max-w-[620px]">
           {t.quote}
         </blockquote>
 
         <div className="mt-8">
           {/* Author Profile */}
           <figcaption className="flex items-center gap-4">
-            <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[17px] font-extrabold text-[#0A2558] shadow-xs">
+            <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-heading text-[17px] font-extrabold text-navy shadow-xs">
               {initials(t.name)}
             </div>
             <div>
-              <p className="font-jakarta text-[20px] font-bold text-white lg:text-[22px] leading-tight">{t.name}</p>
+              <p className="font-heading text-[20px] font-extrabold text-white lg:text-[22px] leading-tight">{t.name}</p>
               <p className="text-[14px] text-white/80 mt-0.5 leading-normal">{t.role}</p>
             </div>
           </figcaption>
@@ -98,8 +98,8 @@ function ReviewCard({
       className={cn(
         "flex flex-col justify-between rounded-[24px] p-6 lg:p-7 transition-all duration-300 cursor-pointer select-none",
         active
-          ? "border border-[#E2E8F0] bg-white shadow-[0_12px_36px_rgba(35,42,50,0.08)] md:scale-[1.02] z-10 ring-1 ring-[#0A2558]/5"
-          : "border border-[#D9E4F2] bg-[#F0F4FA] opacity-90 hover:opacity-100 hover:border-[#CBD5E1]"
+          ? "border border-line bg-card shadow-[0_12px_36px_rgba(35,42,50,0.08)] md:scale-[1.02] z-10 ring-1 ring-navy/10"
+          : "border border-line/70 bg-[#F0F4FA] opacity-90 hover:opacity-100 hover:border-line"
       )}
     >
       {/* Top Row: Stars + Date */}
@@ -107,20 +107,20 @@ function ReviewCard({
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, idx) => (
-              <svg key={idx} className="size-[18px] text-[#0A2558] fill-[#0A2558]" viewBox="0 0 24 24" aria-hidden="true">
+              <svg key={idx} className="size-[18px] text-navy fill-navy" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.3l-5.8 3.1 1.1-6.47L2.6 9.35l6.5-.95L12 2.5z" />
               </svg>
             ))}
           </div>
-          <span className="text-[13px] font-normal text-[#64748B]">{t.dateLabel}</span>
+          <span className="text-[13px] font-normal text-muted">{t.dateLabel}</span>
         </div>
 
         {/* Body: Quote Text & Double Quote Icon */}
         <div className="mt-4 flex items-start justify-between gap-3">
-          <blockquote className="font-jakarta text-[15px] font-semibold leading-[1.6] text-[#1E293B]">
+          <blockquote className="font-sans text-[15px] font-semibold leading-[1.6] text-charcoal">
             {t.quote}
           </blockquote>
-          <QuoteMark className="size-6 shrink-0 text-[#0A2558] fill-[#0A2558] mt-1" />
+          <QuoteMark className="size-6 shrink-0 text-navy fill-navy mt-1" />
         </div>
       </div>
 
@@ -128,19 +128,19 @@ function ReviewCard({
       <div className="mt-5">
         {/* Accent Divider with End Dots */}
         <div className="relative my-4 flex items-center" aria-hidden="true">
-          <div className="h-[1px] w-full bg-[#D6E0EE]" />
-          <div className="absolute left-0 size-1 rounded-full bg-[#94A3B8]" />
-          <div className="absolute right-0 size-1 rounded-full bg-[#94A3B8]" />
+          <div className="h-[1px] w-full bg-line" />
+          <div className="absolute left-0 size-1 rounded-full bg-muted-dark" />
+          <div className="absolute right-0 size-1 rounded-full bg-muted-dark" />
         </div>
 
         {/* Author Profile */}
         <figcaption className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[14px] font-bold text-[#0A2558]">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-heading text-[14px] font-bold text-navy">
             {initials(t.name)}
           </div>
           <div className="min-w-0">
-            <p className="font-jakarta text-[15px] font-bold leading-snug text-[#1E293B] truncate">{t.name}</p>
-            <p className="text-[12px] leading-tight text-[#64748B] mt-0.5 truncate">{t.role}</p>
+            <p className="font-heading text-[15px] font-extrabold leading-snug text-charcoal truncate">{t.name}</p>
+            <p className="text-[12px] leading-tight text-muted mt-0.5 truncate">{t.role}</p>
           </div>
         </figcaption>
       </div>
@@ -148,11 +148,20 @@ function ReviewCard({
   );
 }
 
-export function Testimonials({ items, reviews }: { items: TestimonialDTO[]; reviews: ReviewSummary }) {
-  const featured = items.find((t) => t.featured) || items[0];
-  const cards = items.filter((t) => !t.featured && !t.forProduct);
-
-  // Active slide index (default 1 to match the screenshot where 2nd card is active)
+export function Testimonials({
+  featured: propFeatured,
+  reviews,
+  testimonials,
+  items,
+}: {
+  featured?: TestimonialDTO;
+  reviews: ReviewSummary;
+  testimonials?: TestimonialDTO[];
+  items?: TestimonialDTO[];
+}) {
+  const allTestimonials = testimonials ?? items ?? [];
+  const featured = propFeatured ?? allTestimonials.find((t) => t.featured) ?? allTestimonials[0];
+  const cards = allTestimonials.slice(0, 4);
   const [activeIndex, setActiveIndex] = useState(1);
   const touchStartX = useRef<number | null>(null);
 
@@ -200,13 +209,13 @@ export function Testimonials({ items, reviews }: { items: TestimonialDTO[]; revi
       {/* Header with Title and Rating Summary Box */}
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="text-[14px] font-extrabold tracking-[0.28em] text-navy uppercase">Testimonials</p>
-          <h2 id="testimonials-heading" className="mt-2 font-jakarta text-[30px]/[38px] font-bold tracking-[-0.01em] text-charcoal md:text-[48px]/[56px]">
+          <p className="text-label font-extrabold tracking-wider text-navy uppercase">Testimonials</p>
+          <h2 id="testimonials-heading" className="mt-2 font-heading text-section md:text-[48px]/[56px] font-extrabold tracking-[-1px] text-charcoal">
             Trusted by institutions across India.
           </h2>
         </div>
-        <div className="flex h-[93px] w-full items-center justify-between gap-3 rounded-[28px] border border-[#ECF1F8] bg-card px-5 shadow-[0_2px_10px_rgb(35_42_50/0.04)] sm:w-[334px]">
-          <p className="font-jakarta text-[48px]/[56px] font-bold text-charcoal">{reviews.rating}</p>
+        <div className="flex h-[93px] w-full items-center justify-between gap-3 rounded-[28px] border border-line/60 bg-card px-5 shadow-[0_2px_10px_rgb(35_42_50/0.04)] sm:w-[334px]">
+          <p className="font-heading text-[48px]/[56px] font-extrabold text-charcoal">{reviews.rating}</p>
           <div className="flex flex-col items-end gap-1">
             <Stars value={reviews.stars} size={34} />
             <p className="text-[15px] leading-5 whitespace-nowrap text-muted">{reviews.label}</p>
@@ -273,8 +282,8 @@ export function Testimonials({ items, reviews }: { items: TestimonialDTO[]; revi
             className={cn(
               "h-2 transition-all duration-300 rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-navy",
               activeIndex === i
-                ? "w-6 bg-[#0A2558]"
-                : "w-2 bg-[#CBD5E1] hover:bg-[#94A3B8] cursor-pointer"
+                ? "w-6 bg-navy"
+                : "w-2 bg-line hover:bg-muted-dark cursor-pointer"
             )}
           />
         ))}

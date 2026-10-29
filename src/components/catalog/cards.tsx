@@ -30,7 +30,7 @@ function UnifiedProductCard({
   const hasOriginal = product.originalPrice > product.price;
 
   return (
-    <article className="group relative flex h-full flex-col rounded-[28px] border border-[#E2E8F0] bg-white p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[0_16px_36px_rgba(0,41,112,0.08)]">
+    <article className="group relative flex h-full flex-col rounded-[28px] border border-line bg-card p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-navy/30 hover:shadow-[0_16px_36px_rgba(0,41,112,0.08)]">
       {/* Product Image Container */}
       <div
         className="relative w-full overflow-hidden rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center"
@@ -45,7 +45,7 @@ function UnifiedProductCard({
         />
 
         {product.badge && (
-          <span className="absolute top-3.5 left-3.5 z-10 inline-flex items-center rounded-full bg-[#0B254E] px-3.5 py-1.5 text-[11px] font-extrabold tracking-wider text-white uppercase shadow-xs">
+          <span className="absolute top-3.5 left-3.5 z-10 inline-flex items-center rounded-full bg-navy px-3.5 py-1.5 text-[11px] font-extrabold tracking-wider text-white uppercase shadow-xs">
             {product.badge.label}
           </span>
         )}
@@ -54,7 +54,7 @@ function UnifiedProductCard({
       {/* Card Content */}
       <div className="mt-5 flex flex-1 flex-col">
         {/* Product Title */}
-        <h3 className="font-jakarta text-[22px] font-bold leading-tight tracking-tight text-[#1e293b]">
+        <h3 className="font-heading text-title font-extrabold leading-tight tracking-[-0.6px] text-charcoal">
           <Link href={productHref(product)} className="hover:text-navy transition-colors">
             {product.title}
           </Link>
@@ -62,7 +62,7 @@ function UnifiedProductCard({
 
         {/* Product Subtitle / Summary */}
         {product.summary && (
-          <p className={cn("mt-2 text-[14px] leading-relaxed text-[#64748b]", clamp && "line-clamp-2")}>
+          <p className={cn("mt-2 text-body-sm leading-relaxed text-muted", clamp && "line-clamp-2")}>
             {product.summary}
           </p>
         )}
@@ -72,7 +72,7 @@ function UnifiedProductCard({
           {chips.slice(0, 4).map((c, i) => (
             <li
               key={i}
-              className="flex h-10 items-center rounded-[12px] bg-[#EAF0F8] px-3.5 text-[13px] font-semibold text-[#475569] truncate"
+              className="flex h-10 items-center rounded-[12px] bg-soft px-3.5 text-[13px] font-semibold text-muted truncate"
             >
               {c}
             </li>
@@ -83,19 +83,19 @@ function UnifiedProductCard({
         <div className="mt-6 flex items-end justify-between gap-3 pt-1">
           <div>
             {hasOriginal && (
-              <p className="text-[14px] font-normal text-[#94a3b8] line-through leading-none mb-1.5">
+              <p className="text-[14px] font-normal text-muted-dark line-through leading-none mb-1.5">
                 <span className="sr-only">Original price </span>
                 {formatINR(product.originalPrice)}
               </p>
             )}
-            <p className="font-jakarta text-[30px] md:text-[32px] font-extrabold text-[#1e293b] leading-none tracking-tight">
+            <p className="font-heading text-[28px] md:text-[32px] font-extrabold text-charcoal leading-none tracking-tight">
               {formatINR(product.price)}
             </p>
           </div>
 
           <Link
             href={productHref(product)}
-            className="inline-flex items-center justify-center rounded-full bg-[#202630] hover:bg-[#0B254E] px-7 py-2.5 text-[14px] font-bold text-white shadow-xs transition-colors"
+            className="inline-flex items-center justify-center rounded-full bg-charcoal hover:bg-navy px-7 py-2.5 text-[14px] font-bold text-white shadow-xs transition-colors"
             aria-label={`View ${product.title}`}
           >
             View

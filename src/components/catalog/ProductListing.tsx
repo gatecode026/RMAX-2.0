@@ -159,7 +159,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
           <div id={filtersId} className={cn("mt-3 lg:mt-0 lg:block", mobileFilters ? "block" : "hidden")}>
             <div className="overflow-hidden rounded-[24px] border border-line bg-card">
               <div className="flex items-center justify-between px-5 py-5">
-                <h2 className="font-jakarta text-[20px]/7 font-bold text-charcoal">Filters</h2>
+                <h2 className="font-heading text-title font-extrabold text-charcoal">Filters</h2>
                 <button
                   type="button"
                   onClick={clear}
@@ -252,7 +252,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
               </Section>
 
               <div className="bg-navy px-6 py-7 text-center text-white">
-                <p className="font-jakarta text-[22px]/8 font-bold text-white">Need help?</p>
+                <p className="font-heading text-title font-extrabold text-white">Need help?</p>
                 <p className="mt-2 text-body-sm text-white">We assist with product fit, pricing, installation, and more.</p>
                 <ButtonLink href="/contact-us" variant="dark" className="mt-5 h-[50px] w-full">
                   Contact our team
@@ -266,7 +266,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
         <div className="min-w-0">
           {showcase.length === 0 ? (
             <div className="rounded-[32px] border border-line bg-card p-8 text-center" role="status">
-              <p className="font-jakarta text-[22px]/8 font-bold">
+              <p className="font-heading text-title font-extrabold">
                 {category === "gps" ? "GPS trackers are coming soon." : "No products match your filters."}
               </p>
               <button type="button" onClick={clear} className="mt-4 font-bold text-navy underline underline-offset-4">
@@ -296,7 +296,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
 
           <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-[40px] bg-charcoal px-8 py-8 text-white md:flex-row md:items-center">
             <div className="max-w-[560px]">
-              <h2 className="font-jakarta text-[24px]/8 font-bold text-white">Compare the right capacity for your facility.</h2>
+              <h2 className="font-heading text-title font-extrabold text-white">Compare the right capacity for your facility.</h2>
               <p className="mt-3 text-body text-muted-dark">
                 Review daily capacity, power, weight and pricing across the three incinerator models.
               </p>

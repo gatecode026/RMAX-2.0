@@ -7,8 +7,8 @@ export function BestSellers({ products }: { products: ProductDTO[] }) {
     <section id="best-sellers" className="mx-auto mt-16 w-full max-w-(--container-page) scroll-mt-24 px-5 sm:px-8 md:mt-[104px] lg:px-12 xl:px-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[14px] font-extrabold tracking-[0.28em] text-navy uppercase">Best sellers</p>
-          <h2 className="mt-2 font-jakarta text-[30px]/[38px] font-bold tracking-[-0.01em] text-charcoal md:text-[48px]/[56px]">
+          <p className="text-label font-extrabold tracking-wider text-navy uppercase">Best sellers</p>
+          <h2 className="mt-2 font-heading text-section md:text-[48px]/[56px] font-extrabold tracking-[-1px] text-charcoal">
             Sanitary disposal for shared spaces.
           </h2>
         </div>

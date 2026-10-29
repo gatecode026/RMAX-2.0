@@ -218,10 +218,10 @@ function CustomerAuthModalContent() {
                 setLoginError(null);
                 setRegisterError(null);
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-action transition-all cursor-pointer ${
                 tab === "login"
-                  ? "bg-white text-[#10469B] shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-card text-navy shadow-sm"
+                  : "text-muted hover:text-charcoal"
               }`}
             >
               Sign In
@@ -233,10 +233,10 @@ function CustomerAuthModalContent() {
                 setLoginError(null);
                 setRegisterError(null);
               }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-action transition-all cursor-pointer ${
                 tab === "register"
-                  ? "bg-white text-[#10469B] shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-card text-navy shadow-sm"
+                  : "text-muted hover:text-charcoal"
               }`}
             >
               Create Account
@@ -269,23 +269,23 @@ function CustomerAuthModalContent() {
                   autoComplete="email"
                   placeholder="name@organization.org"
                   {...loginRegister("email")}
-                  className={`w-full h-11 rounded-xl border bg-slate-50/50 pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                  className={`w-full h-11 rounded-input border bg-card pl-10 pr-3.5 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                     loginErrors.email
-                      ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
-                      : "border-slate-200 focus:border-[#10469B] focus:bg-white focus:ring-2 focus:ring-[#10469B]/10"
+                      ? "border-danger focus:border-danger focus:ring-2 focus:ring-danger/20"
+                      : "border-line focus:border-navy focus:bg-card focus:ring-2 focus:ring-navy/20"
                   }`}
                 />
               </div>
               {loginErrors.email && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{loginErrors.email.message}</p>
+                <p className="mt-1 text-xs text-danger font-medium">{loginErrors.email.message}</p>
               )}
             </div>
 
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="customer-login-password" className="text-xs font-bold text-slate-700">
-                  Password <span className="text-red-500">*</span>
+                <label htmlFor="customer-login-password" className="text-xs font-bold text-charcoal">
+                  Password <span className="text-danger">*</span>
                 </label>
                 <button
                   type="button"
@@ -294,36 +294,36 @@ function CustomerAuthModalContent() {
                     setForgotError(null);
                     setForgotSuccess(null);
                   }}
-                  className="text-xs font-semibold text-[#10469B] hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-navy hover:underline cursor-pointer"
                 >
                   Forgot password?
                 </button>
               </div>
               <div className="relative flex items-center">
-                <Lock className="absolute left-3.5 text-slate-400 size-4 pointer-events-none" />
+                <Lock className="absolute left-3.5 text-muted/60 size-4 pointer-events-none" />
                 <input
                   id="customer-login-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
                   {...loginRegister("password")}
-                  className={`w-full h-11 rounded-xl border bg-slate-50/50 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                  className={`w-full h-11 rounded-input border bg-card pl-10 pr-10 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                     loginErrors.password
-                      ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
-                      : "border-slate-200 focus:border-[#10469B] focus:bg-white focus:ring-2 focus:ring-[#10469B]/10"
+                      ? "border-danger focus:border-danger focus:ring-2 focus:ring-danger/20"
+                      : "border-line focus:border-navy focus:bg-card focus:ring-2 focus:ring-navy/20"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  className="absolute right-3 text-muted hover:text-charcoal p-1 cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
               {loginErrors.password && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{loginErrors.password.message}</p>
+                <p className="mt-1 text-xs text-danger font-medium">{loginErrors.password.message}</p>
               )}
             </div>
 
@@ -333,9 +333,9 @@ function CustomerAuthModalContent() {
                 id="customer-remember"
                 type="checkbox"
                 {...loginRegister("remember")}
-                className="size-4 rounded border-slate-300 text-[#10469B] focus:ring-[#10469B] cursor-pointer"
+                className="size-4 rounded-xs border-line text-navy focus:ring-navy cursor-pointer"
               />
-              <label htmlFor="customer-remember" className="text-xs text-slate-600 font-medium cursor-pointer">
+              <label htmlFor="customer-remember" className="text-xs text-muted font-medium cursor-pointer">
                 Keep me signed in
               </label>
             </div>
@@ -344,7 +344,7 @@ function CustomerAuthModalContent() {
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="mt-2 w-full h-11 rounded-xl bg-gradient-to-r from-[#10469B] to-[#0A2F6E] hover:from-[#0D3B82] hover:to-[#072454] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(16,70,155,0.25)] transition-all cursor-pointer disabled:opacity-70"
+              className="mt-2 w-full h-11 rounded-action bg-linear-to-r from-navy to-navy-600 hover:brightness-110 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(0,41,112,0.25)] transition-all cursor-pointer disabled:opacity-70"
             >
               {isLoggingIn ? (
                 <>
@@ -357,13 +357,13 @@ function CustomerAuthModalContent() {
             </button>
 
             {/* Legal Agreement Notice */}
-            <div className="mt-4 pt-3.5 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-500 leading-relaxed">
+            <div className="mt-4 pt-3.5 border-t border-line text-center">
+              <p className="text-xs text-muted leading-relaxed">
                 By signing in or submitting, you agree to RMAX&apos;s{" "}
                 <Link
                   href="/terms-and-conditions"
                   onClick={closeModal}
-                  className="font-semibold text-[#10469B] hover:underline"
+                  className="font-semibold text-navy hover:underline"
                 >
                   Terms &amp; Conditions
                 </Link>{" "}
@@ -371,7 +371,7 @@ function CustomerAuthModalContent() {
                 <Link
                   href="/privacy-policy"
                   onClick={closeModal}
-                  className="font-semibold text-[#10469B] hover:underline"
+                  className="font-semibold text-navy hover:underline"
                 >
                   Privacy Policy
                 </Link>
@@ -406,82 +406,82 @@ function CustomerAuthModalContent() {
                   autoComplete="name"
                   placeholder="e.g. Dr. Rajesh Sharma"
                   {...regRegister("name")}
-                  className={`w-full h-10.5 rounded-xl border bg-slate-50/50 pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                  className={`w-full h-10.5 rounded-input border bg-card pl-10 pr-3.5 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                     regErrors.name
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-[#10469B] focus:bg-white"
+                      ? "border-danger focus:border-danger"
+                      : "border-line focus:border-navy focus:bg-card"
                   }`}
                 />
               </div>
               {regErrors.name && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{regErrors.name.message}</p>
+                <p className="mt-1 text-xs text-danger font-medium">{regErrors.name.message}</p>
               )}
             </div>
 
             {/* Email Address */}
             <div>
-              <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 mb-1">
-                Email Address <span className="text-red-500">*</span>
+              <label htmlFor="reg-email" className="block text-xs font-bold text-charcoal mb-1">
+                Email Address <span className="text-danger">*</span>
               </label>
               <div className="relative flex items-center">
-                <Mail className="absolute left-3.5 text-slate-400 size-4 pointer-events-none" />
+                <Mail className="absolute left-3.5 text-muted/60 size-4 pointer-events-none" />
                 <input
                   id="reg-email"
                   type="email"
                   autoComplete="email"
                   placeholder="name@organization.org"
                   {...regRegister("email")}
-                  className={`w-full h-10.5 rounded-xl border bg-slate-50/50 pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                  className={`w-full h-10.5 rounded-input border bg-card pl-10 pr-3.5 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                     regErrors.email
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-[#10469B] focus:bg-white"
+                      ? "border-danger focus:border-danger"
+                      : "border-line focus:border-navy focus:bg-card"
                   }`}
                 />
               </div>
               {regErrors.email && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{regErrors.email.message}</p>
+                <p className="mt-1 text-xs text-danger font-medium">{regErrors.email.message}</p>
               )}
             </div>
 
             {/* Mobile Number & Organization */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="reg-phone" className="block text-xs font-bold text-slate-700 mb-1">
-                  Mobile Number <span className="text-red-500">*</span>
+                <label htmlFor="reg-phone" className="block text-xs font-bold text-charcoal mb-1">
+                  Mobile Number <span className="text-danger">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <Phone className="absolute left-3 text-slate-400 size-3.5 pointer-events-none" />
+                  <Phone className="absolute left-3 text-muted/60 size-3.5 pointer-events-none" />
                   <input
                     id="reg-phone"
                     type="tel"
                     autoComplete="tel"
                     placeholder="10-digit number"
                     {...regRegister("phone")}
-                    className={`w-full h-10.5 rounded-xl border bg-slate-50/50 pl-9 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                    className={`w-full h-10.5 rounded-input border bg-card pl-9 pr-3 text-xs sm:text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                       regErrors.phone
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-slate-200 focus:border-[#10469B] focus:bg-white"
+                        ? "border-danger focus:border-danger"
+                        : "border-line focus:border-navy focus:bg-card"
                     }`}
                   />
                 </div>
                 {regErrors.phone && (
-                  <p className="mt-1 text-[11px] text-red-600 font-medium">{regErrors.phone.message}</p>
+                  <p className="mt-1 text-[11px] text-danger font-medium">{regErrors.phone.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="reg-org" className="block text-xs font-bold text-slate-700 mb-1">
-                  Organization <span className="text-slate-400 font-normal">(Optional)</span>
+                <label htmlFor="reg-org" className="block text-xs font-bold text-charcoal mb-1">
+                  Organization <span className="text-muted/60 font-normal">(Optional)</span>
                 </label>
                 <div className="relative flex items-center">
-                  <Building2 className="absolute left-3 text-slate-400 size-3.5 pointer-events-none" />
+                  <Building2 className="absolute left-3 text-muted/60 size-3.5 pointer-events-none" />
                   <input
                     id="reg-org"
                     type="text"
                     autoComplete="organization"
                     placeholder="School / College / Co."
                     {...regRegister("organization")}
-                    className="w-full h-10.5 rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#10469B] focus:bg-white transition-all"
+                    className="w-full h-10.5 rounded-input border border-line bg-card pl-9 pr-3 text-xs sm:text-sm text-charcoal placeholder:text-muted/60 outline-none focus:border-navy focus:bg-card transition-all"
                   />
                 </div>
               </div>
@@ -489,67 +489,67 @@ function CustomerAuthModalContent() {
 
             {/* Password */}
             <div>
-              <label htmlFor="reg-password" className="block text-xs font-bold text-slate-700 mb-1">
-                Password <span className="text-red-500">*</span>
+              <label htmlFor="reg-password" className="block text-xs font-bold text-charcoal mb-1">
+                Password <span className="text-danger">*</span>
               </label>
               <div className="relative flex items-center">
-                <Lock className="absolute left-3.5 text-slate-400 size-4 pointer-events-none" />
+                <Lock className="absolute left-3.5 text-muted/60 size-4 pointer-events-none" />
                 <input
                   id="reg-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   placeholder="Min 6 characters"
                   {...regRegister("password")}
-                  className={`w-full h-10.5 rounded-xl border bg-slate-50/50 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                  className={`w-full h-10.5 rounded-input border bg-card pl-10 pr-10 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                     regErrors.password
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-[#10469B] focus:bg-white"
+                      ? "border-danger focus:border-danger"
+                      : "border-line focus:border-navy focus:bg-card"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  className="absolute right-3 text-muted hover:text-charcoal p-1 cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
               {regErrors.password && (
-                <p className="mt-1 text-xs text-red-600 font-medium">{regErrors.password.message}</p>
+                <p className="mt-1 text-xs text-danger font-medium">{regErrors.password.message}</p>
               )}
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="reg-confirm-password" className="block text-xs font-bold text-slate-700 mb-1">
-                Confirm Password <span className="text-red-500">*</span>
+              <label htmlFor="reg-confirm-password" className="block text-xs font-bold text-charcoal mb-1">
+                Confirm Password <span className="text-danger">*</span>
               </label>
               <div className="relative flex items-center">
-                <Lock className="absolute left-3.5 text-slate-400 size-4 pointer-events-none" />
+                <Lock className="absolute left-3.5 text-muted/60 size-4 pointer-events-none" />
                 <input
                   id="reg-confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   placeholder="Re-enter password"
                   {...regRegister("confirmPassword")}
-                  className={`w-full h-10.5 rounded-xl border bg-slate-50/50 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                  className={`w-full h-10.5 rounded-input border bg-card pl-10 pr-10 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                     regErrors.confirmPassword
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-slate-200 focus:border-[#10469B] focus:bg-white"
+                      ? "border-danger focus:border-danger"
+                      : "border-line focus:border-navy focus:bg-card"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  className="absolute right-3 text-muted hover:text-charcoal p-1 cursor-pointer"
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
                   {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
               {regErrors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-600 font-medium">
+                <p className="mt-1 text-xs text-danger font-medium">
                   {regErrors.confirmPassword.message}
                 </p>
               )}
@@ -561,14 +561,14 @@ function CustomerAuthModalContent() {
                 id="reg-terms"
                 type="checkbox"
                 {...regRegister("terms")}
-                className="mt-0.5 size-4 rounded border-slate-300 text-[#10469B] focus:ring-[#10469B] cursor-pointer"
+                className="mt-0.5 size-4 rounded-xs border-line text-navy focus:ring-navy cursor-pointer"
               />
-              <label htmlFor="reg-terms" className="text-xs text-slate-600 leading-snug cursor-pointer">
+              <label htmlFor="reg-terms" className="text-xs text-muted leading-snug cursor-pointer">
                 I agree to the{" "}
                 <Link
                   href="/terms-and-conditions"
                   target="_blank"
-                  className="font-semibold text-[#10469B] underline"
+                  className="font-semibold text-navy underline"
                 >
                   Terms &amp; Conditions
                 </Link>{" "}
@@ -576,7 +576,7 @@ function CustomerAuthModalContent() {
                 <Link
                   href="/privacy-policy"
                   target="_blank"
-                  className="font-semibold text-[#10469B] underline"
+                  className="font-semibold text-navy underline"
                 >
                   Privacy Policy
                 </Link>
@@ -584,14 +584,14 @@ function CustomerAuthModalContent() {
               </label>
             </div>
             {regErrors.terms && (
-              <p className="text-xs text-red-600 font-medium">{regErrors.terms.message}</p>
+              <p className="text-xs text-danger font-medium">{regErrors.terms.message}</p>
             )}
 
             {/* Register Submit Button */}
             <button
               type="submit"
               disabled={isRegistering}
-              className="mt-2 w-full h-11 rounded-xl bg-gradient-to-r from-[#10469B] to-[#0A2F6E] hover:from-[#0D3B82] hover:to-[#072454] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(16,70,155,0.25)] transition-all cursor-pointer disabled:opacity-70"
+              className="mt-2 w-full h-11 rounded-action bg-linear-to-r from-navy to-navy-600 hover:brightness-110 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(0,41,112,0.25)] transition-all cursor-pointer disabled:opacity-70"
             >
               {isRegistering ? (
                 <>
@@ -625,7 +625,7 @@ function CustomerAuthModalContent() {
                 <button
                   type="button"
                   onClick={() => setTab("login")}
-                  className="mt-4 w-full h-10 rounded-xl bg-[#10469B] hover:bg-[#0A2F6E] text-white text-xs font-bold transition-all cursor-pointer"
+                  className="mt-4 w-full h-10 rounded-action bg-navy hover:brightness-110 text-white text-xs font-bold transition-all cursor-pointer"
                 >
                   Return to Sign In
                 </button>
@@ -633,40 +633,40 @@ function CustomerAuthModalContent() {
             ) : (
               <form onSubmit={handleForgotSubmit(onForgot)} noValidate className="flex flex-col gap-4">
                 {forgotError && (
-                  <div className="rounded-xl bg-red-50 border border-red-200 p-3.5 flex items-start gap-2.5 text-red-700 animate-in fade-in duration-150">
-                    <AlertCircle className="size-4.5 text-red-600 shrink-0 mt-0.5" />
+                  <div className="rounded-input bg-danger-soft border border-danger/20 p-3.5 flex items-start gap-2.5 text-danger animate-in fade-in duration-150">
+                    <AlertCircle className="size-4.5 text-danger shrink-0 mt-0.5" />
                     <p className="text-xs font-semibold leading-relaxed">{forgotError}</p>
                   </div>
                 )}
 
                 <div>
-                  <label htmlFor="forgot-email" className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Account Email Address <span className="text-red-500">*</span>
+                  <label htmlFor="forgot-email" className="block text-xs font-bold text-charcoal mb-1.5">
+                    Account Email Address <span className="text-danger">*</span>
                   </label>
                   <div className="relative flex items-center">
-                    <Mail className="absolute left-3.5 text-slate-400 size-4 pointer-events-none" />
+                    <Mail className="absolute left-3.5 text-muted/60 size-4 pointer-events-none" />
                     <input
                       id="forgot-email"
                       type="email"
                       autoComplete="email"
                       placeholder="name@organization.org"
                       {...forgotRegister("email")}
-                      className={`w-full h-11 rounded-xl border bg-slate-50/50 pl-10 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all ${
+                      className={`w-full h-11 rounded-input border bg-card pl-10 pr-3.5 text-sm text-charcoal placeholder:text-muted/60 outline-none transition-all ${
                         forgotErrors.email
-                          ? "border-red-400 focus:border-red-500"
-                          : "border-slate-200 focus:border-[#10469B] focus:bg-white"
+                          ? "border-danger focus:border-danger"
+                          : "border-line focus:border-navy focus:bg-card"
                       }`}
                     />
                   </div>
                   {forgotErrors.email && (
-                    <p className="mt-1 text-xs text-red-600 font-medium">{forgotErrors.email.message}</p>
+                    <p className="mt-1 text-xs text-danger font-medium">{forgotErrors.email.message}</p>
                   )}
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSendingForgot}
-                  className="w-full h-11 rounded-xl bg-gradient-to-r from-[#10469B] to-[#0A2F6E] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(16,70,155,0.25)] transition-all cursor-pointer disabled:opacity-70"
+                  className="w-full h-11 rounded-action bg-linear-to-r from-navy to-navy-600 hover:brightness-110 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(0,41,112,0.25)] transition-all cursor-pointer disabled:opacity-70"
                 >
                   {isSendingForgot ? (
                     <>
@@ -682,7 +682,7 @@ function CustomerAuthModalContent() {
                   <button
                     type="button"
                     onClick={() => setTab("login")}
-                    className="text-xs font-bold text-slate-600 hover:text-[#10469B] transition-colors cursor-pointer"
+                    className="text-xs font-bold text-muted hover:text-navy transition-colors cursor-pointer"
                   >
                     &larr; Back to Sign In
                   </button>

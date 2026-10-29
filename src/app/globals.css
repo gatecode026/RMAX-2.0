@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * RMAX design tokens — Style A (see .context/DESIGN_SYSTEM.md).
+ * RMAX design tokens — Style A (see CLAUDE.md & .context/DESIGN_SYSTEM.md).
  * All sizes advance on a 4px grid (Tailwind's default spacing unit is 4px).
  */
 @theme {
@@ -17,18 +17,18 @@
   --color-soft: #eaf0f8;
   --color-success: #257052;
   --color-success-soft: #e8f2ec;
-  --color-danger: #b3261e; /* ASSUMED: no error colour in the design */
-  --color-danger-soft: #fbeae8; /* ASSUMED */
+  --color-danger: #b3261e;
+  --color-danger-soft: #fbeae8;
 
   /* Fonts */
   --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-jakarta: var(--font-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
 
-  /* Type scale (size / line-height) */
+  /* Type scale (size / line-height) - 4px increments */
   --text-label: 12px;
   --text-label--line-height: 20px;
-  --text-body-sm: 14px; /* ASSUMED: used for footer + helper text */
+  --text-body-sm: 14px;
   --text-body-sm--line-height: 20px;
   --text-body: 16px;
   --text-body--line-height: 24px;
@@ -38,21 +38,26 @@
   --text-section--line-height: 44px;
   --text-display: 52px;
   --text-display--line-height: 64px;
-  --text-display-sm: 40px; /* tablet/mobile step of the display size (ASSUMED) */
+  --text-display-sm: 40px;
   --text-display-sm--line-height: 48px;
   --text-numeral: 152px;
   --text-numeral--line-height: 184px;
 
-  /* Radii */
+  /* Radii (Strict 4px grid inventory: 0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40 px) */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-chip: 12px;
   --radius-input: 16px;
+  --radius-action-sm: 20px;
   --radius-action: 28px;
   --radius-card: 32px;
   --radius-card-lg: 40px;
+  --radius-pill: 9999px;
 
-  /* Shadows (ASSUMED: soft card elevation visible on 08) */
+  /* Shadows */
   --shadow-card: 0 2px 12px rgb(35 42 50 / 0.06);
 
-  /* Layout — one container width shared by the header, every page and the footer, so their edges line up */
+  /* Layout — 1280px desktop content container (1440px frame - 2x80px padding) */
   --container-page: 1280px;
 }
 
@@ -142,7 +147,7 @@
   }
 }
 
-/* Modern sleek custom scrollbars app-wide (eliminates ugly retro Windows track with arrows) */
+/* Modern sleek custom scrollbars app-wide */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -151,11 +156,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 75, 168, 0.22);
+  background: rgba(0, 41, 112, 0.22);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 75, 168, 0.45);
+  background: rgba(0, 41, 112, 0.45);
 }
 ::-webkit-scrollbar-button {
   display: none !important;
@@ -180,4 +185,3 @@ html:has(body.modal-open) {
   overflow: hidden !important;
   touch-action: none;
 }
-

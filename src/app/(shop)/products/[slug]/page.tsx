@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: Params) {
           <div className="flex flex-col gap-6">
             <div>
               <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
-              <h1 className="mt-3 font-jakarta text-[28px]/9 font-bold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
+              <h1 className="mt-3 font-heading text-[28px]/9 font-extrabold tracking-[-1px] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
               {product.intro && <p className="mt-4 text-body leading-relaxed text-muted">{product.intro}</p>}
               {tiles.length > 0 && <SpecTiles tiles={tiles} />}
             </div>
@@ -144,7 +144,7 @@ export default async function ProductPage({ params }: Params) {
       {related.length > 0 && (
         <section aria-labelledby="related-h" className="mx-auto mt-14 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-16 lg:px-12 xl:px-16">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h2 id="related-h" className="font-jakarta text-[28px]/9 font-bold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]">
+            <h2 id="related-h" className="font-heading text-[28px]/9 font-extrabold tracking-[-1px] text-charcoal md:text-[36px]/[44px]">
               Related products.
             </h2>
             <ButtonLink href="/our-product" variant="outline" className="h-[46px] px-6 text-body-sm">

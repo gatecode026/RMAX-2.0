@@ -21,7 +21,7 @@ const ICONS: Record<DetailIcon, LucideIcon> = {
 const TRUST_ICONS: Record<TrustPoint["icon"], LucideIcon> = { shield: ShieldCheck, truck: Truck, cog: Cog };
 
 const card = "rounded-[28px] border border-[#ECF1F8] bg-card shadow-[0_6px_24px_rgb(35_42_50/0.04)]";
-const h2 = "font-jakarta text-[24px]/8 font-bold tracking-[-0.005em] text-charcoal";
+const h2 = "font-heading text-title font-extrabold tracking-[-0.6px] text-charcoal";
 
 export function RatingRow({ rating, label, stars }: { rating: string; label: string; stars: number }) {
   return (
@@ -38,7 +38,7 @@ export function SpecTiles({ tiles }: { tiles: { value: string; label: string }[]
     <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
       {tiles.map((t) => (
         <li key={t.label} className="rounded-[14px] bg-soft px-4 py-3.5">
-          <p className="font-jakarta text-[16px]/6 font-semibold text-charcoal">{t.value}</p>
+          <p className="font-sans text-body font-semibold text-charcoal">{t.value}</p>
           <p className="text-[11px]/4 text-muted">{t.label}</p>
         </li>
       ))}
@@ -171,17 +171,17 @@ export function ProductTestimonial({ t }: { t: TestimonialDTO }) {
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
         </svg>
 
-        <blockquote className="font-jakarta text-[22px] sm:text-[26px] font-bold leading-snug tracking-tight text-white max-w-[580px]">
+        <blockquote className="font-heading text-[22px] sm:text-[26px] font-extrabold leading-snug tracking-tight text-white max-w-[580px]">
           {t.quote}
         </blockquote>
 
         <div className="mt-6">
           <figcaption className="flex items-center gap-3.5">
-            <div className="flex size-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[16px] font-extrabold text-[#0A2558]">
+            <div className="flex size-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-heading text-[16px] font-extrabold text-navy">
               {initials(t.name)}
             </div>
             <div>
-              <p className="font-jakarta text-[18px] font-bold text-white leading-tight">{t.name}</p>
+              <p className="font-heading text-[18px] font-extrabold text-white leading-tight">{t.name}</p>
               <p className="text-[13px] text-white/80 mt-0.5">{t.role}</p>
             </div>
           </figcaption>
