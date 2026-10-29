@@ -477,11 +477,20 @@ export const testimonials: ITestimonial[] = [
   {
     name: "Dr. Meera Iyer",
     role: "Principal, Sunrise Public School, Pune",
-    quote: "The Basic unit handles our daily load without any fuss. Installation took an hour and the students are comfortable using it.",
+    quote: "The Basic unit handles our daily load without any fuss. Installation took under an hour and the students are comfortable using it.",
     rating: 5,
     dateLabel: "October 2025",
     featured: false,
     sortOrder: 3,
+  },
+  {
+    name: "Sunil Deshmukh",
+    role: "Admin Officer, Apex Health Diagnostics, Mumbai",
+    quote: "Very impressed with the ceramic chamber and smoke filter. Keeps our washroom premises clean, odour-free and completely compliant.",
+    rating: 5,
+    dateLabel: "November 2025",
+    featured: false,
+    sortOrder: 4,
   },
 ];
 
