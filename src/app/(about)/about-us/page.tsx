@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "RMAX Solutions is an Indian manufacturer and OEM supplier of sanitary waste disposal, pad vending systems and smart service hardware.",
 };
 
-const wrap = "mx-auto w-full max-w-(--container-page) px-5 sm:px-8 lg:px-8 xl:px-16";
+const wrap = "mx-auto w-full max-w-(--container-page) px-4 sm:px-8 lg:px-8 xl:px-16";
 const h2 = "text-[28px]/9 font-extrabold tracking-[-0.01em] text-charcoal md:text-[36px]/[44px]";
 const lead = "text-body text-muted";
 const card = "rounded-[28px] border border-line bg-card";
@@ -85,10 +85,10 @@ export default async function AboutUsPage() {
                 help institutions make everyday hygiene more accessible, practical and easier to manage.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/contact-us" className="h-12 px-6">
+                <ButtonLink href="/contact-us" className="h-12 w-full sm:w-auto px-6 text-center">
                   Contact our team
                 </ButtonLink>
-                <ButtonLink href="/our-product" variant="outline" className="h-12 px-6">
+                <ButtonLink href="/our-product" variant="outline" className="h-12 w-full sm:w-auto px-6 text-center">
                   View all products
                 </ButtonLink>
               </div>
@@ -164,7 +164,7 @@ export default async function AboutUsPage() {
                 Our portfolio connects sanitary disposal and pad access with the wider hardware needs of businesses and institutions.
               </p>
             </div>
-            <ButtonLink href="/our-product" variant="outline" className="h-12 px-6">
+            <ButtonLink href="/our-product" variant="outline" className="h-12 w-full sm:w-auto px-6 text-center">
               View all products →
             </ButtonLink>
           </div>
@@ -289,21 +289,21 @@ export default async function AboutUsPage() {
       {/* CTA */}
       <section className="bg-card pt-14 pb-12 md:pt-[70px] md:pb-16">
         <div className={wrap}>
-          <div className="grid items-center gap-6 rounded-[40px] bg-[linear-gradient(100deg,#002970_0%,#2F5995_100%)] px-6 py-8 text-white md:px-10 md:py-10 lg:grid-cols-[1fr_auto] lg:gap-12">
+          <div className="grid items-center gap-6 rounded-[28px] sm:rounded-[36px] md:rounded-[40px] bg-[linear-gradient(100deg,#002970_0%,#2F5995_100%)] p-5 sm:p-8 md:p-10 text-white lg:grid-cols-[1fr_auto] lg:gap-12">
             <div>
-              <h2 className="text-[26px]/9 font-extrabold tracking-[-0.01em] text-white md:text-[32px]/10">
+              <h2 className="text-[22px]/[28px] sm:text-[26px]/9 font-extrabold tracking-[-0.01em] text-white md:text-[32px]/10">
                 Let’s find the right solution for your institution.
               </h2>
-              <p className="mt-4 max-w-[900px] text-body text-white">
+              <p className="mt-3.5 sm:mt-4 max-w-[900px] text-body-sm sm:text-body text-white">
                 Tell us about your space, daily usage and requirements. Our team can help with product fit, pricing, installation and
                 after-sales support.
               </p>
             </div>
-            <div className="flex flex-col items-start gap-4 lg:items-center">
-              <ButtonLink href="/institutional-quote" variant="dark" className="h-12 px-8">
+            <div className="flex w-full flex-col items-start gap-3 sm:gap-4 lg:w-auto lg:items-center">
+              <ButtonLink href="/institutional-quote" variant="dark" className="h-12 w-full px-5 text-[14px] sm:w-auto sm:px-8 sm:text-body text-center">
                 Discuss your requirements
               </ButtonLink>
-              <p className="text-body text-white">For B2B &amp; institutional enquiries</p>
+              <p className="text-body-sm sm:text-body text-white text-center sm:text-left w-full">For B2B &amp; institutional enquiries</p>
             </div>
           </div>
         </div>

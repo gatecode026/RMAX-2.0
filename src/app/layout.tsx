@@ -43,12 +43,27 @@ import { CustomerAuthModal } from "@/components/auth/CustomerAuthModal";
 import { GlobalModalScrollLock } from "@/components/ui/GlobalModalScrollLock";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-export const viewport: Viewport = { themeColor: "#fbf9f5" };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbf9f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#fbf9f5" },
+  ],
+  colorScheme: "light",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}>
-      <body className="flex min-h-dvh flex-col">
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}
+      style={{ colorScheme: "light" }}
+    >
+      <head>
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
+      </head>
+      <body className="flex min-h-dvh flex-col" style={{ colorScheme: "light" }}>
         <GlobalModalScrollLock />
         <ToastProvider>
           <AuthModalProvider>

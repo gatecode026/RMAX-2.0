@@ -23,11 +23,11 @@ export default async function ContactUsPage() {
         lead="Use the contact form for a sales or service enquiry. Include your model and order reference if you already own a unit."
       />
 
-      <Container className="mt-12 grid items-start gap-6 md:mt-16 lg:grid-cols-[1fr_366px]">
+      <Container className="mt-6 sm:mt-10 md:mt-16 grid items-start gap-6 lg:grid-cols-[1fr_366px]">
         <ContactForm models={products.map((p) => ({ slug: p.slug, name: p.name, capacity: p.specs.dailyCapacity }))} />
 
         <aside className="flex flex-col gap-6" aria-label="Other ways to get help">
-          <div className="rounded-card bg-charcoal p-7 text-white">
+          <div className="rounded-[24px] sm:rounded-card bg-charcoal p-5 sm:p-7 text-white">
             <Pill tone="light">Sales &amp; service</Pill>
             <h2 className="mt-5 text-title text-white">Which should I choose?</h2>
             <p className="mt-4 text-body text-muted-dark">
@@ -35,16 +35,16 @@ export default async function ContactUsPage() {
               order reference and model. Choose <strong className="text-white">Sales</strong> for model selection.
             </p>
           </div>
-          <Card className="p-7">
+          <Card className="p-5 sm:p-7">
             <h2 className="text-[20px]/7">Planning more than one unit?</h2>
             <p className="mt-3 text-body-sm text-muted">
               Request an institutional quote to discuss model choice, quantities and installation requirements.
             </p>
-            <ButtonLink href="/institutional-quote" variant="secondary" size="sm" className="mt-5">
+            <ButtonLink href="/institutional-quote" variant="secondary" size="sm" className="mt-4 sm:mt-5 w-full sm:w-auto text-center">
               Request institutional quote
             </ButtonLink>
             <p className="mt-6 text-body-sm text-muted">Looking for quick answers? Browse our Help &amp; FAQs.</p>
-            <ButtonLink href="/help" variant="ghost" size="sm" className="mt-2 -ml-6">
+            <ButtonLink href="/help" variant="ghost" size="sm" className="mt-2 w-full sm:w-auto sm:-ml-6 text-center sm:text-left">
               Help &amp; FAQs
             </ButtonLink>
           </Card>

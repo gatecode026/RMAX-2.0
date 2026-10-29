@@ -39,8 +39,8 @@ export function PageHero({
     <Container className={cn("pt-6 md:pt-8", className)}>
       {breadcrumb && <Breadcrumb current={breadcrumb} />}
       <Eyebrow className={breadcrumb ? "mt-5" : undefined}>{eyebrow}</Eyebrow>
-      <h1 className="mt-3 text-display-sm md:text-display">{title}</h1>
-      {lead && <p className="mt-5 max-w-[880px] text-body text-muted">{lead}</p>}
+      <h1 className="mt-3 text-[28px]/[36px] sm:text-display-sm md:text-display font-extrabold">{title}</h1>
+      {lead && <p className="mt-3.5 sm:mt-5 max-w-[880px] text-body-sm sm:text-body text-muted leading-relaxed">{lead}</p>}
     </Container>
   );
 }

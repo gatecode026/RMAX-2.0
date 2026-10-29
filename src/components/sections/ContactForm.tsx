@@ -54,7 +54,7 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
   }
 
   return (
-    <Card className="p-7 md:p-8">
+    <Card className="p-5 sm:p-7 md:p-8">
       <h2 className="text-title">Send us a message</h2>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 flex flex-col gap-5">
         {/* Hidden Honeypot Anti-Bot Field */}
@@ -118,7 +118,7 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
           </p>
         )}
         <div>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? "Sending…" : "Send message"}
           </Button>
         </div>

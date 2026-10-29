@@ -101,7 +101,7 @@ export default async function CompareModelsPage() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col items-start justify-between gap-6 rounded-card-lg bg-charcoal p-8 text-white md:flex-row md:items-center md:px-9">
+        <div className="mt-6 sm:mt-8 flex flex-col items-start justify-between gap-6 rounded-[24px] sm:rounded-card-lg bg-charcoal p-5 sm:p-8 text-white md:flex-row md:items-center md:px-9">
           <div className="max-w-[820px]">
             <h2 className="text-title text-white">Not sure which capacity you need?</h2>
             <p className="mt-3 text-body text-muted-dark">
@@ -109,7 +109,7 @@ export default async function CompareModelsPage() {
               planning.
             </p>
           </div>
-          <ButtonLink href="/institutional-quote" variant="dark" className="shrink-0">
+          <ButtonLink href="/institutional-quote" variant="dark" className="w-full sm:w-auto shrink-0 text-center">
             Request institutional quote
           </ButtonLink>
         </div>

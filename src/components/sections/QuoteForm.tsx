@@ -182,7 +182,7 @@ export function QuoteForm({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_366px]">
       {done ? (
-        <Card className="p-7 md:p-8" role="status">
+        <Card className="p-5 sm:p-7 md:p-8" role="status">
           <div className="flex items-center gap-3">
             <Pill tone="success">Request Received</Pill>
             {submittedQuoteNumber && (
@@ -226,7 +226,7 @@ export function QuoteForm({
         </Card>
       ) : hasAllDetails && !showManualForm ? (
         /* FAST QUOTE VIEW FOR USERS WITH COMPLETE PROFILE */
-        <Card className="p-7 md:p-8">
+        <Card className="p-5 sm:p-7 md:p-8">
           {/* Verified user details badge */}
           <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -434,7 +434,7 @@ export function QuoteForm({
         </Card>
       ) : (
         /* STANDARD FORM VIEW FOR GUESTS OR MANUAL ENTRY */
-        <Card className="p-7 md:p-8">
+        <Card className="p-5 sm:p-7 md:p-8">
           {hasAllDetails && showManualForm && (
             <div className="mb-6 flex items-center justify-between rounded-xl border border-line bg-soft/70 p-3.5">
               <span className="text-xs text-muted font-medium">
@@ -546,7 +546,7 @@ export function QuoteForm({
               </p>
             )}
             <div>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto text-center">
                 {isSubmitting ? "Sending…" : "Request institutional quote"}
               </Button>
             </div>
@@ -555,7 +555,7 @@ export function QuoteForm({
       )}
 
       <aside className="flex flex-col gap-6" aria-label="About institutional sales">
-        <div className="rounded-card bg-charcoal p-7 text-white">
+        <div className="rounded-[24px] sm:rounded-card bg-charcoal p-5 sm:p-7 text-white">
           <Pill tone="light">Institutional sales</Pill>
           <h2 className="mt-5 text-title text-white">One unit or multiple locations.</h2>
           <p className="mt-5 text-body text-muted-dark">
@@ -564,7 +564,7 @@ export function QuoteForm({
           </p>
         </div>
         {preview && (
-          <Card className="p-7">
+          <Card className="p-5 sm:p-7">
             <Image src={preview.image.src} alt={preview.image.alt} width={310} height={220} className="h-[220px] w-full rounded-[24px] object-cover" />
             <p className="mt-6 font-heading text-title font-extrabold">
               {preview.name} · {formatINR(preview.price)}

@@ -390,7 +390,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
                 Review daily capacity, power, weight and pricing across the three incinerator models.
               </p>
             </div>
-            <ButtonLink href="/compare-models" variant="dark" className="h-[50px] shrink-0 px-8 text-[14px]">
+            <ButtonLink href="/compare-models" variant="dark" className="h-[50px] w-full sm:w-auto shrink-0 px-6 sm:px-8 text-[14px] text-center">
               Compare models
             </ButtonLink>
           </div>

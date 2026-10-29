@@ -26,7 +26,7 @@ export default async function HelpPage() {
       />
 
       <Container className="mt-12 grid items-start gap-8 md:mt-16 lg:grid-cols-[228px_1fr]">
-        <Card className="p-7 lg:sticky lg:top-[calc(var(--header-height)+16px)]">
+        <Card className="p-5 sm:p-7 lg:sticky lg:top-[calc(var(--header-height)+16px)]">
           <h2 className="text-title">Browse help</h2>
           <nav aria-label="Help categories" className="mt-4">
             <ul className="flex flex-col gap-1">
@@ -64,14 +64,14 @@ export default async function HelpPage() {
       </Container>
 
       <Container className="mt-12">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-card bg-charcoal p-8 text-white md:flex-row md:items-center">
+        <div className="flex flex-col items-start justify-between gap-6 rounded-[24px] sm:rounded-card bg-charcoal p-5 sm:p-8 text-white md:flex-row md:items-center">
           <div>
             <h2 className="text-title text-white">Still have a question?</h2>
             <p className="mt-2 text-body text-muted-dark">
               Use the contact form for a sales or service enquiry. Include your model and order reference if you already own a unit.
             </p>
           </div>
-          <ButtonLink href="/contact-us" variant="dark" className="shrink-0">
+          <ButtonLink href="/contact-us" variant="dark" className="w-full sm:w-auto shrink-0 text-center">
             Contact Us
           </ButtonLink>
         </div>
