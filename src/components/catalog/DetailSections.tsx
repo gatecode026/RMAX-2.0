@@ -171,17 +171,17 @@ export function ProductTestimonial({ t }: { t: TestimonialDTO }) {
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
         </svg>
 
-        <blockquote className="font-heading text-[22px] sm:text-[26px] font-extrabold leading-snug tracking-tight text-white max-w-[580px]">
+        <blockquote className="font-jakarta text-[22px] sm:text-[26px] font-bold leading-snug tracking-tight text-white max-w-[540px] pr-12">
           {t.quote}
         </blockquote>
 
         <div className="mt-6">
           <figcaption className="flex items-center gap-3.5">
-            <div className="flex size-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-heading text-[16px] font-extrabold text-navy">
+            <div className="flex size-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[16px] font-extrabold text-[#0A2558]">
               {initials(t.name)}
             </div>
             <div>
-              <p className="font-heading text-[18px] font-extrabold text-white leading-tight">{t.name}</p>
+              <p className="font-jakarta text-[18px] font-bold text-white leading-tight">{t.name}</p>
               <p className="text-[13px] text-white/80 mt-0.5">{t.role}</p>
             </div>
           </figcaption>
