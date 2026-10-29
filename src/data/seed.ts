@@ -453,7 +453,7 @@ export const testimonials: ITestimonial[] = [
     dateLabel: "October 2025",
     featured: true,
     product: "Basic",
-    image: { src: "/images/home/testimonial-basic.png", alt: "RMAX Basic napkin incinerator in a bright washroom", width: 483, height: 460 },
+    image: { src: "/images/home/testimonial-basic-clean.png", alt: "RMAX Basic napkin incinerator in a bright washroom", width: 483, height: 460 },
     sortOrder: 0,
   },
   {

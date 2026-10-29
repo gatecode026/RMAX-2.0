@@ -24,7 +24,7 @@ export function ProductTabs({ items }: { items: TabItem[] }) {
     return () => io.disconnect();
   }, [items]);
 
-  const base = "relative whitespace-nowrap px-1 py-4 text-body-sm transition";
+  const base = "relative inline-flex items-center whitespace-nowrap px-1 pt-3.5 pb-5 md:pb-[22px] text-body-sm transition";
   return (
     <nav aria-label="Product sections" className="sticky top-0 z-30 border-b border-line bg-canvas/95 backdrop-blur">
       <ul className="mx-auto flex w-full max-w-(--container-page) gap-6 overflow-x-auto px-5 sm:px-8 md:gap-[34px] lg:px-8 xl:px-16">

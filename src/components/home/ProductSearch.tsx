@@ -32,7 +32,7 @@ export function ProductSearch({ items, className }: { items: Item[]; className?:
       <label htmlFor={`${listId}-input`} className="sr-only">
         Search products
       </label>
-      <div className="flex h-[46px] items-center gap-3 rounded-full border border-slate-200/90 bg-white/95 backdrop-blur-md px-5 shadow-[0_4px_20px_rgba(0,41,112,0.10),0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 focus-within:border-navy focus-within:ring-2 focus-within:ring-navy/20 focus-within:shadow-[0_6px_20px_rgb(16_70_155/0.14)]">
+      <div className="flex h-[46px] items-center gap-3 rounded-full border-[0.5px] border-slate-200/80 bg-white/95 backdrop-blur-md px-5 shadow-[0_2px_12px_rgba(0,41,112,0.06)] transition-all duration-200 focus-within:border-[#214582]/50 focus-within:ring-1 focus-within:ring-[#214582]/15 focus-within:shadow-[0_4px_16px_rgba(0,41,112,0.10)]">
         <Search aria-hidden className="size-[18px] shrink-0 text-navy" />
         <input
           id={`${listId}-input`}

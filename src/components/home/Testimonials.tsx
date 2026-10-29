@@ -8,10 +8,10 @@ import { initials } from "@/lib/home";
 import { cn } from "@/lib/cn";
 import type { ReviewSummary, TestimonialDTO } from "@/lib/data/content";
 
-/** Double quotation mark glyph matching the design */
+/** Double quotation mark glyph matching the design (rotated 180 to face inside toward quote) */
 function QuoteMark({ className = "size-6", fill = "currentColor" }: { className?: string; fill?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill={fill} aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={cn("rotate-180", className)} fill={fill} aria-hidden="true">
       <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
     </svg>
   );
@@ -40,13 +40,13 @@ function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
       </div>
 
       {/* Featured Quote Section - overlaps the image on the left by 32px so the photo seamlessly shows behind the rounded card corners */}
-      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[24px] sm:rounded-[28px] md:rounded-[36px] -mt-5 md:mt-0 md:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-7 md:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
+      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[24px] md:rounded-[36px] -mt-5 md:mt-0 md:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-7 md:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
         {/* Quote text row with cleanly aligned quotation mark at top-right */}
-        <div className="flex items-start justify-between gap-4">
-          <blockquote className="font-heading font-semibold text-[18px]/[26px] sm:text-[20px]/[28px] md:text-[22px]/[32px] lg:text-[26px]/[38px] xl:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px]">
+        <div className="relative flex items-start justify-between gap-6">
+          <blockquote className="font-heading font-semibold text-[18px]/[26px] sm:text-[20px]/[28px] md:text-[22px]/[32px] lg:text-[26px]/[38px] xl:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px] pr-12 sm:pr-16 md:pr-20">
             {t.quote}
           </blockquote>
-          <QuoteMark className="size-9 sm:size-11 lg:size-11 xl:size-14 shrink-0 text-white/95" fill="currentColor" />
+          <QuoteMark className="absolute top-1 right-2 sm:right-4 md:right-6 lg:right-8 size-8 sm:size-9 lg:size-11 xl:size-12 shrink-0 text-white/95" fill="currentColor" />
         </div>
 
         <div className="mt-8">
@@ -207,15 +207,15 @@ export function Testimonials({
 
   return (
     <section className="mx-auto mt-16 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-[90px] lg:px-8 xl:px-16 xl:mt-[130px]" aria-labelledby="testimonials-heading">
-      {/* Header with Title and Rating Summary Box */}
-      <div className="flex flex-wrap items-end justify-between gap-6">
+      {/* Header with Title and Rating Summary Box (Single row on desktop, rating locked to top-right) */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
         <div>
           <p className="text-[12px] font-extrabold tracking-[0.2em] text-navy uppercase">Testimonials</p>
-          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[24px]/[32px] sm:text-[26px]/[34px] md:text-[30px]/[38px] lg:text-[36px]/[44px] xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal">
+          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[24px]/[32px] sm:text-[26px]/[34px] md:text-[30px]/[38px] lg:text-[36px]/[44px] xl:text-[44px]/[52px] 2xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal sm:whitespace-nowrap">
             Trusted by institutions across India.
           </h2>
         </div>
-        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[12px] sm:rounded-[14px] border border-line bg-card p-3 sm:p-3.5 lg:p-4 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[12px] sm:rounded-[14px] border border-line bg-card p-3 sm:p-3.5 lg:p-4 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0 self-start sm:self-auto">
           <p className="font-heading text-[28px] sm:text-[32px] lg:text-[38px] xl:text-[40px] font-extrabold text-charcoal leading-none">{reviews.rating}</p>
           <div className="flex flex-col items-start gap-1">
             <Stars value={reviews.stars} size={20} />
@@ -229,7 +229,7 @@ export function Testimonials({
 
       {/* Functional Review Cards Carousel Viewport */}
       <div
-        className="mt-6 overflow-hidden py-2"
+        className="mt-6 -my-4 overflow-hidden py-6 px-1.5"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

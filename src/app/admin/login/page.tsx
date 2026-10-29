@@ -272,7 +272,7 @@ function AdminLoginForm() {
             RIGHT LOGIN CARD
             ======================================================== */}
         <main
-          className="w-full lg:flex-1 max-w-[480px] bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-10px_rgba(16,70,155,0.12),0_2px_8px_rgba(0,0,0,0.03)] border border-[#EBF1F8] p-7 sm:p-10 flex flex-col justify-center"
+          className="w-full lg:flex-1 max-w-[480px] bg-white rounded-[24px] shadow-[0_10px_40px_-10px_rgba(16,70,155,0.12),0_2px_8px_rgba(0,0,0,0.03)] border border-[#EBF1F8] p-7 sm:p-10 flex flex-col justify-center"
           aria-labelledby="admin-login-title"
         >
           <div className="flex justify-center mb-1">

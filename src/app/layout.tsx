@@ -57,13 +57,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-scroll-behavior="smooth"
       className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}
-      style={{ colorScheme: "light" }}
+      suppressHydrationWarning
     >
       <head>
         <meta name="color-scheme" content="light" />
         <meta name="supported-color-schemes" content="light" />
       </head>
-      <body className="flex min-h-dvh flex-col" style={{ colorScheme: "light" }}>
+      <body className="flex min-h-dvh flex-col" suppressHydrationWarning>
         <GlobalModalScrollLock />
         <ToastProvider>
           <AuthModalProvider>

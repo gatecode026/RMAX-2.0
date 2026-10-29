@@ -12,7 +12,7 @@ export function BestSellers({ products }: { products: ProductDTO[] }) {
             Sanitary disposal for shared spaces.
           </h2>
         </div>
-        <ButtonLink href="/compare-models" variant="outline" className="h-[46px] sm:h-[51px] px-6 sm:px-8">
+        <ButtonLink href="/compare-models?select=1" variant="outline" className="h-[46px] sm:h-[51px] px-6 sm:px-8">
           Compare
         </ButtonLink>
       </div>
