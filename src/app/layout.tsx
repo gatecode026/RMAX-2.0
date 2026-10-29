@@ -6,7 +6,7 @@ import "./globals.css";
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: ["600", "700", "800"],
   display: "swap",
 });
 
@@ -47,7 +47,7 @@ export const viewport: Viewport = { themeColor: "#fbf9f5" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${montserrat.variable} ${manrope.variable} ${jakarta.variable}`}>
       <body className="flex min-h-dvh flex-col">
         <GlobalModalScrollLock />
         <ToastProvider>

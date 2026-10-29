@@ -149,29 +149,29 @@ export function TechSpecsCard({ rows }: { rows: { label: string; value: string }
 /** Navy testimonial banner at the foot of the detail page (matching design). */
 export function ProductTestimonial({ t }: { t: TestimonialDTO }) {
   return (
-    <figure className="grid overflow-hidden rounded-[36px] bg-[#EEF4FB] border border-[#D9E4F2] md:rounded-[40px] lg:grid-cols-[402px_1fr]">
-      <div className="relative min-h-[260px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] lg:min-h-[320px]">
+    <figure className="relative flex flex-col lg:flex-row items-stretch overflow-hidden rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
+      <div className="relative min-h-[260px] lg:min-h-[340px] lg:w-[400px] shrink-0 overflow-hidden flex items-center justify-center">
         {t.image && (
           <Image
             src={t.image.src}
             alt={t.image.alt}
             width={t.image.width}
             height={t.image.height}
-            className="absolute inset-0 size-full object-cover"
+            className="absolute inset-0 size-full object-cover object-left"
           />
         )}
         {t.product && (
-          <span className="absolute top-4 left-4 z-10 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
+          <span className="absolute top-4 left-4 z-20 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
             {t.product}
           </span>
         )}
       </div>
-      <div className="relative flex flex-col justify-between rounded-[32px] md:rounded-[36px] bg-gradient-to-br from-[#18427F] to-[#245CA4] p-8 md:p-10 text-white">
+      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[32px] md:rounded-[36px] -mt-6 lg:mt-0 lg:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-8 md:p-10 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
         <svg viewBox="0 0 24 24" className="absolute top-8 right-8 size-12 text-white/90" fill="currentColor" aria-hidden="true">
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
         </svg>
 
-        <blockquote className="font-jakarta text-[22px] sm:text-[26px] font-bold leading-snug tracking-tight text-white max-w-[540px] pr-12">
+        <blockquote className="font-heading font-semibold text-[22px]/[32px] sm:text-[26px]/[38px] lg:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px] pr-12">
           {t.quote}
         </blockquote>
 

@@ -20,49 +20,49 @@ function QuoteMark({ className = "size-6", fill = "currentColor" }: { className?
 /** Featured Hero Testimonial matching the exact top card in the design */
 function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
   return (
-    <figure className="grid overflow-hidden rounded-[36px] bg-[#EEF4FB] border border-[#D9E4F2] md:rounded-[40px] lg:grid-cols-[480px_1fr]">
+    <figure className="relative flex flex-col lg:flex-row items-stretch overflow-hidden rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
       {/* Product Image Section */}
-      <div className="relative min-h-[320px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] lg:min-h-[440px] flex items-center justify-center overflow-hidden">
+      <div className="relative min-h-[280px] lg:min-h-[380px] lg:w-[360px] xl:min-h-[460px] xl:w-[480px] shrink-0 overflow-hidden flex items-center justify-center">
         {t.image && (
           <Image
             src={t.image.src}
             alt={t.image.alt}
             width={t.image.width}
             height={t.image.height}
-            className="absolute inset-0 size-full object-cover"
+            className="absolute inset-0 size-full object-cover object-left"
           />
         )}
         {t.product && (
-          <span className="absolute top-4 left-4 z-10 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
+          <span className="absolute top-4 left-4 z-20 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
             {t.product}
           </span>
         )}
       </div>
 
-      {/* Featured Quote Section */}
-      <div className="relative flex flex-col justify-between rounded-[32px] md:rounded-[36px] bg-gradient-to-br from-[#18427F] to-[#245CA4] p-8 sm:p-10 lg:p-12 text-white">
+      {/* Featured Quote Section - overlaps the image on the left by 32px so the photo seamlessly shows behind the rounded card corners */}
+      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[28px] sm:rounded-[32px] md:rounded-[36px] -mt-6 lg:mt-0 lg:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-8 lg:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
         {/* Quote text row with cleanly aligned quotation mark at top-right */}
         <div className="flex items-start justify-between gap-4">
-          <blockquote className="font-jakarta text-[22px] sm:text-[28px] lg:text-[32px] xl:text-[34px] font-bold leading-[1.25] tracking-tight text-white max-w-[560px] xl:max-w-[600px]">
+          <blockquote className="font-heading font-semibold text-[20px]/[30px] sm:text-[24px]/[34px] lg:text-[26px]/[38px] xl:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px]">
             {t.quote}
           </blockquote>
-          <QuoteMark className="size-11 sm:size-12 lg:size-14 shrink-0 text-white/95" fill="currentColor" />
+          <QuoteMark className="size-9 sm:size-11 lg:size-11 xl:size-14 shrink-0 text-white/95" fill="currentColor" />
         </div>
 
         <div className="mt-8">
           {/* Author Profile */}
           <figcaption className="flex items-center gap-4">
-            <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[17px] font-extrabold text-[#0A2558] shadow-xs">
+            <div className="flex size-11 lg:size-[48px] xl:size-[52px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[15px] xl:text-[17px] font-extrabold text-[#0A2558] shadow-xs">
               {initials(t.name)}
             </div>
             <div>
-              <p className="font-jakarta text-[20px] font-bold text-white lg:text-[22px] leading-tight">{t.name}</p>
+              <p className="font-jakarta text-[18px] sm:text-[20px] font-bold text-white xl:text-[22px] leading-tight">{t.name}</p>
               <p className="text-[14px] text-white/80 mt-0.5 leading-normal">{t.role}</p>
             </div>
           </figcaption>
 
           {/* Subtle Accent Divider with End Dots */}
-          <div className="relative my-6 flex items-center lg:my-7" aria-hidden="true">
+          <div className="relative my-5 flex items-center lg:my-6 xl:my-7" aria-hidden="true">
             <div className="h-[1px] w-full bg-white/20" />
             <div className="absolute left-0 size-1 rounded-full bg-white/50" />
             <div className="absolute right-0 size-1 rounded-full bg-white/50" />
@@ -72,7 +72,7 @@ function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
           <div>
             <Link
               href="/institutional-quote"
-              className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3.5 text-[14px] font-bold text-[#18427F] shadow-sm transition-colors hover:bg-[#F0F4FA]"
+              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 sm:px-8 sm:py-3.5 text-[13px] sm:text-[14px] font-bold text-[#18427F] shadow-sm transition-colors hover:bg-[#F0F4FA]"
             >
               Discuss your requirements
             </Link>
@@ -206,20 +206,20 @@ export function Testimonials({
   const mobileOffset = `-${activeIndex * 100}%`;
 
   return (
-    <section className="mx-auto mt-16 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-[130px] lg:px-12 xl:px-16" aria-labelledby="testimonials-heading">
+    <section className="mx-auto mt-16 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-[90px] lg:px-8 xl:px-16 xl:mt-[130px]" aria-labelledby="testimonials-heading">
       {/* Header with Title and Rating Summary Box */}
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="text-[14px] font-extrabold tracking-[0.28em] text-navy uppercase">Testimonials</p>
-          <h2 id="testimonials-heading" className="mt-2 font-jakarta text-[30px]/[38px] font-bold tracking-[-0.01em] text-charcoal md:text-[48px]/[56px]">
+          <p className="text-[12px] font-extrabold tracking-[0.2em] text-navy uppercase">Testimonials</p>
+          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[28px]/[36px] sm:text-[34px]/[42px] lg:text-[36px]/[44px] xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal">
             Trusted by institutions across India.
           </h2>
         </div>
-        <div className="flex h-[93px] w-full items-center justify-between gap-3 rounded-[28px] border border-[#ECF1F8] bg-card px-5 shadow-[0_2px_10px_rgb(35_42_50/0.04)] sm:w-[334px]">
-          <p className="font-jakarta text-[48px]/[56px] font-bold text-charcoal">{reviews.rating}</p>
-          <div className="flex flex-col items-end gap-1">
-            <Stars value={reviews.stars} size={34} />
-            <p className="text-[15px] leading-5 whitespace-nowrap text-muted">{reviews.label}</p>
+        <div className="flex items-center gap-3 sm:gap-4 rounded-[20px] sm:rounded-[24px] border border-line bg-card px-4 sm:px-5 py-2 sm:py-3 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0">
+          <p className="font-heading text-[32px] sm:text-[38px] xl:text-[40px] font-extrabold text-charcoal leading-none">{reviews.rating}</p>
+          <div className="flex flex-col items-start gap-1">
+            <Stars value={reviews.stars} size={20} />
+            <p className="text-[12px] font-medium leading-none whitespace-nowrap text-muted">{reviews.label}</p>
           </div>
         </div>
       </div>
@@ -251,11 +251,11 @@ export function Testimonials({
 
         {/* Track for Tablet & Desktop (3 cards per view) */}
         <div
-          className="hidden md:flex gap-6 transition-transform duration-500 ease-out"
+          className="hidden md:flex gap-4 xl:gap-6 transition-transform duration-500 ease-out"
           style={{ transform: `translateX(${desktopOffset})` }}
         >
           {cards.map((t, i) => (
-            <div key={t._id} className="w-[calc(33.333%-16px)] shrink-0">
+            <div key={t._id} className="w-[calc(33.333%-11px)] xl:w-[calc(33.333%-16px)] shrink-0">
               <ReviewCard
                 t={t}
                 active={i === activeIndex}

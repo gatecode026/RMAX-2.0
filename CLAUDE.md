@@ -198,3 +198,4 @@ All corner radii strictly follow 4px multiples:
    - Always preserve comments and docstrings.
 5. **Verification Protocol:**
    - Run `npx tsc --noEmit` and `npm run build` after any styling refactor to guarantee zero compilation errors.
+

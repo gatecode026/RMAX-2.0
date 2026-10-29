@@ -5,6 +5,46 @@
  * All sizes advance on a 4px grid (Tailwind's default spacing unit is 4px).
  */
 @theme {
+  /* Pure pixel spacing scale (4px grid: p-1 = 4px, p-2 = 8px, p-4 = 16px, p-6 = 24px, etc.) */
+  --spacing: 4px;
+
+  /* Standard typography scale in pure px replacing default rems */
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+  --text-4xl: 36px;
+  --text-4xl--line-height: 40px;
+  --text-5xl: 48px;
+  --text-5xl--line-height: 56px;
+  --text-6xl: 60px;
+  --text-6xl--line-height: 68px;
+  --text-7xl: 72px;
+  --text-7xl--line-height: 80px;
+  --text-8xl: 96px;
+  --text-8xl--line-height: 104px;
+  --text-9xl: 128px;
+  --text-9xl--line-height: 136px;
+
+  /* Additional standard radii in pure px */
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-4xl: 40px;
+  --radius-full: 9999px;
+
   /* Colours */
   --color-navy: #002970;
   --color-navy-600: #315b96;
@@ -57,8 +97,8 @@
   /* Shadows */
   --shadow-card: 0 2px 12px rgb(35 42 50 / 0.06);
 
-  /* Layout — 1280px desktop content container (1440px frame - 2x80px padding) */
-  --container-page: 1280px;
+  /* Layout — 1440px desktop frame container matching Figma foundations */
+  --container-page: 1440px;
 }
 
 :root {

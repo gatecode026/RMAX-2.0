@@ -68,43 +68,45 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
     <>
       {/* ========================================================
           FLOATING SEARCH BAR ON SCROLL
-          Only the search bar appears when scrolled; full navbar stays at top.
+          Only appears on homepage and product pages when scrolled.
           ======================================================== */}
-      <div
-        className={cn(
-          "fixed top-3.5 left-1/2 -translate-x-1/2 z-50 w-full max-w-[460px] px-4 transition-all duration-300",
-          isScrolled
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 -translate-y-5 pointer-events-none"
-        )}
-        aria-hidden={!isScrolled}
-      >
-        <div className="rounded-full bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0_41_112/0.16)] border border-line p-0.5">
-          <ProductSearch items={products} />
+      {(pathname === "/" || pathname === "/our-product" || pathname.startsWith("/products")) && (
+        <div
+          className={cn(
+            "fixed top-3.5 left-1/2 -translate-x-1/2 z-50 w-full max-w-[460px] px-4 transition-all duration-300",
+            isScrolled
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 -translate-y-5 pointer-events-none"
+          )}
+          aria-hidden={!isScrolled}
+        >
+          <div className="rounded-full bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0_41_112/0.16)] border border-line p-0.5">
+            <ProductSearch items={products} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================
           MAIN NAVBAR
           Visible at top of page. Search bar grouped together with nav links.
           ======================================================== */}
       <header className="relative z-40 bg-transparent transition-all duration-300">
-        <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-12 xl:px-16">
+        <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-8 xl:px-16">
           {/* Left Side: Logo */}
           <div className="shrink-0">
             <Logo />
           </div>
 
           {/* Right Side: Search bar together with Nav links & Profile/Login */}
-          <div className="ml-auto hidden items-center gap-5 xl:gap-7 lg:flex">
+          <div className="ml-auto hidden items-center gap-4 xl:gap-7 lg:flex">
             {/* Searchbar adjacent to navlinks */}
-            <div className="w-[230px] xl:w-[270px] shrink-0">
+            <div className="w-[190px] xl:w-[270px] shrink-0">
               <ProductSearch items={products} />
             </div>
 
             {/* Nav links & Account/Login: Always visible on desktop */}
-            <nav aria-label="Main" className="flex items-center gap-5 xl:gap-7">
-              <ul className="flex items-center gap-5 xl:gap-7">
+            <nav aria-label="Main" className="flex items-center gap-4 xl:gap-7">
+              <ul className="flex items-center gap-4 xl:gap-7">
                 {LINKS.map((l) => (
                   <li key={l.href}>
                     <Link

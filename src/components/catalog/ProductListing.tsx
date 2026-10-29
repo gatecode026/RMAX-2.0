@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Check, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { DetailCard, ShowcaseCard } from "@/components/catalog/cards";
 import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
@@ -33,6 +33,100 @@ const COLOURS = [
 
 const PRICE_MAX = 15000;
 const PRICE_DEFAULT = 8550; // the design's slider rests at ~57 %
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "featured", label: "Sort by: Featured" },
+  { value: "price-asc", label: "Sort by: Price, low to high" },
+  { value: "price-desc", label: "Sort by: Price, high to low" },
+  { value: "name", label: "Sort by: Name" },
+];
+
+function SortDropdown({
+  value,
+  onChange,
+}: {
+  value: SortKey;
+  onChange: (val: SortKey) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  const currentOption = SORT_OPTIONS.find((o) => o.value === value) ?? SORT_OPTIONS[0];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Sort products"
+        onClick={() => setOpen((prev) => !prev)}
+        className={cn(
+          "flex h-10 w-[214px] items-center justify-between rounded-[14px] border border-line bg-card px-4 text-[13px] font-semibold text-charcoal transition-all",
+          "hover:border-navy/40 hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-navy/20",
+          open && "border-navy ring-2 ring-navy/20"
+        )}
+      >
+        <span className="truncate">{currentOption.label}</span>
+        <ChevronDown
+          aria-hidden
+          className={cn("size-4 text-charcoal transition-transform duration-200", open && "rotate-180 text-navy")}
+        />
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          aria-label="Sort options"
+          className="absolute right-0 top-full mt-1.5 z-50 w-[220px] rounded-[16px] border border-line bg-card p-1.5 shadow-[0_12px_36px_rgba(0,41,112,0.12)] animate-in fade-in zoom-in-95 duration-150"
+        >
+          {SORT_OPTIONS.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <li
+                key={opt.value}
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex items-center justify-between rounded-[10px] px-3.5 py-2.5 text-[13px] transition-colors cursor-pointer",
+                  isSelected
+                    ? "bg-soft font-bold text-navy"
+                    : "font-medium text-charcoal hover:bg-soft/70 hover:text-navy"
+                )}
+              >
+                <span>{opt.label}</span>
+                {isSelected && <Check className="size-4 text-navy shrink-0 ml-2" />}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /** Accordion section — the design shows ˅ when open and ˄ when closed. */
 function Section({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children?: React.ReactNode }) {
@@ -96,16 +190,26 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
     return sorted;
   }, [products, category, tiers, maxPrice, colours, sort]);
 
-  const showcase = visible;
-  const detail = visible.filter((p) => p.category === "incinerator");
+  const cards = useMemo(() => {
+    const list: { key: string; product: ProductDTO; type: "showcase" | "detail" }[] = [];
+    visible.forEach((p) => {
+      list.push({ key: `s-${p.slug}`, product: p, type: "showcase" });
+    });
+    const incinerators = visible.filter((p) => p.category === "incinerator");
+    incinerators.forEach((p) => {
+      list.push({ key: `d-${p.slug}`, product: p, type: "detail" });
+    });
+    return list;
+  }, [visible]);
+
   const filtersActive = tiers.length > 0 || colours.length > 0 || maxPrice !== PRICE_DEFAULT || category !== "all";
   const pct = (maxPrice / PRICE_MAX) * 100;
 
   return (
-    <div className="mx-auto w-full max-w-(--container-page) px-5 sm:px-8 lg:px-12 xl:px-16">
+    <div className="mx-auto w-full max-w-(--container-page) px-5 sm:px-8 lg:px-8 xl:px-16">
       {/* Category pills + sort */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div role="group" aria-label="Product category" className="flex flex-wrap gap-3">
+        <div role="group" aria-label="Product category" className="flex flex-wrap gap-2.5 sm:gap-3">
           {CATEGORIES.map((c) => (
             <button
               key={c.key}
@@ -113,7 +217,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
               aria-pressed={category === c.key}
               onClick={() => setCategory(c.key)}
               className={cn(
-                "h-10 rounded-full border px-5 text-body-sm font-semibold transition",
+                "h-10 rounded-full border px-4 sm:px-5 text-body-sm font-semibold transition",
                 category === c.key ? "border-navy bg-navy text-white" : "border-line bg-card text-charcoal hover:border-navy",
               )}
             >
@@ -121,27 +225,14 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
             </button>
           ))}
         </div>
-        <label className="relative">
-          <span className="sr-only">Sort products</span>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className="h-10 w-[204px] appearance-none rounded-[12px] border border-line bg-card pr-10 pl-4 text-body-sm text-charcoal focus:border-navy focus:outline-none"
-          >
-            <option value="featured">Sort by: Featured</option>
-            <option value="price-asc">Sort by: Price, low to high</option>
-            <option value="price-desc">Sort by: Price, high to low</option>
-            <option value="name">Sort by: Name</option>
-          </select>
-          <ChevronDown aria-hidden className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2" />
-        </label>
+        <SortDropdown value={sort} onChange={setSort} />
       </div>
 
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[302px_1fr]">
+      <div className="mt-5 sm:mt-6 grid items-start gap-5 lg:grid-cols-[250px_1fr] xl:grid-cols-[270px_1fr] xl:gap-6">
         {/* Filters */}
         <aside
           aria-label="Filters"
-          className="lg:sticky lg:top-[74px] lg:max-h-[calc(100vh-84px)] lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="lg:sticky lg:top-4 h-fit"
         >
           <button
             type="button"
@@ -264,7 +355,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
 
         {/* Grid */}
         <div className="min-w-0">
-          {showcase.length === 0 ? (
+          {cards.length === 0 ? (
             <div className="rounded-[32px] border border-line bg-card p-8 text-center" role="status">
               <p className="font-heading text-title font-extrabold">
                 {category === "gps" ? "GPS trackers are coming soon." : "No products match your filters."}
@@ -274,34 +365,32 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
               </button>
             </div>
           ) : (
-            <>
-              <ul className="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-2" aria-label="Products">
-                {showcase.map((p) => (
-                  <li key={`s-${p.slug}`} className="h-full">
-                    <ShowcaseCard product={p} clamp variant="listing" />
-                  </li>
-                ))}
-              </ul>
-              {detail.length > 0 && (
-                <ul className="mt-8 grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-2" aria-label="Products with specifications">
-                  {detail.map((p) => (
-                    <li key={`d-${p.slug}`} className="h-full">
-                      <DetailCard product={p} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
+            <ul
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 xl:gap-5"
+              aria-label="Products"
+            >
+              {cards.map((item) => (
+                <li key={item.key} className="h-full">
+                  {item.type === "showcase" ? (
+                    <ShowcaseCard product={item.product} clamp variant="listing" />
+                  ) : (
+                    <DetailCard product={item.product} />
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
 
-          <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-[40px] bg-charcoal px-8 py-8 text-white md:flex-row md:items-center">
+          <div className="mt-8 flex flex-col items-start justify-between gap-5 rounded-[36px] md:rounded-[40px] bg-charcoal p-8 md:p-10 text-white md:flex-row md:items-center">
             <div className="max-w-[560px]">
-              <h2 className="font-heading text-title font-extrabold text-white">Compare the right capacity for your facility.</h2>
-              <p className="mt-3 text-body text-muted-dark">
+              <h2 className="font-heading text-[24px] sm:text-[28px] font-extrabold text-white leading-tight">
+                Compare the right capacity for your facility.
+              </h2>
+              <p className="mt-2.5 text-body text-white/80">
                 Review daily capacity, power, weight and pricing across the three incinerator models.
               </p>
             </div>
-            <ButtonLink href="/compare-models" variant="dark" className="h-[52px] shrink-0 px-8">
+            <ButtonLink href="/compare-models" variant="dark" className="h-[50px] shrink-0 px-8 text-[14px]">
               Compare models
             </ButtonLink>
           </div>
