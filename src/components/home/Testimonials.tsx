@@ -215,7 +215,7 @@ export function Testimonials({
             Trusted by institutions across India.
           </h2>
         </div>
-        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[18px] sm:rounded-[22px] lg:rounded-[24px] border border-line bg-card px-3.5 sm:px-4 lg:px-5 py-2 sm:py-2.5 lg:py-3 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[12px] sm:rounded-[14px] border border-line bg-card p-3 sm:p-3.5 lg:p-4 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0">
           <p className="font-heading text-[28px] sm:text-[32px] lg:text-[38px] xl:text-[40px] font-extrabold text-charcoal leading-none">{reviews.rating}</p>
           <div className="flex flex-col items-start gap-1">
             <Stars value={reviews.stars} size={20} />
