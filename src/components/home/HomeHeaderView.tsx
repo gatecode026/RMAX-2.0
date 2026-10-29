@@ -80,9 +80,7 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
           )}
           aria-hidden={!isScrolled}
         >
-          <div className="rounded-full bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0_41_112/0.16)] border border-line p-0.5">
-            <ProductSearch items={products} />
-          </div>
+          <ProductSearch items={products} />
         </div>
       )}
 
@@ -91,19 +89,19 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
           Visible at top of page. Search bar grouped together with nav links.
           ======================================================== */}
       <header className="relative z-40 bg-transparent transition-all duration-300">
-        <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-6 px-5 sm:px-8 lg:px-8 xl:px-16">
+        <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-4 lg:gap-8 px-5 sm:px-8 lg:px-8 xl:px-16">
           {/* Left Side: Logo */}
           <div className="shrink-0">
             <Logo />
           </div>
 
-          {/* Right Side: Search bar together with Nav links & Profile/Login */}
-          <div className="ml-auto hidden items-center gap-4 xl:gap-7 lg:flex">
-            {/* Searchbar adjacent to navlinks */}
-            <div className="w-[190px] xl:w-[270px] shrink-0">
-              <ProductSearch items={products} />
-            </div>
+          {/* Center: Search bar */}
+          <div className="hidden lg:flex flex-1 justify-center max-w-[320px] xl:max-w-[420px] mx-auto">
+            <ProductSearch items={products} className="w-full" />
+          </div>
 
+          {/* Right Side: Nav links & Profile/Login */}
+          <div className="hidden items-center gap-4 xl:gap-7 lg:flex shrink-0">
             {/* Nav links & Account/Login: Always visible on desktop */}
             <nav aria-label="Main" className="flex items-center gap-4 xl:gap-7">
               <ul className="flex items-center gap-4 xl:gap-7">

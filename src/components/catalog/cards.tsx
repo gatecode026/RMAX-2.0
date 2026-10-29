@@ -37,7 +37,7 @@ function UnifiedProductCard({
     img.src.includes("testimonial-");
 
   return (
-    <article className="group relative flex h-full flex-col rounded-[24px] sm:rounded-[28px] border border-line bg-card p-3 sm:p-3.5 xl:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-navy/30 hover:shadow-[0_16px_36px_rgba(0,41,112,0.08)]">
+    <article className="group relative flex h-full flex-col rounded-[24px] sm:rounded-[28px] border border-line bg-card p-3 sm:p-3.5 xl:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:border-navy/40 hover:shadow-[0_18px_40px_rgba(0,41,112,0.12)]">
       {/* Product Image Container */}
       <div
         className="relative w-full overflow-hidden rounded-[16px] sm:rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center h-[200px] sm:h-[220px] lg:h-[260px] xl:h-[300px]"
@@ -47,7 +47,7 @@ function UnifiedProductCard({
           alt={img.alt || product.title}
           width={img.width || 400}
           height={img.height || 340}
-          className="size-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+          className="size-full object-cover object-center"
         />
 
         {!isBakedImage && product.badge && (
@@ -172,7 +172,7 @@ export function DetailCard({ product }: { product: ProductDTO }) {
   ];
 
   return (
-    <article className="group relative flex h-full flex-col rounded-[24px] sm:rounded-[28px] border border-line bg-card p-3 sm:p-3.5 xl:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-navy/30 hover:shadow-[0_16px_36px_rgba(0,41,112,0.08)]">
+    <article className="group relative flex h-full flex-col rounded-[24px] sm:rounded-[28px] border border-line bg-card p-3 sm:p-3.5 xl:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:border-navy/40 hover:shadow-[0_18px_40px_rgba(0,41,112,0.12)]">
       {/* Product Image Container */}
       <div
         className="relative w-full overflow-hidden rounded-[16px] sm:rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center h-[220px] sm:h-[250px] lg:h-[260px] xl:h-[300px]"
@@ -182,7 +182,7 @@ export function DetailCard({ product }: { product: ProductDTO }) {
           alt={img.alt || product.title}
           width={img.width || 400}
           height={img.height || 340}
-          className="size-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+          className="size-full object-cover object-center"
         />
       </div>
 
