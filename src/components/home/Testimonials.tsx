@@ -20,16 +20,16 @@ function QuoteMark({ className = "size-6", fill = "currentColor" }: { className?
 /** Featured Hero Testimonial matching the exact top card in the design */
 function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
   return (
-    <figure className="relative flex flex-col lg:flex-row items-stretch overflow-hidden rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
+    <figure className="relative flex flex-col md:flex-row items-stretch overflow-hidden rounded-[28px] sm:rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
       {/* Product Image Section */}
-      <div className="relative min-h-[280px] lg:min-h-[380px] lg:w-[360px] xl:min-h-[460px] xl:w-[480px] shrink-0 overflow-hidden flex items-center justify-center">
+      <div className="relative min-h-[260px] md:min-h-[360px] md:w-[280px] lg:w-[360px] xl:min-h-[460px] xl:w-[480px] shrink-0 overflow-hidden flex items-center justify-center">
         {t.image && (
           <Image
             src={t.image.src}
             alt={t.image.alt}
             width={t.image.width}
             height={t.image.height}
-            className="absolute inset-0 size-full object-cover object-left"
+            className="absolute inset-0 size-full object-cover object-center md:object-left"
           />
         )}
         {t.product && (
@@ -40,10 +40,10 @@ function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
       </div>
 
       {/* Featured Quote Section - overlaps the image on the left by 32px so the photo seamlessly shows behind the rounded card corners */}
-      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[28px] sm:rounded-[32px] md:rounded-[36px] -mt-6 lg:mt-0 lg:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-8 lg:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
+      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[24px] sm:rounded-[28px] md:rounded-[36px] -mt-5 md:mt-0 md:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-7 md:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
         {/* Quote text row with cleanly aligned quotation mark at top-right */}
         <div className="flex items-start justify-between gap-4">
-          <blockquote className="font-heading font-semibold text-[20px]/[30px] sm:text-[24px]/[34px] lg:text-[26px]/[38px] xl:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px]">
+          <blockquote className="font-heading font-semibold text-[18px]/[26px] sm:text-[20px]/[28px] md:text-[22px]/[32px] lg:text-[26px]/[38px] xl:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px]">
             {t.quote}
           </blockquote>
           <QuoteMark className="size-9 sm:size-11 lg:size-11 xl:size-14 shrink-0 text-white/95" fill="currentColor" />
@@ -97,7 +97,7 @@ function ReviewCard({
     <figure
       onClick={onClick}
       className={cn(
-        "flex flex-col justify-between rounded-[24px] p-6 lg:p-7 transition-all duration-300 cursor-pointer select-none",
+        "flex flex-col justify-between rounded-[20px] sm:rounded-[24px] p-4.5 sm:p-5 lg:p-7 transition-all duration-300 cursor-pointer select-none",
         active
           ? "border border-[#E2E8F0] bg-white shadow-[0_12px_36px_rgba(35,42,50,0.08)] md:scale-[1.02] z-10 ring-1 ring-[#0A2558]/5"
           : "border border-[#D9E4F2] bg-[#F0F4FA] opacity-90 hover:opacity-100 hover:border-[#CBD5E1]"
@@ -108,20 +108,20 @@ function ReviewCard({
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, idx) => (
-              <svg key={idx} className="size-[18px] text-[#0A2558] fill-[#0A2558]" viewBox="0 0 24 24" aria-hidden="true">
+              <svg key={idx} className="size-3.5 sm:size-4 lg:size-[18px] text-[#0A2558] fill-[#0A2558]" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.3l-5.8 3.1 1.1-6.47L2.6 9.35l6.5-.95L12 2.5z" />
               </svg>
             ))}
           </div>
-          <span className="text-[13px] font-normal text-[#64748B]">{t.dateLabel}</span>
+          <span className="text-[11.5px] sm:text-[12px] lg:text-[13px] font-normal text-[#64748B]">{t.dateLabel}</span>
         </div>
 
         {/* Body: Quote Text & Double Quote Icon */}
         <div className="mt-4 flex items-start justify-between gap-3">
-          <blockquote className="font-jakarta text-[15px] font-semibold leading-[1.6] text-[#1E293B]">
+          <blockquote className="font-jakarta text-[13px]/[20px] sm:text-[13.5px]/[21px] lg:text-[15px]/[24px] font-semibold text-[#1E293B]">
             {t.quote}
           </blockquote>
-          <QuoteMark className="size-6 shrink-0 text-[#0A2558] fill-[#0A2558] mt-1" />
+          <QuoteMark className="size-4.5 sm:size-5 lg:size-6 shrink-0 text-[#0A2558] fill-[#0A2558] mt-0.5" />
         </div>
       </div>
 
@@ -136,12 +136,12 @@ function ReviewCard({
 
         {/* Author Profile */}
         <figcaption className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[14px] font-bold text-[#0A2558]">
+          <div className="flex size-9 sm:size-10 lg:size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[12px] sm:text-[13px] lg:text-[14px] font-bold text-[#0A2558]">
             {initials(t.name)}
           </div>
           <div className="min-w-0">
-            <p className="font-jakarta text-[15px] font-bold leading-snug text-[#1E293B] truncate">{t.name}</p>
-            <p className="text-[12px] leading-tight text-[#64748B] mt-0.5 truncate">{t.role}</p>
+            <p className="font-jakarta text-[13.5px] sm:text-[14px] lg:text-[15px] font-bold leading-snug text-[#1E293B] truncate">{t.name}</p>
+            <p className="text-[11px] sm:text-[11.5px] lg:text-[12px] leading-tight text-[#64748B] mt-0.5 truncate">{t.role}</p>
           </div>
         </figcaption>
       </div>
@@ -211,12 +211,12 @@ export function Testimonials({
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <p className="text-[12px] font-extrabold tracking-[0.2em] text-navy uppercase">Testimonials</p>
-          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[28px]/[36px] sm:text-[34px]/[42px] lg:text-[36px]/[44px] xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal">
+          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[24px]/[32px] sm:text-[26px]/[34px] md:text-[30px]/[38px] lg:text-[36px]/[44px] xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal">
             Trusted by institutions across India.
           </h2>
         </div>
-        <div className="flex items-center gap-3 sm:gap-4 rounded-[20px] sm:rounded-[24px] border border-line bg-card px-4 sm:px-5 py-2 sm:py-3 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0">
-          <p className="font-heading text-[32px] sm:text-[38px] xl:text-[40px] font-extrabold text-charcoal leading-none">{reviews.rating}</p>
+        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[18px] sm:rounded-[22px] lg:rounded-[24px] border border-line bg-card px-3.5 sm:px-4 lg:px-5 py-2 sm:py-2.5 lg:py-3 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0">
+          <p className="font-heading text-[28px] sm:text-[32px] lg:text-[38px] xl:text-[40px] font-extrabold text-charcoal leading-none">{reviews.rating}</p>
           <div className="flex flex-col items-start gap-1">
             <Stars value={reviews.stars} size={20} />
             <p className="text-[12px] font-medium leading-none whitespace-nowrap text-muted">{reviews.label}</p>

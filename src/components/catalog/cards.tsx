@@ -40,7 +40,7 @@ function UnifiedProductCard({
     <article className="group relative flex h-full flex-col rounded-[24px] sm:rounded-[28px] border border-line bg-card p-3 sm:p-3.5 xl:p-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-navy/30 hover:shadow-[0_16px_36px_rgba(0,41,112,0.08)]">
       {/* Product Image Container */}
       <div
-        className="relative w-full overflow-hidden rounded-[16px] sm:rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center h-[220px] sm:h-[250px] lg:h-[260px] xl:h-[300px]"
+        className="relative w-full overflow-hidden rounded-[16px] sm:rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center h-[200px] sm:h-[220px] lg:h-[260px] xl:h-[300px]"
       >
         <Image
           src={img.src}
@@ -70,7 +70,7 @@ function UnifiedProductCard({
       <div className="mt-3.5 sm:mt-4 flex flex-1 flex-col justify-between">
         <div>
           {/* Product Title */}
-          <h3 className="font-heading text-[16px] sm:text-[18px] xl:text-[20px] font-extrabold leading-tight tracking-[-0.3px] text-charcoal">
+          <h3 className="font-heading text-[15px] sm:text-[16px] lg:text-[18px] xl:text-[20px] font-extrabold leading-tight tracking-[-0.3px] text-charcoal">
             <Link href={productHref(product)} className="hover:text-navy transition-colors">
               {product.title}
             </Link>
@@ -88,7 +88,7 @@ function UnifiedProductCard({
             {chips.slice(0, 4).map((c, i) => (
               <li
                 key={i}
-                className="flex h-7.5 sm:h-8.5 items-center justify-center rounded-[8px] sm:rounded-[10px] bg-soft px-1 sm:px-2 text-[10.5px] sm:text-[11.5px] xl:text-[12.5px] font-semibold text-muted whitespace-nowrap text-center"
+                className="flex h-7.5 sm:h-8.5 items-center justify-center rounded-[8px] sm:rounded-[10px] bg-soft px-1 sm:px-2 text-[10px] sm:text-[11px] xl:text-[12.5px] font-semibold text-muted whitespace-nowrap text-center"
               >
                 {c}
               </li>
@@ -105,7 +105,7 @@ function UnifiedProductCard({
                 {formatINR(product.originalPrice)}
               </p>
             )}
-            <p className="font-heading text-[20px] sm:text-[24px] xl:text-[28px] font-extrabold text-charcoal leading-none tracking-tight">
+            <p className="font-heading text-[18px] sm:text-[20px] lg:text-[24px] xl:text-[28px] font-extrabold text-charcoal leading-none tracking-tight">
               {formatINR(product.price)}
             </p>
           </div>

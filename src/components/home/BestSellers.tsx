@@ -16,7 +16,7 @@ export function BestSellers({ products }: { products: ProductDTO[] }) {
           Compare
         </ButtonLink>
       </div>
-      <div className="mt-6 md:mt-[34px] grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 xl:gap-7">
+      <div className="mt-6 md:mt-[34px] grid gap-3.5 sm:gap-4 md:grid-cols-3 xl:gap-7">
         {products.map((p) => (
           <ShowcaseCard key={p.slug} product={p} />
         ))}
