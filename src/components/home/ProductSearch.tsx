@@ -44,7 +44,7 @@ export function ProductSearch({ items, className }: { items: Item[]; className?:
           onKeyDown={(e) => e.key === "Escape" && setFocused(false)}
           placeholder="Search products"
           autoComplete="off"
-          className="w-full bg-transparent text-body text-charcoal placeholder:text-muted focus:outline-none"
+          className="w-full bg-transparent text-[14px] leading-none text-charcoal placeholder:text-muted focus:outline-none"
         />
       </div>
       {open && (

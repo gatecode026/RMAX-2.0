@@ -89,19 +89,19 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
           Visible at top of page. Search bar grouped together with nav links.
           ======================================================== */}
       <header className="relative z-40 bg-transparent transition-all duration-300">
-        <div className="mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-4 lg:gap-8 px-5 sm:px-8 lg:px-8 xl:px-16">
+        <div className="relative mx-auto flex h-(--header-height) w-full max-w-(--container-page) items-center justify-between gap-4 px-5 sm:px-8 lg:px-8 xl:px-16">
           {/* Left Side: Logo */}
-          <div className="shrink-0">
+          <div className="shrink-0 z-10">
             <Logo />
           </div>
 
-          {/* Center: Search bar */}
-          <div className="hidden lg:flex flex-1 justify-center max-w-[320px] xl:max-w-[420px] mx-auto">
+          {/* Center: Search bar locked at absolute center on desktop */}
+          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-full max-w-[320px] xl:max-w-[400px] z-10 pointer-events-auto">
             <ProductSearch items={products} className="w-full" />
           </div>
 
           {/* Right Side: Nav links & Profile/Login */}
-          <div className="hidden items-center gap-4 xl:gap-7 lg:flex shrink-0">
+          <div className="hidden items-center gap-4 xl:gap-7 lg:flex shrink-0 z-10 ml-auto">
             {/* Nav links & Account/Login: Always visible on desktop */}
             <nav aria-label="Main" className="flex items-center gap-4 xl:gap-7">
               <ul className="flex items-center gap-4 xl:gap-7">
@@ -135,15 +135,11 @@ export function HomeHeaderView({ userName, userRole, products, cartCount = 0 }: 
               {userName ? (
                 <Link
                   href={dashboardHref}
-                  className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1.5 pr-3.5 shadow-xs transition hover:border-navy/40 hover:shadow-sm"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-navy font-bold text-[14px] text-white uppercase shadow-xs transition hover:opacity-90 hover:scale-105"
                   title={dashboardTitle}
+                  aria-label={dashboardTitle}
                 >
-                  <div className="flex size-8 items-center justify-center rounded-full bg-navy font-bold text-xs text-white uppercase shadow-xs">
-                    {userName.trim().charAt(0)}
-                  </div>
-                  <span className="font-semibold text-charcoal text-xs">
-                    {userName.split(" ")[0]}
-                  </span>
+                  {userName.trim().charAt(0)}
                 </Link>
               ) : (
                 <button
