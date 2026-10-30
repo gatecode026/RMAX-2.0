@@ -11,9 +11,7 @@ export default function AboutLayout({ children }: { children: React.ReactNode })
       >
         Skip to content
       </a>
-      <div className="relative z-40 bg-card">
-        <HomeHeader />
-      </div>
+      <HomeHeader />
       <main id="main" className="flex-1 bg-card">
         {children}
       </main>

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ProductListing } from "@/components/catalog/ProductListing";
-import { getAllProducts } from "@/lib/data/content";
+import { getAllProducts, getProductTestimonial } from "@/lib/data/content";
+import { FeaturedTestimonial } from "@/components/home/Testimonials";
 
 export const metadata: Metadata = {
   title: "Our Product",
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default async function OurProductPage() {
-  const products = await getAllProducts();
+  const [products, testimonial] = await Promise.all([
+    getAllProducts(),
+    getProductTestimonial(),
+  ]);
+
   return (
     <>
       <section className="mx-auto grid w-full max-w-(--container-page) items-center gap-6 px-5 sm:px-8 lg:px-8 xl:px-16 pt-2 sm:pt-3 md:pt-4 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_540px] lg:gap-8">
@@ -37,6 +42,12 @@ export default async function OurProductPage() {
       <div className="mt-6 md:mt-8">
         <ProductListing products={products} />
       </div>
+
+      {testimonial && (
+        <section aria-label="Customer testimonial" className="mx-auto mt-14 md:mt-20 w-full max-w-(--container-page) px-5 sm:px-8 lg:px-8 xl:px-16 mb-12 md:mb-16">
+          <FeaturedTestimonial t={testimonial} />
+        </section>
+      )}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { auth } from "@/auth";
+import { getSessionUser } from "@/lib/session";
 import { Logo } from "@/components/layout/Logo";
 import { buttonClasses } from "@/components/ui/Button";
 import { getCart } from "@/lib/cart";
@@ -10,11 +10,14 @@ import { HomeHeaderView } from "./HomeHeaderView";
 
 async function HomeHeaderDynamic() {
   await connection();
-  const [products, session, cart] = await Promise.all([getProducts(), auth(), getCart()]);
+  // Customer session only — an Admin or Manager who is only logged into their own portal is
+  // shown the ordinary guest header here, never their staff identity.
+  const [products, sessionUser, cart] = await Promise.all([getProducts(), getSessionUser("customer"), getCart()]);
   return (
     <HomeHeaderView
-      userName={session?.user?.name ?? null}
-      userRole={session?.user?.role ?? null}
+      userName={sessionUser?.name ?? null}
+      userRole={sessionUser?.role ?? null}
+      cart={cart}
       cartCount={cart.count}
       products={products.map((p) => ({ slug: p.slug, name: p.name, summary: p.summary }))}
     />

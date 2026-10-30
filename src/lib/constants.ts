@@ -36,5 +36,4 @@ export const INDIAN_STATES = [
   "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
 ] as const;
 
-export const CART_COOKIE = "rmax_cart";
 export const LAST_ORDER_COOKIE = "rmax_last_order";

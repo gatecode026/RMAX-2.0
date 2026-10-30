@@ -5,22 +5,32 @@ import { nextSequence } from "@/models/Counter";
 import { fail, limited, ok, readJson, zodFail, route } from "@/lib/api";
 import { checkoutSchema } from "@/lib/validations/schemas";
 import { clearCart, getCart } from "@/lib/cart";
-import { getSessionUserId } from "@/lib/session";
+import { checkApiRole } from "@/lib/session";
 import { buildSpecLine } from "@/lib/specs";
-import { CART_COOKIE, LAST_ORDER_COOKIE } from "@/lib/constants";
+import { LAST_ORDER_COOKIE } from "@/lib/constants";
 import { toOrderDTO } from "@/lib/data/orders";
 
 /** List the signed-in user's orders (newest first). */
 export const GET = route(async () => {
-  const userId = await getSessionUserId();
-  if (!userId) return fail("Please log in.", 401);
+  const auth = await checkApiRole(["customer"]);
+  if ("error" in auth) return fail("Please log in.", 401);
   await connectDB();
-  const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find({ user: auth.user.id }).sort({ createdAt: -1 }).lean();
   return ok(orders.map(toOrderDTO));
 });
 
-/** Place an order from the current cart (guest or logged-in). */
+/**
+ * Place an order from the current cart. Customer authentication is mandatory — there is no
+ * guest checkout. (The cart is already always empty for a non-Customer session, but this
+ * checks explicitly rather than relying on that alone — a frontend/cart condition is not
+ * backend authorization.)
+ */
 export const POST = route(async (req: Request) => {
+  const auth = await checkApiRole(["customer"]);
+  if ("error" in auth) {
+    return fail("Please log in to your RMAX customer account to complete your purchase.", 401);
+  }
+
   const rl = limited(req, "orders", 10, 60 * 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
@@ -32,15 +42,20 @@ export const POST = route(async (req: Request) => {
   const cart = await getCart();
   if (cart.lines.length === 0) return fail("Your cart is empty.", 409);
 
+  const totalUnits = cart.lines.reduce((sum, l) => sum + l.quantity, 0);
+  if (totalUnits > 5) {
+    return fail("Direct online ordering is limited to a maximum of 5 units across your order. For 6 or more units, please request a bulk quotation.", 400);
+  }
+
   await connectDB();
-  const userId = await getSessionUserId();
+  const userId = auth.user.id;
   const seq = await nextSequence("order");
   const reference = `RMAX-DEMO-${String(seq).padStart(3, "0")}`;
   const now = new Date();
 
   await Order.create({
     reference,
-    user: userId ?? undefined,
+    user: userId,
     contact: { fullName: d.fullName, email: d.email, phone: d.phone },
     items: cart.lines.map((l) => ({
       product: l.product._id,
@@ -84,10 +99,9 @@ export const POST = route(async (req: Request) => {
     isIllustrative: true,
   });
 
+  await clearCart(userId);
   const jar = await cookies();
-  const token = jar.get(CART_COOKIE)?.value;
-  if (token) await clearCart(token);
-  // Lets a guest view their own confirmation page without an account.
+  // Lets the order confirmation page render right after checkout without an extra fetch.
   jar.set(LAST_ORDER_COOKIE, reference, {
     httpOnly: true,
     sameSite: "lax",

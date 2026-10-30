@@ -2,12 +2,16 @@ import Image from "next/image";
 import { Building2, Cog, Flame, Hospital, Landmark, Leaf, School, Settings, ShieldCheck, Truck, Wrench, type LucideIcon } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Stars } from "@/components/home/Stars";
+import { FeaturedTestimonial } from "@/components/home/Testimonials";
 import type { DetailIcon, IDetailPoint } from "@/models/Product";
 import type { TestimonialDTO, TrustPoint } from "@/lib/data/content";
 import { initials } from "@/lib/home";
 import { cn } from "@/lib/cn";
 
-const ICONS: Record<DetailIcon, LucideIcon> = {
+const ICONS: Record<string, LucideIcon> = {
+  shield: ShieldCheck,
+  truck: Truck,
+  cog: Cog,
   flame: Flame,
   settings: Settings,
   leaf: Leaf,
@@ -66,21 +70,37 @@ export function TrustRow({ points }: { points: TrustPoint[] }) {
 }
 
 export function OverviewSection({ text, image }: { text: string; image?: { src: string; alt: string; width: number; height: number } }) {
+  const hasImage = Boolean(image?.src);
   return (
-    <section id="overview" aria-labelledby="overview-h" className="scroll-mt-20 grid gap-6 lg:grid-cols-[1fr_641px]">
-      <div className={cn(card, "p-7 md:p-8 lg:min-h-[276px]")}>
+    <section
+      id="overview"
+      aria-labelledby="overview-h"
+      className={cn(
+        "scroll-mt-20 grid gap-6",
+        hasImage ? "lg:grid-cols-[1fr_540px] xl:grid-cols-[1fr_641px]" : "grid-cols-1"
+      )}
+    >
+      <div className={cn(card, "p-7 md:p-8 lg:min-h-[220px]")}>
         <h2 id="overview-h" className={h2}>
           Product overview.
         </h2>
         <p className="mt-4 text-body leading-[26px] text-muted">{text}</p>
       </div>
-      {image && <Image src={image.src} alt={image.alt} width={image.width} height={image.height} className="h-[220px] w-full rounded-[24px] object-cover sm:h-[276px]" />}
+      {hasImage && image && (
+        <Image
+          src={image.src}
+          alt={image.alt}
+          width={image.width}
+          height={image.height}
+          className="h-[220px] w-full rounded-[24px] object-cover sm:h-[276px]"
+        />
+      )}
     </section>
   );
 }
 
 function IconTile({ icon }: { icon: DetailIcon }) {
-  const Icon = ICONS[icon];
+  const Icon = ICONS[icon] || Settings;
   return (
     <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-soft text-navy">
       <Icon className="size-5" strokeWidth={1.6} />
@@ -146,62 +166,7 @@ export function TechSpecsCard({ rows }: { rows: { label: string; value: string }
   );
 }
 
-/** Navy testimonial banner at the foot of the detail page (matching design). */
+/** Navy testimonial banner at the foot of the detail page (same to same with homepage). */
 export function ProductTestimonial({ t }: { t: TestimonialDTO }) {
-  return (
-    <figure className="relative flex flex-col lg:flex-row items-stretch overflow-hidden rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
-      <div className="relative min-h-[260px] lg:min-h-[340px] lg:w-[400px] shrink-0 overflow-hidden flex items-center justify-center">
-        {t.image && (
-          <Image
-            src={t.image.src}
-            alt={t.image.alt}
-            width={t.image.width}
-            height={t.image.height}
-            className="absolute inset-0 size-full object-cover object-left"
-          />
-        )}
-        {t.product && (
-          <span className="absolute top-4 left-4 z-20 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
-            {t.product}
-          </span>
-        )}
-      </div>
-      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[32px] md:rounded-[36px] -mt-6 lg:mt-0 lg:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-8 md:p-10 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
-        <svg viewBox="0 0 24 24" className="absolute top-8 right-8 size-12 text-white/90" fill="currentColor" aria-hidden="true">
-          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-        </svg>
-
-        <blockquote className="font-heading font-semibold text-[22px]/[32px] sm:text-[26px]/[38px] lg:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px] pr-12">
-          {t.quote}
-        </blockquote>
-
-        <div className="mt-6">
-          <figcaption className="flex items-center gap-3.5">
-            <div className="flex size-[48px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#CBDDF5] to-[#A3C5EC] font-jakarta text-[16px] font-extrabold text-[#0A2558]">
-              {initials(t.name)}
-            </div>
-            <div>
-              <p className="font-jakarta text-[18px] font-bold text-white leading-tight">{t.name}</p>
-              <p className="text-[13px] text-white/80 mt-0.5">{t.role}</p>
-            </div>
-          </figcaption>
-
-          <div className="relative my-5 flex items-center" aria-hidden="true">
-            <div className="h-[1px] w-full bg-white/20" />
-            <div className="absolute left-0 size-1 rounded-full bg-white/50" />
-            <div className="absolute right-0 size-1 rounded-full bg-white/50" />
-          </div>
-
-          <div>
-            <ButtonLink
-              href="/institutional-quote"
-              className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-[14px] font-bold text-[#18427F] shadow-sm transition-colors hover:bg-[#F0F4FA]"
-            >
-              Discuss your requirements
-            </ButtonLink>
-          </div>
-        </div>
-      </div>
-    </figure>
-  );
+  return <FeaturedTestimonial t={t} />;
 }

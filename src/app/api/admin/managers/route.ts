@@ -84,9 +84,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await User.findOne({ email: email.toLowerCase().trim() }).lean();
+    // Scoped to the Manager identity namespace only: the same email (or phone) may already
+    // belong to an Admin or Customer account — that's the whole point of the shared-identity
+    // model (same person, independent Admin/Manager/Customer logins with separate passwords).
+    // Only a second *Manager* account with this email is rejected as a true duplicate.
+    const existing = await User.findOne({ email: email.toLowerCase().trim(), role: "manager" }).lean();
     if (existing) {
-      return NextResponse.json({ error: "A user with this email address already exists" }, { status: 409 });
+      return NextResponse.json({ error: "A manager account with this email address already exists" }, { status: 409 });
+    }
+
+    if (phone?.trim()) {
+      const cleanDigits = phone.replace(/\D/g, "").slice(-10);
+      const existingPhone = await User.findOne({
+        role: "manager",
+        $or: [
+          { phone: cleanDigits },
+          { phone: phone.trim() },
+          { phone: `+91${cleanDigits}` },
+          { phone: `0${cleanDigits}` },
+        ],
+      }).lean();
+      if (existingPhone) {
+        return NextResponse.json({ error: "A manager account with this mobile number already exists" }, { status: 409 });
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);

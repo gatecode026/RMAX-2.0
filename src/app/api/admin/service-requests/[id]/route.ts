@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin" && user.role !== "manager")) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin")) {
       return NextResponse.json({ success: false, error: "Only Super Admin can delete service tickets" }, { status: 403 });
     }

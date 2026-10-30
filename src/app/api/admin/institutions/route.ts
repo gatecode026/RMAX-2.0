@@ -7,7 +7,7 @@ import { logAction } from "@/lib/audit";
 
 export async function GET() {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin" && user.role !== "manager")) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
@@ -69,7 +69,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin")) {
       return NextResponse.json({ success: false, error: "Only Super Admin can add institutions" }, { status: 403 });
     }

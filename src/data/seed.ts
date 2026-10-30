@@ -156,12 +156,66 @@ const LIST_IMAGES: Record<string, IImage> = {
   "pro-max": { src: "/images/products/list-pro-max.png", alt: "RMAX Pro-Max napkin incinerator, blue steel cabinet", width: 270, height: 311 },
 };
 
-const OVERVIEW_IMAGE: IImage = {
-  src: "/images/products/overview.png",
-  alt: "RMAX incinerator mounted on a washroom wall beside a basin",
-  width: 641,
-  height: 276,
+const MODEL_GALLERIES: Record<string, IGalleryItem[]> = {
+  basic: [
+    { src: "/images/products/list-basic.png", thumb: "/images/products/list-basic.png", alt: "RMAX Basic napkin incinerator front view", kind: "image" },
+    { src: "/images/products/portrait-basic.png", thumb: "/images/products/portrait-basic.png", alt: "RMAX Basic napkin incinerator portrait angle", kind: "image" },
+    { src: "/images/product-basic.png", thumb: "/images/product-basic.png", alt: "RMAX Basic napkin incinerator studio view", kind: "image" },
+    { src: "/images/products/gallery-thumb-3.png", thumb: "/images/products/gallery-thumb-3.png", alt: "Control panel close-up", kind: "image" },
+    { src: "/images/products/gallery-thumb-4.png", thumb: "/images/products/gallery-thumb-4.png", alt: "Open combustion chamber", kind: "image" },
+  ],
+  pro: [
+    { src: "/images/products/gallery-main.png", thumb: "/images/products/gallery-thumb-1.png", alt: "Front view of the Pro blue incinerator", kind: "image" },
+    { src: "/images/products/list-pro.png", thumb: "/images/products/list-pro.png", alt: "RMAX Pro incinerator cabinet view", kind: "image" },
+    { src: "/images/products/portrait-pro.png", thumb: "/images/products/portrait-pro.png", alt: "RMAX Pro incinerator on wheels", kind: "image" },
+    { src: "/images/products/gallery-thumb-2.png", thumb: "/images/products/gallery-thumb-2.png", alt: "Side view with power cable", kind: "image" },
+    { src: "/images/products/gallery-thumb-3.png", thumb: "/images/products/gallery-thumb-3.png", alt: "Control panel close-up", kind: "image" },
+    { src: "/images/products/gallery-thumb-4.png", thumb: "/images/products/gallery-thumb-4.png", alt: "Open combustion chamber", kind: "image" },
+    { src: "/images/products/gallery-thumb-5.png", thumb: "/images/products/gallery-thumb-5.png", alt: "Product video", kind: "video" },
+  ],
+  "pro-max": [
+    { src: "/images/products/list-pro-max.png", thumb: "/images/products/list-pro-max.png", alt: "RMAX Pro-Max heavy-duty napkin incinerator", kind: "image" },
+    { src: "/images/products/portrait-pro-max.png", thumb: "/images/products/portrait-pro-max.png", alt: "RMAX Pro-Max silver steel cabinet", kind: "image" },
+    { src: "/images/products/promax-transparent.png", thumb: "/images/products/promax-transparent.png", alt: "RMAX Pro-Max high-capacity unit", kind: "image" },
+    { src: "/images/product-pro-max.png", thumb: "/images/product-pro-max.png", alt: "RMAX Pro-Max studio angle", kind: "image" },
+    { src: "/images/products/gallery-thumb-3.png", thumb: "/images/products/gallery-thumb-3.png", alt: "Digital control panel close-up", kind: "image" },
+    { src: "/images/products/gallery-thumb-4.png", thumb: "/images/products/gallery-thumb-4.png", alt: "Open high-temperature combustion chamber", kind: "image" },
+  ],
 };
+
+const PAD_VENDING_GALLERY: IGalleryItem[] = [
+  { src: "/images/products/pad-vending.png", thumb: "/images/products/pad-vending.png", alt: "RMAX Sanitary Pad Vending Machine wall mount", kind: "image" },
+  { src: "/images/products/hero-lineup.png", thumb: "/images/products/hero-lineup.png", alt: "RMAX sanitary vending machines lineup", kind: "image" },
+];
+
+const OVERVIEW_IMAGES: Record<string, IImage> = {
+  basic: {
+    src: "/images/products/list-basic.png",
+    alt: "RMAX Basic incinerator compact washroom setup",
+    width: 641,
+    height: 276,
+  },
+  pro: {
+    src: "/images/products/overview.png",
+    alt: "RMAX Pro incinerator mounted on a washroom wall beside a basin",
+    width: 641,
+    height: 276,
+  },
+  "pro-max": {
+    src: "/images/products/list-pro-max.png",
+    alt: "RMAX Pro-Max high-capacity institutional incinerator",
+    width: 641,
+    height: 276,
+  },
+  "pad-vending-coin": {
+    src: "/images/products/pad-vending.png",
+    alt: "RMAX Sanitary Pad Vending Machine mounted on a washroom wall",
+    width: 641,
+    height: 276,
+  },
+};
+
+const OVERVIEW_IMAGE: IImage = OVERVIEW_IMAGES.pro;
 
 /** Incinerators, enriched with the detail-page content. */
 const incinerators: IProduct[] = baseProducts.map((p) => ({
@@ -170,11 +224,11 @@ const incinerators: IProduct[] = baseProducts.map((p) => ({
   colours: p.slug === "basic" ? ["blue", "pink"] : p.slug === "pro" ? ["blue", "pink"] : ["blue"],
   portraitImage: PORTRAITS[p.slug],
   listImage: LIST_IMAGES[p.slug],
-  mrp: p.slug === "pro" ? 9570 : undefined, // the Pro detail page prints "M.R.P.: ₹9,570"
+  mrp: p.slug === "pro" ? 9570 : p.originalPrice || undefined,
   intro: INTRO,
   overview: overviewFor(p.slug, p.name),
-  overviewImage: OVERVIEW_IMAGE,
-  gallery: GALLERY,
+  overviewImage: OVERVIEW_IMAGES[p.slug] || OVERVIEW_IMAGE,
+  gallery: MODEL_GALLERIES[p.slug] || GALLERY,
   features: featuresFor(p.specs.batchCapacity),
   applications: APPLICATIONS,
   techSpecs: techSpecsFor(p.name, p.specs),
@@ -186,33 +240,47 @@ const padVending: IProduct = {
   colours: ["off-white"],
   slug: "pad-vending-coin",
   name: "Pad Vending",
-  title: "Sanitary Pad Vending Machine (Coin-operated)",
+  title: "Sanitary Pad Vending Machine (Automatic, Manual & Push Button)",
   shortName: "Pad vending machine",
   price: 8500,
-  originalPrice: 0,
-  discountPercent: 0,
-  image: { src: "/images/products/pad-vending.png", alt: "Coin-operated sanitary pad vending machine mounted on a wall", width: 380, height: 240 },
-  cardImage: { src: "/images/products/pad-vending.png", alt: "Coin-operated sanitary pad vending machine mounted on a wall", width: 380, height: 240 },
-  chips: ["Coin-operated", "Wall mount"],
-  summary: "Wall-mounted, coin-operated sanitary pad vending machine.",
+  originalPrice: 12000,
+  discountPercent: 29,
+  mrp: 12000,
+  image: { src: "/images/products/pad-vending.png", alt: "Sanitary pad vending machine mounted on a wall", width: 380, height: 240 },
+  cardImage: { src: "/images/products/pad-vending.png", alt: "Sanitary pad vending machine mounted on a wall", width: 380, height: 240 },
+  chips: ["Automatic", "Manual", "Push Button (Free)", "Wall mount"],
+  summary: "Wall-mounted sanitary pad vending machine available in Automatic, Manual, and Push-button (instant free dispensing with no money needed) configurations.",
+  overview: "The RMAX Sanitary Pad Vending Machine offers rapid, hygienic dispensing in institutions, schools, colleges, and workplaces. Available in Automatic, Manual turn, and Push-button (free dispensing without money) configurations, ensuring complete convenience.",
+  overviewImage: OVERVIEW_IMAGES["pad-vending-coin"],
+  gallery: PAD_VENDING_GALLERY,
+  features: [
+    { icon: "settings", title: "3 Dispensing Modes", body: "Available in Automatic (sensor/coin), Manual (twist knob), and Push Button (instant free dispensing)." },
+    { icon: "shield", title: "100% Made in India", body: "Manufactured in-house with high-grade Indian engineering." },
+    { icon: "wrench", title: "1 Year Warranty", body: "Piece-to-piece replacement for defects. Spare parts available after warranty." },
+    { icon: "leaf", title: "Low Maintenance", body: "Jam-free dispensing mechanism with high pad capacity." },
+  ],
+  applications: APPLICATIONS,
   specs: {
-    dailyCapacity: "Not specified",
-    batchCapacity: "Not specified",
-    power: "Not specified",
-    weight: "Not specified",
+    dailyCapacity: "High capacity (100+ pads)",
+    batchCapacity: "Single / Multi Dispense",
+    power: "Push-button / Manual (no power needed) or Automatic (mains)",
+    weight: "Lightweight wall-mount",
     colours: "Off-white",
-    cycleDuration: "Not specified",
-    chamber: "Not specified",
-    maintenance: "Low maintenance",
-    warranty: "1 year",
-    delivery: "3–5 days · Free shipping",
+    cycleDuration: "Instant dispensing",
+    chamber: "Stainless steel mechanism",
+    maintenance: "Low maintenance · Made in India",
+    warranty: "1 year warranty · Piece-to-piece return",
+    delivery: "3–5 days · Free shipping · Max 5 direct",
   },
   techSpecs: [
-    { label: "Model", value: "Pad Vending Machine" },
-    { label: "Operation", value: "Coin-operated" },
+    { label: "Model", value: "Sanitary Pad Vending Machine" },
+    { label: "Operation Types", value: "Automatic, Manual & Push Button (No money required)" },
     { label: "Installation", value: "Wall mount" },
-    { label: "Colours", value: "Off-white" },
-    { label: "Warranty", value: "1 year" },
+    { label: "Direct Order Limit", value: "Max 5 units (Bulk via mukesh@rmaxelectro.com)" },
+    { label: "Warranty", value: "1 year (Piece-to-piece replacement)" },
+    { label: "Manufacturing", value: "100% Made in India" },
+    { label: "Post-Warranty Support", value: "Repairing parts & service available" },
+    { label: "Return Condition", value: "Physical damage non-returnable" },
   ],
   sortOrder: 4,
 };
@@ -221,60 +289,67 @@ export const products: IProduct[] = [...incinerators, padVending];
 
 /** Trust row under the product price card. */
 export const productTrust = [
-  { icon: "shield", title: "1 year warranty", body: "On all manufacturing defects" },
-  { icon: "truck", title: "PAN India delivery", body: "Safe and insured shipping" },
-  { icon: "cog", title: "ISI Certified 101:4002", body: "Custom configurations available" },
+  { icon: "shield", title: "1 year warranty", body: "Piece-to-piece return for defects" },
+  { icon: "truck", title: "100% Made in India", body: "PAN India delivery & in-house manufacturing" },
+  { icon: "cog", title: "Post-warranty support", body: "Repairing parts available after warranty" },
 ];
 
 export const faqItems: IFaqItem[] = [
+  {
+    category: "Selection",
+    question: "What types of sanitary pad vending machines are available?",
+    answer:
+      "RMAX provides 3 distinct vending machine types: 1) Automatic (sensor/coin operated), 2) Manual (turn-knob dispensing), and 3) Push Button (push button vending machine where no money/coins are needed—just press the button for automatic dispensing).",
+    sortOrder: 1,
+  },
+  {
+    category: "Delivery",
+    question: "What is the maximum quantity for direct online orders?",
+    answer:
+      "Direct online checkout is capped at a maximum of 5 units. For bulk institutional orders of 6 or more units, please submit an institutional quote request or contact our team directly at mukesh@rmaxelectro.com for institutional pricing and delivery scheduling.",
+    sortOrder: 2,
+  },
+  {
+    category: "Exchanges",
+    question: "What is the return and replacement policy?",
+    answer:
+      "We offer a piece-to-piece return and replacement policy for any unit with manufacturing defects during the 1-year warranty period. Units with physical damage, mishandling, or improper installation are strictly non-returnable.",
+    sortOrder: 3,
+  },
+  {
+    category: "Warranty",
+    question: "Are repairing parts available after the 1-year warranty ends?",
+    answer:
+      "Yes. All RMAX machines come with a 1-year warranty on manufacturing defects. Even after the warranty ends, genuine repairing spare parts and maintenance support are readily available directly from our manufacturing facility.",
+    sortOrder: 4,
+  },
+  {
+    category: "Service",
+    question: "Where are RMAX machines manufactured?",
+    answer:
+      "All RMAX incinerators and vending machines are 100% Made in India in our own manufacturing facility with high-grade Indian engineering and quality control.",
+    sortOrder: 5,
+  },
   {
     category: "Operation",
     question: "How does the incinerator operate?",
     answer:
       "Each model uses an enclosed high-temperature chamber for sanitary napkin disposal. Supplied cycle duration is 3–4 minutes. Follow the operating instructions provided with your unit.",
-    sortOrder: 1,
+    sortOrder: 6,
   },
   {
     category: "Selection",
-    question: "Which model is right for my institution?",
+    question: "Which incinerator model is right for my institution?",
     answer:
       "Basic: 80–100/day. Pro: 200–250/day, 4–6 at once. Pro-Max: 400–500/day, 6–8 at once. Choose around your expected usage; request help if you are unsure.",
-    sortOrder: 2,
-  },
-  {
-    category: "Installation",
-    question: "What should I check before installation?",
-    answer:
-      "Share your proposed location and site requirements with the team. Confirm placement and installation arrangements before using the machine; specific site instructions are not provided here.",
-    sortOrder: 3,
+    sortOrder: 7,
   },
   {
     category: "Delivery",
     question: "When will my order arrive?",
     answer:
-      "The supplied delivery window is 3–5 days, with free shipping. Use your order detail page for delivery updates, or send an order enquiry through the contact form.",
-    sortOrder: 4,
-  },
-  {
-    category: "Exchanges",
-    question: "Can I return or exchange a machine?",
-    answer:
-      "RMAX’s supplied policy is exchange only. Contact support with your order reference and issue before sending a unit back. Eligibility and the exchange procedure must be confirmed by the team.",
-    sortOrder: 5,
-  },
-  {
-    category: "Warranty",
-    question: "What warranty is included?",
-    answer:
-      "All models include a 1 year warranty. For a warranty enquiry, provide the model, purchase reference and issue through the service contact form. Coverage details should be confirmed with support.",
-    sortOrder: 6,
-  },
-  {
-    category: "Service",
-    question: "How do I request service or maintenance help?",
-    answer:
-      "The machines are described as low maintenance. For a service question, choose Service on the contact form and include the model, order reference and symptoms. Follow the supplied instructions rather than attempting unsupported repairs.",
-    sortOrder: 7,
+      "The supplied delivery window is 3–5 days across India, with free shipping. Use your order detail page for delivery updates, or send an enquiry through the contact form.",
+    sortOrder: 8,
   },
 ];
 
@@ -288,43 +363,43 @@ export const policyPages: IPolicyPage[] = [
     slug: "shipping-exchanges-warranty",
     eyebrow: "SHIPPING, EXCHANGES & WARRANTY",
     title: "Support for your purchase.",
-    lead: "Free shipping. Exchange only. 1 year warranty. Read the supplied policy essentials and the proposed support process below.",
+    lead: "Free shipping · 1 year warranty · Piece-to-piece return for defects · Post-warranty spare parts · 100% Made in India.",
     draftNotice: DRAFT_NOTICE,
     sections: [
       {
         id: "shipping-delivery",
         title: "Shipping & delivery",
-        body: "RMAX Solutions’ supplied storefront offer includes free shipping and a 3–5 day delivery window. Confirm the delivery location and any institutional receiving requirements when ordering. Dispatch arrangements, serviceable locations and the point from which the delivery window is measured need business review before publication.",
+        body: "RMAX Solutions provides free shipping across India with an estimated 3–5 day delivery window. Direct online orders are capped at a maximum of 5 units. For bulk institutional orders (6+ units), please submit an inquiry or email mukesh@rmaxelectro.com to coordinate logistics and site delivery.",
       },
       {
         id: "receiving-your-order",
         title: "Receiving your order",
-        body: "Use the order detail page for available delivery updates. When contacting support about delivery, include your order reference, model and delivery location. Report any concern with the unit or packaging through the contact form so the team can advise the next step. A reporting deadline has not been supplied and must be confirmed.",
+        body: "Use the order detail page for available delivery updates. When contacting support about delivery, include your order reference, model and delivery location. Inspect the packaging upon receipt and report any transit damage immediately.",
       },
       {
         id: "exchange-only-policy",
-        title: "Exchange-only policy",
-        body: "The supplied policy is exchange only; this draft does not promise returns or refunds. If you need an exchange, contact Service with your order reference, model, reason for the request and relevant issue details. Eligibility, required condition, packaging requirements and exchange time limits must be confirmed by RMAX Solutions before this policy goes live.",
+        title: "Piece-to-piece return & exchange policy",
+        body: "We provide piece-to-piece return and replacement for any unit with manufacturing defects. Physical damage, vandalism, mishandling, or incorrect power supply connections are strictly non-returnable. Please contact mukesh@rmaxelectro.com with your order reference and photos/videos of the defect to initiate an exchange.",
       },
       {
         id: "requesting-an-exchange",
         title: "Requesting an exchange",
-        body: "Do not send a unit back until the team has confirmed the exchange procedure and receiving instructions. The team should explain any applicable collection arrangements, inspection process and replacement availability. Who pays any exchange transport costs and the expected replacement timeline are not supplied and require business approval.",
+        body: "Contact service at mukesh@rmaxelectro.com with your order reference and reason. Our support team will confirm pickup arrangements, inspect the returned unit for absence of physical damage, and dispatch a replacement unit under our piece-to-piece defect policy.",
       },
       {
         id: "1-year-warranty",
-        title: "1 year warranty",
-        body: "The supplied product warranty is 1 year. For a warranty enquiry, provide your purchase reference, model and a description of the issue using the Service contact form. The warranty start date, coverage, exclusions, proof-of-purchase requirements and available remedies need confirmation; this draft does not create additional coverage promises.",
+        title: "1 year warranty & post-warranty parts",
+        body: "Every RMAX machine is backed by a 1-year warranty covering manufacturing defects. After the 1-year warranty expires, RMAX provides full repairing parts support and replacement components to ensure your machines continue running reliably for years to come.",
       },
       {
         id: "installation-service",
-        title: "Installation & service",
-        body: "Confirm your site-specific installation requirements with the team and follow the instructions supplied with your machine. The products are described as low maintenance. Installation pricing, service visits, spare parts and repair timelines are not stated here and should be confirmed for your requirement.",
+        title: "100% Made in India & service support",
+        body: "All RMAX machines are designed and manufactured 100% in India. Our support and technical team provide complete post-sale support, user manuals, and genuine spare parts across India.",
       },
       {
         id: "need-help-with-an-order",
-        title: "Need help with an order?",
-        body: "Use Contact Us and choose Service for delivery, exchange or warranty enquiries. Include your order reference and model. For a planned institutional deployment, use Request Institutional Quote to discuss model choice, quantities and installation requirements. Do not include passwords or full payment details in your message.",
+        title: "Need help with an order or bulk inquiry?",
+        body: "For support, piece-to-piece exchange, or bulk institutional quotes exceeding 5 units, reach out to mukesh@rmaxelectro.com or use our institutional quote request form.",
       },
     ],
   },
@@ -494,19 +569,6 @@ export const testimonials: ITestimonial[] = [
   },
 ];
 
-/** Testimonial banner at the bottom of the Pro detail page (a variant of the Home quote, as drawn). */
-testimonials.push({
-  name: "Balbir Singh",
-  role: "Principal, Singhaniya School, Jaipur",
-  quote: "Our campus needed a hygienic disposal solution for 1,500+ students. RMAX delivered and supported it end to end.",
-  rating: 5,
-  dateLabel: "October 2025",
-  featured: false,
-  product: "Pro",
-  forProduct: "pro",
-  image: { src: "/images/products/testimonial-pro.png", alt: "RMAX Pro incinerator in a bright washroom", width: 402, height: 297 },
-  sortOrder: 9,
-});
 
 /** Demo account + order shown on the My Account / My Orders / Order Detail designs. */
 export const demoUser = {

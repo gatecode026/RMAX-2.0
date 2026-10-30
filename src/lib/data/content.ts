@@ -57,7 +57,11 @@ export async function getProducts(): Promise<ProductDTO[]> {
 
 export async function getProductBySlug(slug: string): Promise<ProductDTO | null> {
   const all = await getAllProducts();
-  return all.find((p) => p.slug === slug) ?? null;
+  return (
+    all.find((p) => p.slug === slug) ??
+    (slug === "pad-vending" ? all.find((p) => p.slug === "pad-vending-coin") : null) ??
+    null
+  );
 }
 
 export type TrustPoint = { icon: "shield" | "truck" | "cog"; title: string; body: string };
@@ -80,11 +84,10 @@ export function getTrustPoints(): Promise<TrustPoint[]> {
   return readTrust();
 }
 
-/** Testimonial shown on a product's detail page (falls back to the first product testimonial). */
-export async function getProductTestimonial(slug: string): Promise<TestimonialDTO | null> {
+/** Testimonial shown on a product's detail page (uses the homepage featured testimonial). */
+export async function getProductTestimonial(_slug?: string): Promise<TestimonialDTO | null> {
   const all = await getTestimonials();
-  const forProducts = all.filter((t) => t.forProduct);
-  return forProducts.find((t) => t.forProduct === slug) ?? forProducts[0] ?? null;
+  return all.find((t) => t.featured) ?? all[0] ?? null;
 }
 
 async function readFaqItems(): Promise<FaqDTO[]> {

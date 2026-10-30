@@ -39,7 +39,7 @@ export const contactSchema = z.object({
         .string()
         .min(2, "Name must be at least 2 characters")
         .max(100, "Name cannot exceed 100 characters")
-        .regex(/^[a-zA-Zs.'-]+$/, "Name should only contain letters and standard characters")
+        .regex(/^[a-zA-Z\s.'-]+$/, "Name should only contain letters and standard characters")
     ),
   email,
   phone,
@@ -140,14 +140,18 @@ export const changePasswordSchema = z
   .refine((v) => v.newPassword === v.confirmPassword, {
     path: ["confirmPassword"],
     message: "Passwords do not match",
+  })
+  .refine((v) => v.currentPassword !== v.newPassword, {
+    path: ["newPassword"],
+    message: "New password cannot be the same as your current password",
   });
 export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
 
 /* ---------- Cart ---------- */
-export const cartAddSchema = z.object({ slug: z.string().min(1).max(40) });
+export const cartAddSchema = z.object({ slug: z.string().min(1).max(40), quantity: z.number().int().min(1).max(5).optional() });
 export const cartUpdateSchema = z.object({
   slug: z.string().min(1).max(40),
-  quantity: z.number().int().min(0).max(999), // 0 = remove
+  quantity: z.number().int().min(0).max(5), // 0 = remove
 });
 
 /* ---------- Checkout ---------- */

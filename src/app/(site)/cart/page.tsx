@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Container } from "@/components/layout/Container";
 import { PageHero } from "@/components/layout/PageHero";
+import { CartIntentHandler } from "@/components/sections/CartIntentHandler";
 import { CartLineControls } from "@/components/sections/CartLineControls";
 import { LineItem, OrderSummary } from "@/components/sections/OrderParts";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { getCart } from "@/lib/cart";
+import { getSessionUser } from "@/lib/session";
 import { formatINR, pluralItems } from "@/lib/format";
 import { buildSpecLine } from "@/lib/specs";
 
@@ -22,10 +24,13 @@ function describe(lines: { quantity: number; product: { name: string } }[]) {
 const BASE_LEAD = "Review your model and quantity before checkout.";
 
 async function CartContent() {
-  const cart = await getCart();
+  const [cart, customer] = await Promise.all([getCart(), getSessionUser("customer")]);
   const empty = cart.lines.length === 0;
+  const hasMaxQuantity = cart.lines.some((l) => l.quantity >= 5);
+
   return (
     <>
+      <CartIntentHandler />
       <PageHero
         breadcrumb="Shopping Cart"
         eyebrow="Shopping Cart"
@@ -33,7 +38,20 @@ async function CartContent() {
         lead={empty ? BASE_LEAD : `${BASE_LEAD} ${describe(cart.lines)}`}
       />
       <Container className="mt-12 md:mt-16">
-        {empty ? (
+        {!customer ? (
+          <Card className="p-7 md:p-8">
+            <h2 className="text-title">Your cart</h2>
+            <p className="mt-3 text-body text-muted">
+              Please log in to your RMAX customer account to access your shopping cart.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href="/?auth=login&next=/cart">Login</ButtonLink>
+              <ButtonLink href="/?auth=register&next=/cart" variant="secondary">
+                Create Account
+              </ButtonLink>
+            </div>
+          </Card>
+        ) : empty ? (
           // ASSUMED: the designs only show a filled cart.
           <Card className="p-7 md:p-8">
             <h2 className="text-title">Your cart is empty</h2>
@@ -67,11 +85,41 @@ async function CartContent() {
                 </div>
               </Card>
 
+              {hasMaxQuantity && (
+                <div className="mt-6 rounded-[16px] bg-[#EFF6FF] border border-[#BFDBFE] p-4 text-body-sm text-[#1E40AF]">
+                  <p className="font-bold">Direct orders are limited to 5 units max per item.</p>
+                  <p className="mt-1 text-[#3B82F6]">
+                    Need more units for your campus or hospital? Submit an{" "}
+                    <a href="/institutional-quote" className="font-bold underline hover:text-[#1D4ED8]">
+                      institutional bulk inquiry
+                    </a>{" "}
+                    or email us at{" "}
+                    <a href="mailto:mukesh@rmaxelectro.com" className="font-bold underline hover:text-[#1D4ED8]">
+                      mukesh@rmaxelectro.com
+                    </a>{" "}
+                    for wholesale pricing and custom installation.
+                  </p>
+                </div>
+              )}
+
               <Card tone="tint" className="mt-6 rounded-input p-5">
                 <p className="text-body-sm font-bold">Buying for an institution?</p>
                 <p className="mt-2 text-body-sm text-muted">
-                  Need multiple units or installation planning? Request an institutional quote before placing your order.
+                  Direct online orders are capped at 5 max. For 6+ units, tender inquiries, or tailored delivery, please{" "}
+                  <a href="/institutional-quote" className="font-bold text-navy hover:underline">
+                    request an institutional quote
+                  </a>{" "}
+                  or write to{" "}
+                  <a href="mailto:mukesh@rmaxelectro.com" className="font-bold text-navy hover:underline">
+                    mukesh@rmaxelectro.com
+                  </a>.
                 </p>
+                <div className="mt-4 pt-3 border-t border-line/60 text-[12px] text-muted flex flex-wrap gap-x-4 gap-y-1">
+                  <span>✓ 1 Year Warranty</span>
+                  <span>✓ Piece-to-piece return for defects</span>
+                  <span>✓ 100% Made in India</span>
+                  <span>✓ Spare parts available post-warranty</span>
+                </div>
               </Card>
 
               <div className="mt-6 flex flex-wrap gap-4">

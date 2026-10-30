@@ -17,14 +17,18 @@ async function main() {
   console.log("Connected.");
 
   // 1. Seed Super Admin
-  const adminEmail = process.env.SUPER_ADMIN_EMAIL || "rmaxadmin@gmail.com";
+  const adminEmail = process.env.SUPER_ADMIN_EMAIL || "mukesh@rmaxiot.com";
   const adminPassword = process.env.SUPER_ADMIN_PASSWORD || "rmaxadmin123";
   const adminHash = await bcrypt.hash(adminPassword, 10);
 
-  let superAdmin = await User.findOne({ email: adminEmail });
+  // Accounts are now looked up by (email, role) rather than email alone — the same email may
+  // own an independent Admin identity AND an independent Manager identity, each with its own
+  // password (see src/lib/auth/resolve.ts). SUPER_ADMIN_EMAIL and MANAGER_EMAIL are commonly
+  // the SAME address on purpose: that's exactly the shared-identity scenario this supports.
+  let superAdmin = await User.findOne({ email: adminEmail, role: "super_admin" });
   if (!superAdmin) {
     superAdmin = await User.create({
-      name: "Super Admin",
+      name: "Mukesh",
       email: adminEmail,
       passwordHash: adminHash,
       role: "super_admin",
@@ -33,8 +37,7 @@ async function main() {
     });
     console.log(`✔ Created Super Admin (${adminEmail})`);
   } else {
-    superAdmin.name = "Super Admin";
-    superAdmin.role = "super_admin";
+    superAdmin.name = "Mukesh";
     superAdmin.status = "active";
     superAdmin.passwordHash = adminHash;
     await superAdmin.save();
@@ -42,28 +45,31 @@ async function main() {
   }
 
   // 2. Seed Managers
-  const manager1Email = process.env.MANAGER_EMAIL || "rmaxmanager@gmail.com";
+  const manager1Email = process.env.MANAGER_EMAIL || "mukesh@rmaxiot.com";
   const manager1Password = process.env.MANAGER_PASSWORD || "rmaxmanager123";
   const manager1Hash = await bcrypt.hash(manager1Password, 10);
 
-  let manager1 = await User.findOne({ email: manager1Email });
-  if (!manager1) {
-    manager1 = await User.create({
-      name: "RMAX Manager",
-      email: manager1Email,
-      passwordHash: manager1Hash,
-      role: "manager",
-      status: "active",
-      department: "Institutional Sales",
-    });
-    console.log(`✔ Created Manager 1 (${manager1Email})`);
-  } else {
-    manager1.name = "RMAX Manager";
-    manager1.role = "manager";
-    manager1.status = "active";
-    manager1.passwordHash = manager1Hash;
-    await manager1.save();
-    console.log(`✔ Updated Manager 1 (${manager1Email})`);
+  let manager1;
+  {
+    const existing = await User.findOne({ email: manager1Email, role: "manager" });
+    if (!existing) {
+      manager1 = await User.create({
+        name: "RMAX Manager",
+        email: manager1Email,
+        passwordHash: manager1Hash,
+        role: "manager",
+        status: "active",
+        department: "Institutional Sales",
+      });
+      console.log(`✔ Created Manager 1 (${manager1Email})${manager1Email === adminEmail ? " — shares email with Super Admin, independent password" : ""}`);
+    } else {
+      existing.name = "RMAX Manager";
+      existing.status = "active";
+      existing.passwordHash = manager1Hash;
+      await existing.save();
+      manager1 = existing;
+      console.log(`✔ Updated Manager 1 (${manager1Email})`);
+    }
   }
 
   const manager2Email = "priya.manager@rmax.in";

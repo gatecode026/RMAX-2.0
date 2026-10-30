@@ -353,12 +353,12 @@ export function QuoteForm({
                     max={999}
                     value={fastQuantity}
                     onChange={(e) => setFastQuantity(Math.max(1, Number(e.target.value) || 1))}
-                    className="h-11 w-24 rounded-xl border border-line bg-white text-center font-heading font-bold text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                    className="h-11 w-24 rounded-xl border border-line bg-white text-center font-heading font-bold text-charcoal focus:border-navy focus:outline-none focus:ring-0"
                   />
                   <button
                     type="button"
                     onClick={() => setFastQuantity((q) => q + 1)}
-                    className="flex size-11 items-center justify-center rounded-xl border border-line bg-white font-bold text-charcoal shadow-xs transition hover:bg-soft"
+                    className="flex size-11 items-center justify-center rounded-xl border border-line bg-white font-bold text-charcoal transition hover:bg-soft"
                   >
                     +
                   </button>
@@ -372,7 +372,7 @@ export function QuoteForm({
                 <select
                   value={fastInstitutionType}
                   onChange={(e) => setFastInstitutionType(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal focus:border-navy focus:outline-none focus:ring-0"
                 >
                   {INSTITUTION_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -392,7 +392,7 @@ export function QuoteForm({
                 <select
                   value={fastDailyUsage}
                   onChange={(e) => setFastDailyUsage(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal focus:border-navy focus:outline-none focus:ring-0"
                 >
                   <option value="Up to 100 napkins/day">Up to 100 napkins/day</option>
                   <option value="100–250 napkins/day">100–250 napkins/day</option>
@@ -411,7 +411,7 @@ export function QuoteForm({
                   placeholder="e.g. Mumbai, 400001"
                   value={fastDeliveryCityPostal}
                   onChange={(e) => setFastDeliveryCityPostal(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal shadow-xs focus:border-navy focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-line bg-white px-3 font-medium text-sm text-charcoal focus:border-navy focus:outline-none focus:ring-0"
                 />
               </div>
             </div>

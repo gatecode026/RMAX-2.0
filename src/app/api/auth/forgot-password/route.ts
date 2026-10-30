@@ -20,16 +20,19 @@ export const POST = route(async (req: Request) => {
 
   try {
     await connectDB();
-    const user = await User.findOne({ email: parsed.data.email }).select("_id").lean();
-    if (user) {
+    // The same email may own an Admin, a Manager AND a Customer identity at once (see
+    // lib/auth/resolve.ts). An email-only reset must never silently pick just one of them —
+    // each identity gets its own independent token, scoped to that one account only.
+    const accounts = await User.find({ email: parsed.data.email }).select("_id role").lean();
+    for (const account of accounts) {
       const token = randomBytes(32).toString("hex");
       await PasswordResetToken.create({
-        user: user._id,
+        user: account._id,
         tokenHash: createHash("sha256").update(token).digest("hex"),
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       });
       if (process.env.NODE_ENV !== "production") {
-        console.info(`[forgot-password] reset token for ${parsed.data.email}: ${token}`);
+        console.info(`[forgot-password] reset token for ${parsed.data.email} (${account.role}): ${token}`);
       }
     }
   } catch (err) {

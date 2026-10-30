@@ -25,9 +25,13 @@ export default async function AdminDashboardPage() {
   const user = await requireRole(["super_admin", "admin"]);
   const data = await getAdminDashboardOverview();
 
-  const userName = user?.name || "Administrator";
+  const rawName = user?.name || "Administrator";
+  const userName = rawName.replace(/\s*\(.*?\)/g, "").trim();
   const now = new Date();
-  const currentMonthRange = `01 ${now.toLocaleDateString("en-GB", { month: "short", year: "numeric" })} - ${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()} ${now.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
+  const monthShort = now.toLocaleDateString("en-GB", { month: "short" });
+  const year = now.getFullYear();
+  const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+  const currentMonthRange = `01 ${monthShort} - ${lastDay} ${monthShort} ${year}`;
 
   return (
     <div className="space-y-6">

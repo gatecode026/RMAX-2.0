@@ -9,7 +9,9 @@ export default async function ManagerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireRole(["manager", "super_admin", "admin"]);
+  // Manager Dashboard requires its own Manager session — an Admin session never substitutes
+  // for it, even for the same person; they must separately authenticate as Manager.
+  const user = await requireRole(["manager"]);
 
   return (
     <Suspense

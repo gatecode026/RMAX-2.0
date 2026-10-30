@@ -58,7 +58,7 @@ export async function getAdminDashboardOverview() {
     const customerUsers = dbUsers.filter(
       (u) =>
         u.role === "customer" ||
-        (!u.role && u.email !== "rmaxadmin@gmail.com" && u.email !== "rmaxmanager@gmail.com")
+        (!u.role && u.email !== "mukesh@rmaxelectro.com" && u.email !== "rmaxadmin@gmail.com" && u.email !== "rmaxmanager@gmail.com")
     );
     const liveCustomers = customerUsers.length;
 

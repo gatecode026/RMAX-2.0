@@ -15,6 +15,7 @@ import {
   TrustRow,
 } from "@/components/catalog/DetailSections";
 import { ButtonLink } from "@/components/ui/Button";
+import { FeaturedTestimonial } from "@/components/home/Testimonials";
 import { getAllProducts, getProductBySlug, getProductTestimonial, getReviewSummary, getTrustPoints } from "@/lib/data/content";
 import { SITE_URL } from "@/lib/constants";
 
@@ -23,7 +24,9 @@ type Params = { params: Promise<{ slug: string }> };
 export const instant = false;
 
 export async function generateStaticParams() {
-  return (await getAllProducts()).map((p) => ({ slug: p.slug }));
+  const all = await getAllProducts();
+  const slugs = new Set([...all.map((p) => p.slug), "pad-vending"]);
+  return Array.from(slugs).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -64,7 +67,12 @@ export default async function ProductPage({ params }: Params) {
         { value: s.dailyCapacity, label: "Capacity" },
         { value: batchKnown ? s.batchCapacity : s.colours, label: batchKnown ? "Burning at once" : "Colours" },
       ]
-    : (product.chips ?? []).map((c) => ({ value: c, label: "Type" }));
+    : [
+        { value: "Automatic / Manual", label: "Operation" },
+        { value: "Push Button", label: "Free Dispense" },
+        { value: "Wall Mount", label: "Installation" },
+        { value: "1 Year", label: "Warranty" },
+      ];
 
   const gallery = product.gallery?.length
     ? product.gallery
@@ -113,7 +121,14 @@ export default async function ProductPage({ params }: Params) {
               mrp={product.mrp}
               colours={product.colours}
               quoteModel={QUOTE_MODELS.has(product.slug) ? product.slug : null}
-              showOptions={isIncinerator}
+              showOptions={true}
+              models={all.map((m) => ({
+                slug: m.slug,
+                name: m.name,
+                price: m.price,
+                dailyCapacity: m.specs?.dailyCapacity,
+                category: m.category,
+              }))}
             />
 
             <TrustRow points={trust} />
@@ -128,17 +143,24 @@ export default async function ProductPage({ params }: Params) {
       <div className="mx-auto mt-8 flex w-full max-w-(--container-page) flex-col gap-6 px-5 sm:px-8 lg:px-8 xl:px-16">
         <OverviewSection text={product.overview ?? product.summary ?? product.intro ?? ""} image={product.overviewImage} />
 
-        <div className="grid items-stretch gap-6 lg:grid-cols-[1.24fr_1fr]">
-          {product.features?.length || product.applications?.length ? (
+        {Boolean(product.features?.length || product.applications?.length) && product.techSpecs?.length ? (
+          <div className="grid items-stretch gap-6 lg:grid-cols-[1.24fr_1fr]">
             <div className="flex flex-col gap-6 [&>section:first-child]:flex-[1.5]">
               {product.features?.length ? <FeaturesCard items={product.features} /> : null}
               {product.applications?.length ? <ApplicationsCard items={product.applications} /> : null}
             </div>
-          ) : (
-            <div />
-          )}
-          {product.techSpecs?.length ? <TechSpecsCard rows={product.techSpecs} /> : null}
-        </div>
+            <TechSpecsCard rows={product.techSpecs} />
+          </div>
+        ) : product.techSpecs?.length ? (
+          <div className="w-full">
+            <TechSpecsCard rows={product.techSpecs} />
+          </div>
+        ) : product.features?.length || product.applications?.length ? (
+          <div className="flex flex-col gap-6">
+            {product.features?.length ? <FeaturesCard items={product.features} /> : null}
+            {product.applications?.length ? <ApplicationsCard items={product.applications} /> : null}
+          </div>
+        ) : null}
       </div>
 
       {related.length > 0 && (
@@ -162,9 +184,9 @@ export default async function ProductPage({ params }: Params) {
       )}
 
       {testimonial && (
-        <div className="mx-auto mt-8 w-full max-w-(--container-page) px-5 sm:px-8 lg:px-8 xl:px-16">
-          <ProductTestimonial t={testimonial} />
-        </div>
+        <section aria-label="Customer testimonial" className="mx-auto mt-14 md:mt-20 w-full max-w-(--container-page) px-5 sm:px-8 lg:px-8 xl:px-16 mb-14 md:mb-20">
+          <FeaturedTestimonial t={testimonial} />
+        </section>
       )}
     </>
   );

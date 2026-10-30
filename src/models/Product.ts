@@ -29,7 +29,7 @@ export interface IGalleryItem {
 
 export type DetailIcon =
   | "flame" | "settings" | "leaf" | "wrench"
-  | "school" | "hospital" | "office" | "institution";
+  | "school" | "hospital" | "office" | "institution" | "shield" | "truck" | "cog";
 
 export interface IDetailPoint {
   icon: DetailIcon;
@@ -38,8 +38,8 @@ export interface IDetailPoint {
 }
 
 export interface IProduct {
-  /** "incinerator" (the three models) or "pad-vending". */
-  category: "incinerator" | "pad-vending";
+  /** "incinerator", "automatic-vending", "manual-vending", "push-button-vending", or legacy "pad-vending". */
+  category: "incinerator" | "pad-vending" | "automatic-vending" | "manual-vending" | "push-button-vending";
   /** Colour filter keys: blue, pink, off-white, red. */
   colours: string[];
   /** Portrait photo used by the "detail" card style on the listing page. */

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 import { useDesktopNotifications } from "@/hooks/useDesktopNotifications";
-import { logoutAction } from "@/lib/actions/auth";
+import { adminLogoutAction } from "@/lib/actions/auth";
 import { BellRing, CheckCheck } from "lucide-react";
 
 export function AdminTopbar({ onToggleMobile }: { onToggleMobile: () => void }) {
@@ -77,7 +77,7 @@ export function AdminTopbar({ onToggleMobile }: { onToggleMobile: () => void }) 
 
   const handleSignOut = async () => {
     try {
-      await logoutAction("/admin/login");
+      await adminLogoutAction("/admin/login");
     } finally {
       window.location.href = "/admin/login";
     }

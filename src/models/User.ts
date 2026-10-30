@@ -27,6 +27,9 @@ export interface IUser {
   shippingAddress?: IAddress;
   billingSameAsShipping: boolean;
   billingAddress?: IAddress;
+  tokenVersion: number;
+  failedLoginAttempts: number;
+  lockedUntil?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -49,7 +52,7 @@ export const addressSchema = new Schema<IAddress>(
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
+    email: { type: String, required: true, index: true, lowercase: true, trim: true },
     organization: { type: String, trim: true },
     phone: { type: String, trim: true },
     passwordHash: { type: String, required: true, select: false },
@@ -60,9 +63,27 @@ const userSchema = new Schema<IUser>(
     shippingAddress: { type: addressSchema },
     billingSameAsShipping: { type: Boolean, default: true },
     billingAddress: { type: addressSchema },
+    tokenVersion: { type: Number, default: 0 },
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockedUntil: { type: Date, default: null },
   },
   { timestamps: true },
 );
 
-export const User: Model<IUser> = models.User || model<IUser>("User", userSchema);
+// One account per (email, role): the same email may have at most one Admin, one Manager and
+// one Customer identity, each with its own independent password hash.
+userSchema.index({ email: 1, role: 1 }, { unique: true });
 
+// Prevent duplicate accounts sharing a phone number WITHIN the same role (ignoring empty/unset
+// phones). Scoped by role — not global — for the same reason as the email index above: the
+// same real person may legitimately hold an Admin identity and a Manager identity (or a
+// Customer identity) that share a phone number, each with its own independent password.
+userSchema.index(
+  { phone: 1, role: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { phone: { $type: "string", $gt: "" } },
+  },
+);
+
+export const User: Model<IUser> = models.User || model<IUser>("User", userSchema);

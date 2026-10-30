@@ -5,7 +5,7 @@ import { getSessionUser } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

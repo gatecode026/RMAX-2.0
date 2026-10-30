@@ -1,4 +1,4 @@
-import { Schema, model, models, type Model } from "mongoose";
+import { Schema, model, models, type Model, type Types } from "mongoose";
 
 export interface ICartItem {
   /** Product slug (stable across re-seeds, unlike ObjectIds). */
@@ -7,14 +7,17 @@ export interface ICartItem {
 }
 
 export interface ICart {
-  /** Opaque token stored in an httpOnly cookie — carts are per browser, not per account. */
-  token: string;
+  /**
+   * Owning Customer account id. Carts are strictly per-account, never per-browser — there is
+   * no guest/anonymous cart. Only the Customer identity (never Admin or Manager) can own one.
+   */
+  customerId: Types.ObjectId;
   items: ICartItem[];
 }
 
 const cartSchema = new Schema<ICart>(
   {
-    token: { type: String, required: true, unique: true, index: true },
+    customerId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
     items: [
       new Schema<ICartItem>(
         {
@@ -28,7 +31,8 @@ const cartSchema = new Schema<ICart>(
   { timestamps: true },
 );
 
-// Abandoned carts expire after 30 days of inactivity (ASSUMED).
-cartSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 });
+// Saved carts for inactive accounts expire after 90 days (a customer's own cart is restored on
+// every login up to that point — see lib/cart.ts).
+cartSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
 export const Cart: Model<ICart> = models.Cart || model<ICart>("Cart", cartSchema);

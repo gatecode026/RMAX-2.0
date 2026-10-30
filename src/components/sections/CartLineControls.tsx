@@ -30,9 +30,10 @@ export function CartLineControls({ slug, quantity }: { slug: string; quantity: n
       <span aria-labelledby={`qty-${slug}`} className="min-w-4 text-center" aria-live="polite">
         {quantity}
       </span>
-      <button type="button" className={stepper} disabled={busy || quantity >= 999} onClick={() => setQty(quantity + 1)} aria-label="Increase quantity">
+      <button type="button" className={stepper} disabled={busy || quantity >= 5} onClick={() => setQty(quantity + 1)} aria-label="Increase quantity">
         <Plus className="size-3.5" aria-hidden />
       </button>
+      {quantity >= 5 && <span className="text-[11px] font-semibold text-navy">(Max 5 direct)</span>}
       <span aria-hidden className="text-muted">
         ·
       </span>

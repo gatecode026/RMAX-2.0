@@ -37,7 +37,7 @@ function UnifiedProductCard({
     img.src.includes("testimonial-");
 
   return (
-    <article className="group relative flex h-full flex-col rounded-[24px] border border-line bg-card px-3.5 py-3 sm:px-4 sm:py-3.5 xl:px-[18px] xl:py-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:border-navy/40 hover:shadow-[0_18px_40px_rgba(0,41,112,0.12)]">
+    <article className="group relative flex h-full flex-col rounded-[24px] border border-line bg-card px-3.5 py-3 sm:px-4 sm:py-3.5 xl:px-[18px] xl:py-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:border-navy/40 hover:shadow-[0_18px_40px_rgba(0,41,112,0.12)] cursor-pointer">
       {/* Product Image Container */}
       <div
         className="relative w-full overflow-hidden rounded-[16px] sm:rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center h-[200px] sm:h-[220px] lg:h-[260px] xl:h-[300px]"
@@ -53,7 +53,7 @@ function UnifiedProductCard({
         {!isBakedImage && product.badge && (
           <span
             className={cn(
-              "absolute top-3.5 left-3.5 z-10 inline-flex items-center rounded-full px-3.5 py-1 text-[11px] font-extrabold tracking-wider uppercase shadow-xs",
+              "absolute top-3.5 left-3.5 z-20 pointer-events-none inline-flex items-center rounded-full px-3.5 py-1 text-[11px] font-extrabold tracking-wider uppercase shadow-xs",
               product.badge.tone === "light"
                 ? "bg-white text-navy border border-line/50 font-bold"
                 : product.badge.tone === "green"
@@ -69,9 +69,12 @@ function UnifiedProductCard({
       {/* Card Content */}
       <div className="mt-3.5 sm:mt-4 flex flex-1 flex-col justify-between px-0.5">
         <div>
-          {/* Product Title */}
+          {/* Product Title (with full-card clickable overlay) */}
           <h3 className="font-heading text-[15px] sm:text-[16px] lg:text-[18px] xl:text-[20px] font-extrabold leading-tight tracking-[-0.3px] text-charcoal">
-            <Link href={productHref(product)} className="hover:text-navy transition-colors">
+            <Link
+              href={productHref(product)}
+              className="hover:text-navy transition-colors after:absolute after:inset-0 after:z-10 focus:outline-none"
+            >
               {product.title}
             </Link>
           </h3>
@@ -84,7 +87,7 @@ function UnifiedProductCard({
           )}
 
           {/* 2x2 Specs Grid */}
-          <ul className="mt-3 sm:mt-4 grid grid-cols-2 gap-1.5 sm:gap-2">
+          <ul className="mt-4 sm:mt-5 grid grid-cols-2 gap-1.5 sm:gap-2">
             {chips.slice(0, 4).map((c, i) => (
               <li
                 key={i}
@@ -100,9 +103,9 @@ function UnifiedProductCard({
         <div className="mt-4 sm:mt-5 flex items-end justify-between gap-2 pt-1">
           <div className="min-w-0">
             {hasOriginal && (
-              <p className="text-[11px] sm:text-[12px] font-normal text-muted-dark line-through leading-none mb-1 truncate">
+              <p className="text-[11px] sm:text-[12px] font-normal text-muted-dark leading-none mb-1 truncate">
                 <span className="sr-only">Original price </span>
-                {formatINR(product.originalPrice)}
+                <span className="diagonal-strike">{formatINR(product.originalPrice)}</span>
               </p>
             )}
             <p className="font-heading text-[18px] sm:text-[20px] lg:text-[24px] xl:text-[28px] font-extrabold text-charcoal leading-none tracking-tight">
@@ -110,13 +113,12 @@ function UnifiedProductCard({
             </p>
           </div>
 
-          <Link
-            href={productHref(product)}
-            className="inline-flex shrink-0 items-center justify-center rounded-full bg-charcoal hover:bg-navy px-4 sm:px-5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] xl:text-[14px] font-bold text-white shadow-xs transition-colors"
-            aria-label={`View ${product.title}`}
+          <span
+            className="relative z-20 inline-flex shrink-0 items-center justify-center rounded-full bg-charcoal group-hover:bg-navy px-4 sm:px-5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] xl:text-[14px] font-bold text-white shadow-xs transition-colors pointer-events-none"
+            aria-hidden="true"
           >
             View
-          </Link>
+          </span>
         </div>
       </div>
     </article>

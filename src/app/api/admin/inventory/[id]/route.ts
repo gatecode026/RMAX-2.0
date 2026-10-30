@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin")) {
       return NextResponse.json({ success: false, error: "Only Super Admin can update inventory" }, { status: 403 });
     }

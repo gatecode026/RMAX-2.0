@@ -18,7 +18,7 @@ function QuoteMark({ className = "size-6", fill = "currentColor" }: { className?
 }
 
 /** Featured Hero Testimonial matching the exact top card in the design */
-function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
+export function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
   return (
     <figure className="relative flex flex-col md:flex-row items-stretch overflow-hidden rounded-[28px] sm:rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
       {/* Product Image Section */}
@@ -33,7 +33,7 @@ function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
           />
         )}
         {t.product && (
-          <span className="absolute top-4 left-4 z-20 inline-flex items-center rounded-full bg-[#0A2558] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
+          <span className="absolute top-5 left-5 sm:top-6 sm:left-6 z-20 inline-flex items-center rounded-full bg-[#002970] px-4 py-1.5 text-[12px] font-bold text-white shadow-xs">
             {t.product}
           </span>
         )}
@@ -165,6 +165,10 @@ export function Testimonials({
   const cards = allTestimonials.slice(0, 4);
   const [activeIndex, setActiveIndex] = useState(1);
   const touchStartX = useRef<number | null>(null);
+  const mouseStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const wheelCooldown = useRef(false);
 
   const nextSlide = useCallback(() => {
     setActiveIndex((prev) => (prev + 1) % cards.length);
@@ -174,7 +178,7 @@ export function Testimonials({
     setActiveIndex((prev) => (prev - 1 + cards.length) % cards.length);
   }, [cards.length]);
 
-  // Touch swipe support for mobile/tablets
+    // Touch swipe support for mobile/tablets
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -188,6 +192,55 @@ export function Testimonials({
       prevSlide();
     }
     touchStartX.current = null;
+  };
+
+  // Mouse wheel & trackpad horizontal scroll support
+  const handleWheel = (e: React.WheelEvent) => {
+    const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    const delta = isHorizontal ? e.deltaX : e.shiftKey ? e.deltaY : e.deltaY;
+    if (Math.abs(delta) > 25 && !wheelCooldown.current) {
+      wheelCooldown.current = true;
+      if (delta > 0) nextSlide();
+      else prevSlide();
+      setTimeout(() => {
+        wheelCooldown.current = false;
+      }, 350);
+    }
+  };
+
+  // Mouse drag support
+  const handleMouseDown = (e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX;
+    isDragging.current = true;
+    hasDragged.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || mouseStartX.current === null) return;
+    const diff = mouseStartX.current - e.clientX;
+    if (Math.abs(diff) > 8) {
+      hasDragged.current = true;
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging.current || mouseStartX.current === null) return;
+    const diff = mouseStartX.current - e.clientX;
+    if (diff > 40) {
+      nextSlide();
+    } else if (diff < -40) {
+      prevSlide();
+    }
+    isDragging.current = false;
+    mouseStartX.current = null;
+    setTimeout(() => {
+      hasDragged.current = false;
+    }, 50);
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+    mouseStartX.current = null;
   };
 
   // Keyboard navigation
@@ -229,9 +282,14 @@ export function Testimonials({
 
       {/* Functional Review Cards Carousel Viewport */}
       <div
-        className="mt-6 -my-4 overflow-hidden py-6 px-1.5"
+        className="mt-6 -my-4 overflow-hidden py-6 px-1.5 cursor-grab active:cursor-grabbing select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Track for Mobile (1 card per view) */}
         <div
@@ -243,7 +301,7 @@ export function Testimonials({
               <ReviewCard
                 t={t}
                 active={i === activeIndex}
-                onClick={() => setActiveIndex(i)}
+                onClick={() => { if (!hasDragged.current) setActiveIndex(i); }}
               />
             </div>
           ))}
@@ -259,7 +317,7 @@ export function Testimonials({
               <ReviewCard
                 t={t}
                 active={i === activeIndex}
-                onClick={() => setActiveIndex(i)}
+                onClick={() => { if (!hasDragged.current) setActiveIndex(i); }}
               />
             </div>
           ))}
@@ -279,7 +337,7 @@ export function Testimonials({
             role="tab"
             aria-selected={activeIndex === i}
             aria-label={`Go to review ${i + 1}`}
-            onClick={() => setActiveIndex(i)}
+            onClick={() => { if (!hasDragged.current) setActiveIndex(i); }}
             className={cn(
               "h-2 transition-all duration-300 rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-navy",
               activeIndex === i

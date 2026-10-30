@@ -86,10 +86,10 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
               </option>
             ))}
           </SelectInput>
-          <TextInput label="Full name *" autoComplete="name" placeholder="Enter your full name" error={errors.name?.message} {...register("name")} />
-          <TextInput label="Email *" type="email" autoComplete="email" placeholder="name@institution.edu / work" error={errors.email?.message} {...register("email")} />
-          <TextInput label="Mobile Number *" type="tel" placeholder="10-digit Indian mobile number" autoComplete="tel" error={errors.phone?.message} {...register("phone")} />
-          <TextInput label="Order reference (optional)" placeholder="e.g. RMAX-DEMO-001" error={errors.orderReference?.message} {...register("orderReference")} />
+          <TextInput label="Full name *" autoComplete="name" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
+          <TextInput label="Mobile Number *" type="tel" autoComplete="tel" placeholder="10-digit mobile number" maxLength={10} inputMode="numeric" error={errors.phone?.message} {...register("phone")} />
+          <TextInput label="Order reference (optional)" error={errors.orderReference?.message} {...register("orderReference")} />
           <TextArea
             className="md:col-span-2"
             label="Message *"

@@ -90,6 +90,13 @@ function ChangePassword({ onDone }: { onDone: () => void }) {
 
   async function onSubmit(values: ChangePasswordInput) {
     setFormError(null);
+    if (values.currentPassword === values.newPassword) {
+      const msg = "New password cannot be the same as your current password.";
+      setError("newPassword", { type: "manual", message: msg });
+      setFormError(msg);
+      error("Password Error", msg);
+      return;
+    }
     const res = await requestJson("/api/account/password", "POST", values);
     if (res.ok) {
       reset();

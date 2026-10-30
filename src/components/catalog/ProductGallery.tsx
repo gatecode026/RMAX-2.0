@@ -35,6 +35,11 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
     return () => window.removeEventListener("resize", updateSize);
   }, [updateSize]);
 
+  useEffect(() => {
+    setActive(0);
+    setIsHovering(false);
+  }, [items]);
+
   const current = items[active] ?? items[0];
   if (!current) return null;
 
@@ -80,12 +85,15 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
 
   return (
     <div className="relative flex min-w-0 flex-col-reverse gap-4 sm:flex-row sm:gap-[15px]" aria-label={`${title} gallery`} role="group">
-      {items.length > 1 && (
-        <ul className="flex shrink-0 gap-3 overflow-x-auto pb-1 sm:w-[72px] sm:flex-col sm:gap-[15px] sm:overflow-visible sm:pb-0">
-          {items.map((g, i) => {
-            const isCurrent = i === active;
+      {/* Thumbnail rail: Always shown (empty slots rendered when fewer images, never hidden) */}
+      <ul className="flex shrink-0 gap-3 overflow-x-auto pb-1 sm:w-[72px] sm:flex-col sm:gap-[15px] sm:overflow-visible sm:pb-0">
+        {Array.from({ length: Math.max(5, items.length) }).map((_, i) => {
+          const g = items[i];
+          const isCurrent = i === active;
+
+          if (g) {
             return (
-              <li key={g.thumb} className="shrink-0">
+              <li key={g.thumb || i} className="shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -95,12 +103,12 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                   aria-label={g.kind === "video" ? `Play video: ${g.alt}` : `Show image ${i + 1}: ${g.alt}`}
                   aria-current={isCurrent}
                   className={cn(
-                    "relative block h-[95px] w-[72px] overflow-hidden rounded-[14px] border-2 bg-soft transition",
+                    "relative block h-[95px] w-[72px] overflow-hidden rounded-[14px] border-2 bg-soft transition cursor-pointer",
                     isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
                   )}
                 >
                   <Image src={g.thumb} alt="" width={66} height={89} className="size-full object-cover" />
-                  {/* Small thumbnail active zoom indicator: highlights the exact portion being zoomed */}
+                  {/* Small thumbnail active zoom indicator */}
                   {isCurrent && isHovering && !isVideo && (
                     <span
                       aria-hidden
@@ -116,9 +124,20 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                 </button>
               </li>
             );
-          })}
-        </ul>
-      )}
+          }
+
+          // Placeholder slot when image is not present ("agar multiple image nhi ho to empty show kro but hide nhi")
+          return (
+            <li key={`empty-slot-${i}`} className="shrink-0" aria-hidden="true">
+              <div className="relative flex h-[95px] w-[72px] flex-col items-center justify-center rounded-[14px] border border-dashed border-[#CBD5E1] bg-[#F8FAFC] text-[#94A3B8] transition select-none">
+                <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-[#CBD5E1] opacity-60">
+                  <span className="size-1 rounded-full bg-[#94A3B8]" />
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
       {/* Main image viewer with Amazon lens box */}
       <div

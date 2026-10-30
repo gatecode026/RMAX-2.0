@@ -8,7 +8,7 @@ import { logAction } from "@/lib/audit";
 
 export async function GET() {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin" && user.role !== "manager")) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
@@ -17,7 +17,7 @@ export async function GET() {
 
     // Query all customers (users who are not super_admin or manager)
     const dbUsers = await User.find({
-      email: { $nin: ["rmaxadmin@gmail.com", "rmaxmanager@gmail.com"] },
+      email: { $nin: ["mukesh@rmaxelectro.com", "rmaxadmin@gmail.com", "rmaxmanager@gmail.com"] },
       role: { $nin: ["super_admin", "admin", "manager"] },
     })
       .sort({ createdAt: -1 })
@@ -112,7 +112,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser("staff");
     if (!user || (user.role !== "super_admin" && user.role !== "admin")) {
       return NextResponse.json({ success: false, error: "Only Super Admin can create customers" }, { status: 403 });
     }
@@ -126,9 +126,28 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
+    // Scoped to the customer identity namespace: this email/phone may already belong to an
+    // Admin or Manager account, which is allowed by design and must not block creating a
+    // Customer record for the same person.
+    const existing = await User.findOne({ email: email.toLowerCase(), role: "customer" });
     if (existing) {
       return NextResponse.json({ success: false, error: "Customer with this email already exists" }, { status: 400 });
+    }
+
+    if (phone) {
+      const cleanDigits = phone.replace(/\D/g, "").slice(-10);
+      const existingPhone = await User.findOne({
+        role: "customer",
+        $or: [
+          { phone: cleanDigits },
+          { phone },
+          { phone: `+91${cleanDigits}` },
+          { phone: `0${cleanDigits}` },
+        ],
+      }).lean();
+      if (existingPhone) {
+        return NextResponse.json({ success: false, error: "A user with this mobile number already exists" }, { status: 400 });
+      }
     }
 
     const bcrypt = await import("bcryptjs");

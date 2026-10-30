@@ -1,11 +1,9 @@
 import "server-only";
-import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { randomUUID } from "node:crypto";
 import { connectDB, isDatabaseUnavailable } from "@/lib/mongodb";
 import { Cart } from "@/models/Cart";
 import { getAllProducts, type ProductDTO } from "@/lib/data/content";
-import { CART_COOKIE } from "@/lib/constants";
+import { getSessionUser } from "@/lib/session";
 
 export type CartLine = { product: ProductDTO; quantity: number; lineTotal: number };
 export type CartView = {
@@ -18,15 +16,22 @@ export type CartView = {
 
 const EMPTY: CartView = { lines: [], count: 0, subtotal: 0, shipping: 0, total: 0 };
 
-/** Resolve the cart for the current browser (read-only). */
+/**
+ * Resolve the cart for the current request (read-only).
+ *
+ * Carts belong strictly to an authenticated Customer account — there is no guest/anonymous
+ * cart. A visitor with no Customer session (including a visitor who only has an Admin or
+ * Manager session) always sees an empty cart; Add to Cart / Buy Now require signing in first.
+ */
 export async function getCart(): Promise<CartView> {
   await connection(); // per-visitor data: never part of a prerender
-  const token = (await cookies()).get(CART_COOKIE)?.value;
-  if (!token) return EMPTY;
+  const customer = await getSessionUser("customer");
+  if (!customer) return EMPTY;
+
   let cart;
   try {
     await connectDB();
-    cart = await Cart.findOne({ token }).lean();
+    cart = await Cart.findOne({ customerId: customer.id }).lean();
   } catch (err) {
     // Without a database the cart simply shows as empty (every page renders the navbar's cart count).
     if (isDatabaseUnavailable(err)) return EMPTY;
@@ -49,24 +54,17 @@ export async function getCart(): Promise<CartView> {
   };
 }
 
-/** Cart token for mutating routes — creates one (and sets the cookie) when missing. */
-export async function getOrCreateCartToken(): Promise<string> {
-  const jar = await cookies();
-  let token = jar.get(CART_COOKIE)?.value;
-  if (!token) {
-    token = randomUUID();
-    jar.set(CART_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
-  }
-  return token;
+/**
+ * Resolves the authenticated customer's id for mutating cart routes. Callers MUST have already
+ * verified a Customer session (e.g. via checkApiRole(["customer"])) before calling this — it
+ * does not itself reject guests, it just has nothing to return for one.
+ */
+export async function requireCartCustomerId(): Promise<string | null> {
+  const customer = await getSessionUser("customer");
+  return customer?.id ?? null;
 }
 
-export async function clearCart(token: string) {
+export async function clearCart(customerId: string) {
   await connectDB();
-  await Cart.deleteOne({ token });
+  await Cart.deleteOne({ customerId });
 }

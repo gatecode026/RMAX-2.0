@@ -48,6 +48,10 @@ export default function ManagerProfilePage() {
       setMessage({ type: "error", text: "Passwords do not match." });
       return;
     }
+    if (currentPassword && newPassword === currentPassword) {
+      setMessage({ type: "error", text: "New password cannot be the same as your previous password." });
+      return;
+    }
 
     setSaving(true);
     setMessage(null);

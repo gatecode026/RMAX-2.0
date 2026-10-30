@@ -5,12 +5,13 @@ import { Order, type IOrder } from "@/models/Order";
 import { getSessionUserId } from "@/lib/session";
 import { LAST_ORDER_COOKIE } from "@/lib/constants";
 
-export type OrderDTO = Omit<IOrder, "user" | "items" | "timeline" | "termsAcceptedAt"> & {
+export type OrderDTO = Omit<IOrder, "user" | "items" | "timeline" | "termsAcceptedAt" | "createdAt" | "updatedAt"> & {
   _id: string;
   user?: string;
   items: (Omit<IOrder["items"][number], "product"> & { product: string })[];
   timeline: { step: IOrder["status"]; at?: string }[];
   createdAt: string;
+  updatedAt?: string;
 };
 
 /** Convert a lean Mongoose order into a JSON-safe DTO. */

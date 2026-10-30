@@ -98,6 +98,8 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             ref={setMergedRef}
             id={id}
             type={type}
+            maxLength={type === "tel" ? (props.maxLength ?? 10) : props.maxLength}
+            inputMode={type === "tel" ? (props.inputMode ?? "numeric") : props.inputMode}
             value={value}
             defaultValue={defaultValue}
             aria-invalid={Boolean(error)}
@@ -114,11 +116,24 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
               props.onBlur?.(e);
             }}
             onChange={(e) => {
-              setInternalValue(e.target.value);
+              if (type === "tel") {
+                const clean = e.target.value.replace(/\D/g, "").slice(0, 10);
+                e.target.value = clean;
+                setInternalValue(clean);
+              } else {
+                setInternalValue(e.target.value);
+              }
               props.onChange?.(e);
             }}
             onInput={(e) => {
-              setInternalValue((e.target as HTMLInputElement).value);
+              if (type === "tel") {
+                const target = e.target as HTMLInputElement;
+                const clean = target.value.replace(/\D/g, "").slice(0, 10);
+                target.value = clean;
+                setInternalValue(clean);
+              } else {
+                setInternalValue((e.target as HTMLInputElement).value);
+              }
               props.onInput?.(e);
             }}
             className={cn(

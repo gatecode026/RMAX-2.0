@@ -20,7 +20,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useDesktopNotifications } from "@/hooks/useDesktopNotifications";
-import { logoutAction } from "@/lib/actions/auth";
+import { managerLogoutAction } from "@/lib/actions/auth";
 
 interface ManagerLayoutClientProps {
   children: React.ReactNode;
@@ -61,7 +61,7 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
 
   const handleSignOut = async () => {
     try {
-      await logoutAction("/admin/login");
+      await managerLogoutAction("/admin/login");
     } finally {
       window.location.href = "/admin/login";
     }

@@ -4,7 +4,7 @@ import { notificationEmitter } from "@/lib/notifications";
 import type { INotification } from "@/models/Notification";
 
 export async function GET(req: NextRequest) {
-  const user = await getSessionUser();
+  const user = await getSessionUser("staff");
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }

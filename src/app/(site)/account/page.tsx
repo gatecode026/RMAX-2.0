@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ShoppingCart } from "lucide-react";
 import { PageHero } from "@/components/layout/PageHero";
 import { AccountShell } from "@/components/sections/AccountShell";
 import { AddressCard } from "@/components/sections/AddressCard";
 import { ProfileForm } from "@/components/sections/ProfileForm";
+import { CartLineControls } from "@/components/sections/CartLineControls";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Pill } from "@/components/ui/Pill";
 import { getCurrentUserProfile } from "@/lib/data/users";
 import { listOwnedQuotes } from "@/lib/data/quotes";
+import { getCart } from "@/lib/cart";
 import { formatDate, formatINR } from "@/lib/format";
 import { requireUserId } from "@/lib/session";
 
@@ -36,7 +39,11 @@ function getStatusBadge(status: string) {
 
 async function Overview() {
   await requireUserId("/account");
-  const [user, quotes] = await Promise.all([getCurrentUserProfile(), listOwnedQuotes()]);
+  const [user, quotes, cart] = await Promise.all([
+    getCurrentUserProfile(),
+    listOwnedQuotes(),
+    getCart(),
+  ]);
   if (!user) return null;
   if (user.role === "manager") redirect("/manager/dashboard");
   if (user.role === "super_admin" || user.role === "admin") redirect("/admin/dashboard");
@@ -49,15 +56,129 @@ async function Overview() {
         breadcrumb="My Account"
         eyebrow="My Account"
         title={`Welcome, ${user.name.split(" ")[0]}.`}
-        lead="Manage your contact details, delivery address, and track your institutional quotation proposals."
+        lead="Manage your contact details, delivery address, shopping cart, and track your institutional quotation proposals."
       />
-      <AccountShell active="overview">
+      <AccountShell active="overview" cartCount={cart.count}>
         {/* 1. Mobile Number & Basic Info */}
         <ProfileForm
           initial={{ name: user.name, organization: user.organization ?? "", email: user.email, phone: user.phone ?? "" }}
         />
 
-        {/* 2. Saved Address */}
+        {/* 2. My Cart Products & Details */}
+        <Card id="cart" className="scroll-mt-28 p-7">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-navy/10 text-navy">
+                  <ShoppingCart className="size-4.5" aria-hidden="true" />
+                </div>
+                <h2 className="text-title">My Cart</h2>
+                {cart.count > 0 && (
+                  <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-xs font-bold text-navy">
+                    {cart.count} {cart.count === 1 ? "unit" : "units"}
+                  </span>
+                )}
+              </div>
+              <p className="text-body-sm text-muted">
+                {cart.lines.length > 0
+                  ? "Products in your shopping cart ready for direct checkout (max 5 units limit)."
+                  : "Your shopping cart is currently empty."}
+              </p>
+            </div>
+            {cart.lines.length > 0 && (
+              <ButtonLink href="/checkout" size="sm">
+                Proceed to Checkout →
+              </ButtonLink>
+            )}
+          </div>
+
+          {cart.lines.length > 0 ? (
+            <div className="mt-6 space-y-4">
+              <div className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+                {cart.lines.map((line) => (
+                  <div
+                    key={line.product.slug}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4.5 transition hover:bg-soft/30"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-soft border border-line/60">
+                        <Image
+                          src={line.product.image.src}
+                          alt={line.product.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <Link
+                          href={`/products/${line.product.slug}`}
+                          className="font-bold text-charcoal text-sm hover:text-navy transition line-clamp-1"
+                        >
+                          {line.product.title}
+                        </Link>
+                        <p className="text-xs text-muted mt-0.5">
+                          Unit Price: <span className="font-semibold text-charcoal">{formatINR(line.product.price)}</span>
+                          {line.product.originalPrice > line.product.price && (
+                            <span className="ml-1.5 diagonal-strike text-muted-dark font-normal">
+                              {formatINR(line.product.originalPrice)}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-[11px] text-muted">
+                          Specs: {line.product.specs.dailyCapacity} · {line.product.specs.power}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:justify-end w-full sm:w-auto gap-4 shrink-0">
+                      <div className="text-xs">
+                        <CartLineControls slug={line.product.slug} quantity={line.quantity} />
+                      </div>
+                      <div className="text-left sm:text-right shrink-0">
+                        <span className="font-heading font-extrabold text-navy text-base">
+                          {formatINR(line.lineTotal)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Cart Summary Totals */}
+              <div className="rounded-xl bg-soft/60 p-4.5 border border-line/70 flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-0.5 text-xs text-muted">
+                  <p>✓ Free PAN India insured delivery</p>
+                  <p>✓ 1 Year Warranty · Piece-to-piece defect replacement</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <span className="block text-xs text-muted">Total Payable:</span>
+                    <span className="font-heading text-lg font-extrabold text-charcoal">
+                      {formatINR(cart.total)}
+                    </span>
+                  </div>
+                  <ButtonLink href="/checkout" size="sm">
+                    Checkout Now
+                  </ButtonLink>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-10 text-center">
+              <p className="text-body text-muted">No products in your cart right now.</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <ButtonLink href="/our-product" size="sm">
+                  Explore Products
+                </ButtonLink>
+                <ButtonLink href="/compare-models" variant="secondary" size="sm">
+                  Compare Models
+                </ButtonLink>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* 3. Saved Address */}
         <div className="grid gap-6 md:grid-cols-2">
           <AddressCard kind="shipping" heading="Delivery / Institutional Address" actionLabel="Edit address" initial={ship}>
             <h2 className="mt-4 text-title">{ship?.organization ?? "No delivery address saved"}</h2>
@@ -104,7 +225,7 @@ async function Overview() {
           </AddressCard>
         </div>
 
-        {/* 3. Quotation History Only */}
+        {/* 4. Quotation History Only */}
         <Card id="quotations" className="scroll-mt-28 p-7">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
             <div>
