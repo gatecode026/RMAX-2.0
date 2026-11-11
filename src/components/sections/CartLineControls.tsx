@@ -4,12 +4,27 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { requestJson } from "@/lib/client-api";
+import { BulkOrderModal } from "@/components/sections/BulkOrderModal";
+
+const MAX_DIRECT_QTY = 5;
 
 /** "Quantity − 1 + · Remove" */
-export function CartLineControls({ slug, quantity }: { slug: string; quantity: number }) {
+export function CartLineControls({
+  slug,
+  quantity,
+  title,
+  price,
+}: {
+  slug: string;
+  quantity: number;
+  /** Product display name and unit price — shown in the bulk-order popup past 5 units. */
+  title: string;
+  price: number;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
   async function setQty(next: number) {
     setBusy(true);
@@ -30,10 +45,16 @@ export function CartLineControls({ slug, quantity }: { slug: string; quantity: n
       <span aria-labelledby={`qty-${slug}`} className="min-w-4 text-center" aria-live="polite">
         {quantity}
       </span>
-      <button type="button" className={stepper} disabled={busy || quantity >= 5} onClick={() => setQty(quantity + 1)} aria-label="Increase quantity">
+      <button
+        type="button"
+        className={stepper}
+        disabled={busy}
+        onClick={() => (quantity >= MAX_DIRECT_QTY ? setBulkModalOpen(true) : setQty(quantity + 1))}
+        aria-label="Increase quantity"
+      >
         <Plus className="size-3.5" aria-hidden />
       </button>
-      {quantity >= 5 && <span className="text-[11px] font-semibold text-navy">(Max 5 direct)</span>}
+      {quantity >= MAX_DIRECT_QTY && <span className="text-[11px] font-semibold text-navy">(Max 5 direct)</span>}
       <span aria-hidden className="text-muted">
         ·
       </span>
@@ -45,6 +66,15 @@ export function CartLineControls({ slug, quantity }: { slug: string; quantity: n
           {error}
         </span>
       )}
+
+      <BulkOrderModal
+        open={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        productLabel={title}
+        unitPrice={price}
+        quoteHref={(qty) => `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}`}
+        onKeepMax={() => setBulkModalOpen(false)} // already at the 5-unit cap in the cart — just close
+      />
     </div>
   );
 }

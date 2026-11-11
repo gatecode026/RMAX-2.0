@@ -45,7 +45,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: Package,
     subItems: [
       { label: "All Products", href: "/admin/products" },
-      { label: "Add Product", href: "/admin/products/create" },
+      { label: "Add New Product", href: "/admin/products/create" },
+      { label: "Categories", href: "/admin/categories" },
+      { label: "Brands", href: "/admin/brands" },
+      { label: "Product Reviews", href: "/admin/product-reviews" },
+      { label: "Archived Products", href: "/admin/products?status=archived" },
     ],
   },
   { label: "Customers", href: "/admin/customers", icon: Users },

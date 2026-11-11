@@ -4,264 +4,169 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import {
   UploadCloud,
-  Link as LinkIcon,
-  Image as ImageIcon,
   X,
   Check,
   AlertCircle,
   Loader2,
-  Plus,
+  Star,
   Trash2,
+  ImageIcon,
+  GripVertical,
 } from "lucide-react";
+import { cn } from "@/lib/cn";
 
-export const PRESET_IMAGES = [
-  { label: "Basic Incinerator (Blue Cabinet)", src: "/images/products/list-basic.png" },
-  { label: "Pro Incinerator (Blue Cabinet)", src: "/images/products/list-pro.png" },
-  { label: "Pro-Max Incinerator (Heavy Blue)", src: "/images/products/list-pro-max.png" },
-  { label: "Vending Machine (Off-white)", src: "/images/products/pad-vending.png" },
-];
-
-interface ProductImageUploaderProps {
-  value: string;
-  onChange: (url: string) => void;
-  gallery?: string[];
-  onGalleryChange?: (urls: string[]) => void;
+export interface UploadedProductImage {
+  fileId: string;
+  url: string;
+  filePath: string;
+  type: "main" | "front" | "side" | "rear" | "angle" | "gallery" | "variant" | "thumbnail";
+  alt?: string;
+  isPrimary?: boolean;
+  sortOrder?: number;
+  width?: number;
+  height?: number;
 }
 
-export default function ProductImageUploader({
-  value,
-  onChange,
-  gallery = [],
-  onGalleryChange,
-}: ProductImageUploaderProps) {
-  const [activeTab, setActiveTab] = useState<"upload" | "url" | "presets">("upload");
-  const [urlInput, setUrlInput] = useState("");
-  const [galleryUrlInput, setGalleryUrlInput] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const [isGalleryUploading, setIsGalleryUploading] = useState(false);
+interface ProductImageUploaderProps {
+  images: UploadedProductImage[];
+  onChange: (images: UploadedProductImage[]) => void;
+  /** Used to namespace the ImageKit folder (/rmax/products/{slug}/...) — pass a provisional slug while the product is still new. */
+  productSlug: string;
+}
+
+const SLOT_LABELS: { type: UploadedProductImage["type"]; label: string }[] = [
+  { type: "front", label: "Front View" },
+  { type: "side", label: "Side View" },
+  { type: "rear", label: "Rear View" },
+  { type: "angle", label: "Angle View" },
+];
+
+/**
+ * The first image marked primary (or, failing that, the first "main" slot image, or failing
+ * that the first image overall) is the one used across product cards and listing pages — this
+ * mirrors what src/app/api/admin/products handlers sync into the legacy `image` field.
+ */
+export function primaryImage(images: UploadedProductImage[]): UploadedProductImage | undefined {
+  return images.find((i) => i.isPrimary) ?? images.find((i) => i.type === "main") ?? images[0];
+}
+
+export default function ProductImageUploader({ images, onChange, productSlug }: ProductImageUploaderProps) {
   const [uploadError, setUploadError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadedFileInfo, setUploadedFileInfo] = useState<{ name: string; size: string } | null>(null);
-
+  const [uploadingCount, setUploadingCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+  const slugForUpload = productSlug?.trim() || `draft-${Date.now()}`;
 
-  const uploadFile = async (file: File): Promise<string> => {
-    if (!file.type.startsWith("image/")) {
-      throw new Error("Please select a valid image file (PNG, JPG, WEBP, SVG).");
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error("Image must be smaller than 10MB.");
-    }
+  async function uploadOne(file: File, type: UploadedProductImage["type"]): Promise<UploadedProductImage> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("productSlug", slugForUpload);
+    formData.append("imageType", type === "main" || type === "gallery" ? type : "gallery");
 
+    const res = await fetch("/api/admin/products/images", { method: "POST", body: formData });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.error || "Upload failed.");
+    const img = json.image as { fileId: string; url: string; filePath: string; width?: number; height?: number };
+    return { ...img, type, alt: file.name.replace(/\.[^.]+$/, "") };
+  }
+
+  async function handleFiles(files: FileList | File[], type: UploadedProductImage["type"]) {
+    const list = Array.from(files);
+    if (list.length === 0) return;
+    setUploadError("");
+    setUploadingCount((n) => n + list.length);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) return data.url;
+      const uploaded: UploadedProductImage[] = [];
+      for (const file of list) {
+        try {
+          uploaded.push(await uploadOne(file, type));
+        } catch (err) {
+          setUploadError(err instanceof Error ? err.message : "One or more images failed to upload.");
+        }
       }
+      if (uploaded.length === 0) return;
+      let next = [...images];
+      // A slot type that should only ever hold one image (main/front/side/rear/angle) replaces
+      // whatever was there before; gallery always appends.
+      if (type !== "gallery") {
+        const old = next.find((i) => i.type === type);
+        if (old) next = next.filter((i) => i.type !== type);
+        next = [...next, uploaded[0]];
+      } else {
+        const existingGalleryCount = next.filter((i) => i.type === "gallery").length;
+        next = [...next, ...uploaded.map((img, idx) => ({ ...img, sortOrder: existingGalleryCount + idx }))];
+      }
+      if (!next.some((i) => i.isPrimary) && (type === "main" || next.length === uploaded.length)) {
+        next = next.map((i, idx) => (idx === 0 ? { ...i, isPrimary: true } : i));
+      }
+      onChange(next);
+    } finally {
+      setUploadingCount((n) => Math.max(0, n - list.length));
+    }
+  }
+
+  async function removeImage(target: UploadedProductImage) {
+    onChange(images.filter((i) => i !== target));
+    try {
+      await fetch("/api/admin/products/images", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileId: target.fileId }),
+      });
     } catch {
-      // Fall through to FileReader base64 on network/serverless errors
+      // Non-fatal — the DB reference is already gone; a failed remote delete just leaves an
+      // orphaned ImageKit asset, which the PRD explicitly treats as an acceptable degraded case.
     }
+  }
 
-    // Client-side fallback to base64 Data URL
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("Failed to read image file"));
-      reader.readAsDataURL(file);
-    });
-  };
+  function setPrimary(target: UploadedProductImage) {
+    onChange(images.map((i) => ({ ...i, isPrimary: i === target })));
+  }
 
-  const handleMainFileSelect = async (file: File) => {
-    setUploadError("");
-    setIsUploading(true);
-    try {
-      const imageUrl = await uploadFile(file);
-      onChange(imageUrl);
-      setUploadedFileInfo({
-        name: file.name,
-        size: formatFileSize(file.size),
-      });
-    } catch (err: unknown) {
-      setUploadError(err instanceof Error ? err.message : "Error uploading image");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  function setAlt(target: UploadedProductImage, alt: string) {
+    onChange(images.map((i) => (i === target ? { ...i, alt } : i)));
+  }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+  const [draggedFileId, setDraggedFileId] = useState<string | null>(null);
+  const [dragOverFileId, setDragOverFileId] = useState<string | null>(null);
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+  /** Drops `dragged` into `target`'s position within the gallery subset, re-numbers sortOrder, and leaves every non-gallery image untouched. */
+  function reorderGallery(draggedId: string, targetId: string) {
+    if (draggedId === targetId) return;
+    const galleryItems = images.filter((i) => i.type === "gallery");
+    const fromIndex = galleryItems.findIndex((i) => i.fileId === draggedId);
+    const toIndex = galleryItems.findIndex((i) => i.fileId === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const reordered = [...galleryItems];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    const withOrder = reordered.map((img, idx) => ({ ...img, sortOrder: idx }));
+    const byFileId = new Map(withOrder.map((img) => [img.fileId, img]));
+    onChange(images.map((i) => (i.type === "gallery" ? byFileId.get(i.fileId)! : i)));
+  }
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      handleMainFileSelect(files[0]);
-    }
-  };
-
-  const handleApplyUrl = () => {
-    if (!urlInput.trim()) {
-      setUploadError("Please enter a valid image URL");
-      return;
-    }
-    setUploadError("");
-    onChange(urlInput.trim());
-    setUploadedFileInfo(null);
-  };
-
-  const handleGalleryFileSelect = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !onGalleryChange) return;
-    setIsGalleryUploading(true);
-    setUploadError("");
-
-    try {
-      const newUrls: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const url = await uploadFile(files[i]);
-        newUrls.push(url);
-      }
-      onGalleryChange([...gallery, ...newUrls]);
-    } catch (err: unknown) {
-      setUploadError(err instanceof Error ? err.message : "Error uploading gallery image");
-    } finally {
-      setIsGalleryUploading(false);
-    }
-  };
-
-  const handleAddGalleryUrl = () => {
-    if (!galleryUrlInput.trim() || !onGalleryChange) return;
-    onGalleryChange([...gallery, galleryUrlInput.trim()]);
-    setGalleryUrlInput("");
-  };
-
-  const handleRemoveGalleryImage = (index: number) => {
-    if (!onGalleryChange) return;
-    const updated = gallery.filter((_, i) => i !== index);
-    onGalleryChange(updated);
-  };
+  const main = images.find((i) => i.type === "main");
+  const gallery = images
+    .filter((i) => i.type === "gallery")
+    .slice()
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  const slotted = SLOT_LABELS.map((s) => ({ ...s, image: images.find((i) => i.type === s.type) }));
 
   return (
     <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-[#0B2450]">Product Image</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Primary photo shown on catalog and product page</p>
+          <h2 className="text-base font-bold text-[#0B2450]">Product Images</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Hosted on ImageKit — uploads go live immediately, no rebuild required</p>
         </div>
-        {value && (
+        {images.length > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-            <Check className="h-3 w-3" /> Selected
+            <Check className="h-3 w-3" /> {images.length} uploaded
           </span>
         )}
       </div>
 
-      {/* Main Preview Box */}
-      <div className="relative flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-[#F4F7FC]/70 p-4 min-h-[200px]">
-        {value ? (
-          <div className="relative group flex items-center justify-center">
-            <div className="relative h-44 w-44">
-              <Image
-                src={value}
-                alt="Product preview"
-                fill
-                unoptimized
-                className="object-contain drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
-                sizes="176px"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                onChange("");
-                setUploadedFileInfo(null);
-                setUrlInput("");
-              }}
-              title="Remove image"
-              className="absolute -top-2 -right-2 rounded-full bg-red-600 p-1.5 text-white shadow-md hover:bg-red-700 transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center text-center py-6 text-slate-400">
-            <ImageIcon className="h-12 w-12 text-slate-300 mb-2 stroke-[1.5]" />
-            <p className="text-xs font-medium text-slate-600">No image chosen yet</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Upload a photo, enter a link, or pick a preset below</p>
-          </div>
-        )}
-
-        {uploadedFileInfo && (
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-[#10469B]">
-            <Check className="h-3 w-3" />
-            <span className="max-w-[140px] truncate">{uploadedFileInfo.name}</span>
-            <span className="text-slate-400">({uploadedFileInfo.size})</span>
-          </div>
-        )}
-      </div>
-
-      {/* Source Switcher Tabs */}
-      <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1 text-xs font-semibold">
-        <button
-          type="button"
-          onClick={() => setActiveTab("upload")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-md py-1.5 transition-all ${
-            activeTab === "upload"
-              ? "bg-white text-[#10469B] shadow-sm font-bold"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <UploadCloud className="h-3.5 w-3.5" />
-          Upload File
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("url")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-md py-1.5 transition-all ${
-            activeTab === "url"
-              ? "bg-white text-[#10469B] shadow-sm font-bold"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <LinkIcon className="h-3.5 w-3.5" />
-          Image URL
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("presets")}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-md py-1.5 transition-all ${
-            activeTab === "presets"
-              ? "bg-white text-[#10469B] shadow-sm font-bold"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <ImageIcon className="h-3.5 w-3.5" />
-          Brand Presets
-        </button>
-      </div>
-
-      {/* Error alert */}
       {uploadError && (
         <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs font-medium text-red-700">
           <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600" />
@@ -269,203 +174,168 @@ export default function ProductImageUploader({
         </div>
       )}
 
-      {/* Tab 1: Upload from Device */}
-      {activeTab === "upload" && (
-        <div className="space-y-3">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                handleMainFileSelect(e.target.files[0]);
-              }
-            }}
-            accept="image/png,image/jpeg,image/webp,image/svg+xml"
-            className="hidden"
-          />
-
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center cursor-pointer transition-all ${
-              isDragging
-                ? "border-[#10469B] bg-blue-50/60"
-                : "border-slate-300 hover:border-[#10469B] hover:bg-slate-50/70"
-            }`}
-          >
-            {isUploading ? (
-              <div className="flex flex-col items-center py-2">
-                <Loader2 className="h-8 w-8 animate-spin text-[#10469B]" />
-                <span className="mt-2 text-xs font-medium text-slate-700">Uploading image...</span>
+      {/* Main image dropzone */}
+      <div>
+        <label className="mb-1.5 block text-xs font-bold text-[#0B2450] uppercase tracking-wider">Main Product Image *</label>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={(e) => e.target.files && handleFiles(e.target.files, "main")}
+          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
+          className="hidden"
+        />
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files, "main");
+          }}
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center cursor-pointer transition-all min-h-[160px]",
+            isDragging ? "border-[#10469B] bg-blue-50/60" : "border-slate-300 hover:border-[#10469B] hover:bg-slate-50/70",
+          )}
+        >
+          {main ? (
+            <div className="relative group flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              <div className="relative h-32 w-32">
+                <Image src={main.url} alt={main.alt || "Main product image"} fill unoptimized className="object-contain" sizes="128px" />
               </div>
-            ) : (
-              <>
-                <div className="rounded-full bg-blue-50 p-2.5 text-[#10469B] mb-2">
-                  <UploadCloud className="h-6 w-6" />
-                </div>
-                <p className="text-xs font-semibold text-slate-800">
-                  Click to browse <span className="font-normal text-slate-500">or drag and drop</span>
-                </p>
-                <p className="mt-1 text-[11px] text-slate-400">PNG, JPG, WEBP, or SVG (max 10MB)</p>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Tab 2: Direct URL */}
-      {activeTab === "url" && (
-        <div className="space-y-3">
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-            Enter Image Web URL
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              placeholder="https://example.com/product-image.png"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-[#10469B] focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleApplyUrl}
-              className="rounded-lg bg-[#10469B] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0B2450] transition-colors"
-            >
-              Apply
-            </button>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Paste any accessible online link or public asset path like <code>/images/products/...</code>
-          </p>
-        </div>
-      )}
-
-      {/* Tab 3: Brand Presets */}
-      {activeTab === "presets" && (
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-            Choose from Standard RMAX Models
-          </label>
-          <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-            {PRESET_IMAGES.map((opt) => (
               <button
-                key={opt.src}
                 type="button"
-                onClick={() => {
-                  onChange(opt.src);
-                  setUploadedFileInfo(null);
-                }}
-                className={`w-full flex items-center gap-3 rounded-lg border p-2 text-left transition-colors ${
-                  value === opt.src
-                    ? "border-[#10469B] bg-blue-50/60 shadow-sm"
-                    : "border-slate-200 hover:bg-slate-50"
-                }`}
+                onClick={() => removeImage(main)}
+                className="absolute -top-2 -right-2 rounded-full bg-red-600 p-1.5 text-white shadow-md hover:bg-red-700"
               >
-                <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-white p-1 border border-slate-100">
-                  <Image src={opt.src} alt={opt.label} fill className="object-contain" sizes="40px" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">{opt.label}</p>
-                  <p className="text-[10px] text-slate-400 font-mono truncate">{opt.src}</p>
-                </div>
-                {value === opt.src && <Check className="h-4 w-4 text-[#10469B] flex-shrink-0" />}
+                <X className="h-3.5 w-3.5" />
               </button>
-            ))}
-          </div>
+            </div>
+          ) : uploadingCount > 0 ? (
+            <div className="flex flex-col items-center py-2">
+              <Loader2 className="h-8 w-8 animate-spin text-[#10469B]" />
+              <span className="mt-2 text-xs font-medium text-slate-700">Uploading to ImageKit…</span>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-full bg-blue-50 p-2.5 text-[#10469B] mb-2">
+                <UploadCloud className="h-6 w-6" />
+              </div>
+              <p className="text-xs font-semibold text-slate-800">
+                Click to browse <span className="font-normal text-slate-500">or drag and drop</span>
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">JPEG, PNG, WEBP, AVIF or GIF (max 10MB)</p>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Additional Product Gallery Photos (Optional) */}
-      {onGalleryChange && (
-        <div className="border-t border-slate-100 pt-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-[#0B2450] uppercase tracking-wider">
-              Product Gallery Photos <span className="font-normal text-slate-400 lowercase">(optional)</span>
-            </label>
-            <span className="text-[11px] text-slate-500 font-medium">{gallery.length} added</span>
-          </div>
+      {/* Front/Side/Rear/Angle slots */}
+      <div>
+        <label className="mb-1.5 block text-xs font-bold text-[#0B2450] uppercase tracking-wider">Additional Angles</label>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {slotted.map((slot) => (
+            <SlotUploader
+              key={slot.type}
+              label={slot.label}
+              image={slot.image}
+              onUpload={(files) => handleFiles(files, slot.type)}
+              onRemove={slot.image ? () => removeImage(slot.image!) : undefined}
+            />
+          ))}
+        </div>
+      </div>
 
-          <input
-            type="file"
-            ref={galleryFileInputRef}
-            multiple
-            onChange={(e) => handleGalleryFileSelect(e.target.files)}
-            accept="image/*"
-            className="hidden"
-          />
+      {/* Gallery */}
+      <div className="border-t border-slate-100 pt-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-bold text-[#0B2450] uppercase tracking-wider">
+            Gallery Photos <span className="font-normal text-slate-400 lowercase">(optional)</span>
+          </label>
+          <span className="text-[11px] text-slate-500 font-medium">{gallery.length} added</span>
+        </div>
 
-          {/* Gallery Thumbnails List */}
-          {gallery.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              {gallery.map((imgSrc, idx) => (
+        {gallery.length > 0 && (
+          <>
+            <p className="text-[11px] text-slate-400">Drag a photo to reorder — this is the order customers see on the product page.</p>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {gallery.map((img) => (
                 <div
-                  key={idx}
-                  className="group relative h-16 rounded-lg border border-slate-200 bg-[#F4F7FC] p-1 overflow-hidden"
+                  key={img.fileId}
+                  draggable
+                  onDragStart={() => setDraggedFileId(img.fileId)}
+                  onDragEnter={() => draggedFileId && draggedFileId !== img.fileId && setDragOverFileId(img.fileId)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedFileId) reorderGallery(draggedFileId, img.fileId);
+                    setDraggedFileId(null);
+                    setDragOverFileId(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedFileId(null);
+                    setDragOverFileId(null);
+                  }}
+                  className={cn(
+                    "group relative h-16 cursor-grab rounded-lg border bg-[#F4F7FC] p-1 overflow-hidden active:cursor-grabbing transition-all",
+                    dragOverFileId === img.fileId ? "border-[#10469B] ring-2 ring-[#10469B]/30" : "border-slate-200",
+                    draggedFileId === img.fileId && "opacity-40",
+                  )}
                 >
-                  <Image src={imgSrc} alt={`Gallery ${idx + 1}`} fill unoptimized className="object-contain" sizes="64px" />
+                  <Image src={img.url} alt={img.alt || "Gallery image"} fill unoptimized className="object-contain pointer-events-none" sizes="64px" />
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-center bg-gradient-to-b from-black/30 to-transparent py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-3 w-3 text-white" />
+                  </div>
                   <button
                     type="button"
-                    onClick={() => handleRemoveGalleryImage(idx)}
+                    onClick={() => setPrimary(img)}
+                    title="Set as primary image"
+                    className={cn(
+                      "absolute top-1 left-1 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity",
+                      img.isPrimary ? "bg-amber-400 text-white opacity-100" : "bg-white/90 text-slate-500 hover:text-amber-500",
+                    )}
+                  >
+                    <Star className="h-3 w-3" fill={img.isPrimary ? "currentColor" : "none"} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeImage(img)}
                     className="absolute top-1 right-1 rounded-full bg-red-600 p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove this photo"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
               ))}
             </div>
-          )}
+          </>
+        )}
 
-          {/* Quick Add Gallery Buttons */}
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => galleryFileInputRef.current?.click()}
-                disabled={isGalleryUploading}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:border-[#10469B] hover:bg-blue-50/40 hover:text-[#10469B] transition-colors"
-              >
-                {isGalleryUploading ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-3.5 w-3.5" />
-                    Upload Gallery Photos
-                  </>
-                )}
-              </button>
-            </div>
+        <GalleryDropzone onUpload={(files) => handleFiles(files, "gallery")} busy={uploadingCount > 0} />
+      </div>
 
-            {/* Quick URL input for gallery */}
-            <div className="flex gap-1.5">
-              <input
-                type="url"
-                placeholder="Or paste gallery image URL..."
-                value={galleryUrlInput}
-                onChange={(e) => setGalleryUrlInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddGalleryUrl();
-                  }
-                }}
-                className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-[#10469B] focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleAddGalleryUrl}
-                disabled={!galleryUrlInput.trim()}
-                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-40 transition-colors"
-              >
-                Add
-              </button>
-            </div>
+      {/* Alt text editor for the images with alt set so far — lightweight, inline */}
+      {images.length > 0 && (
+        <div className="border-t border-slate-100 pt-4">
+          <label className="mb-1.5 block text-xs font-bold text-[#0B2450] uppercase tracking-wider">Image Alt Text</label>
+          <div className="space-y-1.5">
+            {images.map((img) => (
+              <div key={img.fileId} className="flex items-center gap-2">
+                <span className="w-16 shrink-0 text-[11px] font-medium capitalize text-slate-500">{img.type}</span>
+                <input
+                  type="text"
+                  value={img.alt || ""}
+                  onChange={(e) => setAlt(img, e.target.value)}
+                  placeholder="Describe this image for accessibility and SEO"
+                  className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 focus:border-[#10469B] focus:outline-none"
+                />
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -473,3 +343,77 @@ export default function ProductImageUploader({
   );
 }
 
+function SlotUploader({
+  label,
+  image,
+  onUpload,
+  onRemove,
+}: {
+  label: string;
+  image?: UploadedProductImage;
+  onUpload: (files: FileList) => void;
+  onRemove?: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div className="relative">
+      <input
+        type="file"
+        ref={ref}
+        onChange={(e) => e.target.files && onUpload(e.target.files)}
+        accept="image/*"
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        className="flex h-20 w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 bg-slate-50 hover:border-[#10469B] hover:bg-blue-50/40 transition-colors overflow-hidden"
+      >
+        {image ? (
+          <div className="relative h-full w-full">
+            <Image src={image.url} alt={image.alt || label} fill unoptimized className="object-contain p-1" sizes="80px" />
+          </div>
+        ) : (
+          <>
+            <ImageIcon className="h-4 w-4 text-slate-400" />
+            <span className="text-[10px] font-medium text-slate-500">{label}</span>
+          </>
+        )}
+      </button>
+      {image && onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="absolute -top-1.5 -right-1.5 rounded-full bg-red-600 p-1 text-white shadow"
+        >
+          <X className="h-2.5 w-2.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function GalleryDropzone({ onUpload, busy }: { onUpload: (files: FileList) => void; busy: boolean }) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        type="file"
+        ref={ref}
+        multiple
+        onChange={(e) => e.target.files && onUpload(e.target.files)}
+        accept="image/*"
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        disabled={busy}
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:border-[#10469B] hover:bg-blue-50/40 hover:text-[#10469B] transition-colors disabled:opacity-50"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+        {busy ? "Uploading…" : "Upload gallery photos"}
+      </button>
+    </>
+  );
+}

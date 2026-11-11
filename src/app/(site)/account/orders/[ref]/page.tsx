@@ -234,6 +234,7 @@ async function Detail({ params }: { params: Promise<{ ref: string }> }) {
                           src={itemImage}
                           alt={i.title}
                           fill
+                          unoptimized={typeof itemImage === "string" && itemImage.startsWith("http")}
                           className="object-cover"
                           sizes="118px"
                         />

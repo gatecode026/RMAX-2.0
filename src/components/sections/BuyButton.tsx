@@ -29,13 +29,17 @@ export function BuyButton({
       });
       if (res.status === 401 || res.status === 403) {
         // Direct purchase requires a Customer account — preserve the selection and send the
-        // visitor to sign in, returning straight back to add it once authenticated.
+        // visitor to sign in, returning straight back to add it once authenticated. Reset the
+        // button here too, so it doesn't still read "Adding…" if the visitor lands back on
+        // this page (e.g. via browser back after closing the login modal).
+        setBusy(false);
         const next = `/cart?addSlug=${encodeURIComponent(slug)}&addQty=1`;
         router.push(`/?auth=login&next=${encodeURIComponent(next)}`);
         return;
       }
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message ?? "Could not add to cart.");
+      setBusy(false);
       router.push("/cart");
       router.refresh();
     } catch (e) {

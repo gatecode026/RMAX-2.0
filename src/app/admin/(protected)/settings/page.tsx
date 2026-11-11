@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
-import { Save, CheckCircle2, Building2, Bell, Sliders } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { Save, Building2, Bell, Sliders } from "lucide-react";
 
 export default function AdminSettingsPage() {
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const { success: toastSuccess } = useToast();
 
   const [companyInfo, setCompanyInfo] = useState({
     name: "RMAX Solutions",
@@ -25,8 +26,7 @@ export default function AdminSettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    toastSuccess("Settings saved", "Your changes have been saved successfully.");
   };
 
   return (
@@ -39,13 +39,6 @@ export default function AdminSettingsPage() {
           { label: "Settings" },
         ]}
       />
-
-      {savedSuccess && (
-        <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-          Settings saved successfully!
-        </div>
-      )}
 
       <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
         {/* Company Profile */}

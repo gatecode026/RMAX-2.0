@@ -5,14 +5,14 @@ import { getSessionUser } from "@/lib/session";
 import { Logo } from "@/components/layout/Logo";
 import { buttonClasses } from "@/components/ui/Button";
 import { getCart } from "@/lib/cart";
-import { getProducts } from "@/lib/data/content";
+import { getAllProducts } from "@/lib/data/content";
 import { HomeHeaderView } from "./HomeHeaderView";
 
 async function HomeHeaderDynamic() {
   await connection();
   // Customer session only — an Admin or Manager who is only logged into their own portal is
   // shown the ordinary guest header here, never their staff identity.
-  const [products, sessionUser, cart] = await Promise.all([getProducts(), getSessionUser("customer"), getCart()]);
+  const [products, sessionUser, cart] = await Promise.all([getAllProducts(), getSessionUser("customer"), getCart()]);
   return (
     <HomeHeaderView
       userName={sessionUser?.name ?? null}

@@ -37,13 +37,14 @@ export function RatingRow({ rating, label, stars }: { rating: string; label: str
   );
 }
 
+/** Always a 2×2 bento grid — never widens to a single row, regardless of container width. */
 export function SpecTiles({ tiles }: { tiles: { value: string; label: string }[] }) {
   return (
-    <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <ul className="mt-5 grid grid-cols-2 gap-3">
       {tiles.map((t) => (
-        <li key={t.label} className="rounded-[14px] bg-soft px-4 py-3.5">
-          <p className="font-sans text-body font-semibold text-charcoal">{t.value}</p>
-          <p className="text-[11px]/4 text-muted">{t.label}</p>
+        <li key={t.label} className="rounded-[16px] bg-soft px-5 py-4">
+          <p className="font-sans text-[18px]/6 font-bold text-charcoal">{t.value}</p>
+          <p className="mt-0.5 text-[13px]/4 text-muted">{t.label}</p>
         </li>
       ))}
     </ul>
@@ -92,6 +93,7 @@ export function OverviewSection({ text, image }: { text: string; image?: { src: 
           alt={image.alt}
           width={image.width}
           height={image.height}
+          unoptimized={image.src.startsWith("http")}
           className="h-[220px] w-full rounded-[24px] object-cover sm:h-[276px]"
         />
       )}

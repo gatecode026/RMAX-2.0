@@ -106,6 +106,7 @@ async function Overview() {
                           src={line.product.image.src}
                           alt={line.product.title}
                           fill
+                          unoptimized={line.product.image.src.startsWith("http")}
                           className="object-cover"
                         />
                       </div>
@@ -132,7 +133,12 @@ async function Overview() {
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:justify-end w-full sm:w-auto gap-4 shrink-0">
                       <div className="text-xs">
-                        <CartLineControls slug={line.product.slug} quantity={line.quantity} />
+                        <CartLineControls
+                          slug={line.product.slug}
+                          quantity={line.quantity}
+                          title={line.product.title}
+                          price={line.product.price}
+                        />
                       </div>
                       <div className="text-left sm:text-right shrink-0">
                         <span className="font-heading font-extrabold text-navy text-base">

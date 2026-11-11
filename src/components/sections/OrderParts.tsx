@@ -25,6 +25,7 @@ export function LineItem({
         alt=""
         width={thumb}
         height={thumb}
+        unoptimized={typeof image === "string" && image.startsWith("http")}
         className="rounded-[24px] object-cover"
         style={{ width: thumb, height: thumb }}
       />

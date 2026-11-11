@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useTransition } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import { useToast } from "@/components/ui/Toast";
 import {
   Search,
   Filter,
@@ -63,6 +64,7 @@ interface LeadItem {
 }
 
 export default function SuperAdminLeadsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [managers, setManagers] = useState<ManagerOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,10 +192,14 @@ export default function SuperAdminLeadsPage() {
           nextFollowUpAt: "",
           notes: "",
         });
+        toastSuccess("Lead created", `${newLead.name} has been added.`);
         fetchLeads();
+      } else {
+        const data = await res.json();
+        toastError("Lead Not Created", data.error || "Failed to create lead.");
       }
     } catch {
-      // Error
+      toastError("Lead Not Created", "A network error occurred — please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -212,10 +218,14 @@ export default function SuperAdminLeadsPage() {
       if (res.ok) {
         setReassignModalLead(null);
         setSelectedManagerId("");
+        toastSuccess("Lead reassigned", selectedManagerId ? "The lead has been reassigned." : "The lead is now unassigned.");
         fetchLeads();
+      } else {
+        const data = await res.json();
+        toastError("Reassignment Failed", data.error || "Failed to reassign lead.");
       }
     } catch {
-      // Error
+      toastError("Reassignment Failed", "A network error occurred — please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -235,12 +245,13 @@ export default function SuperAdminLeadsPage() {
           setSelectedLead(null);
         }
         setDeleteLeadItem(null);
+        toastSuccess("Lead deleted", `${deleteLeadItem.name} has been removed.`);
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete lead");
+        toastError("Lead Not Deleted", data.error || "Failed to delete lead.");
       }
     } catch {
-      alert("Error deleting lead");
+      toastError("Lead Not Deleted", "A network error occurred — please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -259,10 +270,14 @@ export default function SuperAdminLeadsPage() {
         const updated = await res.json();
         setSelectedLead(updated.lead);
         setNewNote("");
+        toastSuccess("Note added");
         fetchLeads();
+      } else {
+        const data = await res.json();
+        toastError("Note Not Added", data.error || "Failed to add note.");
       }
     } catch {
-      // Error
+      toastError("Note Not Added", "A network error occurred — please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -281,10 +296,14 @@ export default function SuperAdminLeadsPage() {
       if (res.ok) {
         const updated = await res.json();
         setSelectedLead(updated.lead);
+        toastSuccess("Status updated", `Lead marked as ${status}.`);
         fetchLeads();
+      } else {
+        const data = await res.json();
+        toastError("Status Not Updated", data.error || "Failed to update status.");
       }
     } catch {
-      // Error
+      toastError("Status Not Updated", "A network error occurred — please try again.");
     } finally {
       setActionLoading(false);
     }

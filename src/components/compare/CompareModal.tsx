@@ -180,6 +180,7 @@ export function CompareModal({
                       alt={p.name}
                       width={64}
                       height={64}
+                      unoptimized={p.image.src.startsWith("http")}
                       className="size-full object-contain"
                     />
                   </div>

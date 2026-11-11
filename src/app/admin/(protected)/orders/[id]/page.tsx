@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import { useToast } from "@/components/ui/Toast";
 import {
   ArrowLeft,
   Printer,
@@ -17,14 +18,13 @@ import {
 export default function AdminOrderDetailPage() {
   const params = useParams();
   const orderId = (params?.id as string) || "1523";
+  const { success: toastSuccess } = useToast();
 
   const [currentStatus, setCurrentStatus] = useState<"Processing" | "Shipped" | "Delivered" | "Cancelled">("Delivered");
-  const [updateSaved, setUpdateSaved] = useState(false);
 
   const handleStatusChange = (status: "Processing" | "Shipped" | "Delivered" | "Cancelled") => {
     setCurrentStatus(status);
-    setUpdateSaved(true);
-    setTimeout(() => setUpdateSaved(false), 2500);
+    toastSuccess("Order status updated", `Order #${orderId} marked as ${status}. Notifications sent to customer.`);
   };
 
   const steps = [
@@ -63,13 +63,6 @@ export default function AdminOrderDetailPage() {
           </div>
         }
       />
-
-      {updateSaved && (
-        <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-          Order status updated to {currentStatus}. Notifications sent to customer.
-        </div>
-      )}
 
       {/* Progress Tracker */}
       <div className="mb-6 rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">

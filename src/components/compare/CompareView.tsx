@@ -94,6 +94,7 @@ export function CompareView({
                         fill
                         sizes="280px"
                         priority
+                        unoptimized={imgSrc.startsWith("http")}
                         className="size-full object-cover rounded-[24px] group-hover:scale-105 transition-transform duration-300"
                       />
                     </Link>

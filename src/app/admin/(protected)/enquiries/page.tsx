@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
-import { Search, Mail, Phone, Clock, CheckCircle2, Send, MessageSquare } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { Search, Mail, Phone, Clock, Send, MessageSquare } from "lucide-react";
 
 export interface AdminEnquiry {
   id: string;
@@ -19,13 +20,13 @@ export interface AdminEnquiry {
 }
 
 export default function AdminEnquiriesPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [enquiries, setEnquiries] = useState<AdminEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("All");
   const [activeEnquiry, setActiveEnquiry] = useState<AdminEnquiry | null>(null);
   const [replyText, setReplyText] = useState("");
-  const [replySent, setReplySent] = useState(false);
 
   const statuses = ["All", "New", "In-Progress", "Resolved"];
 
@@ -57,7 +58,7 @@ export default function AdminEnquiriesPage() {
     return matchesStatus && matchesSearch;
   });
 
-  const handleUpdateStatus = async (id: string, status: AdminEnquiry["status"]) => {
+  const handleUpdateStatus = async (id: string, status: AdminEnquiry["status"], opts?: { silent?: boolean }) => {
     try {
       const res = await fetch(`/api/admin/enquiries/${id}`, {
         method: "PATCH",
@@ -69,21 +70,28 @@ export default function AdminEnquiriesPage() {
         if (activeEnquiry && activeEnquiry.id === id) {
           setActiveEnquiry({ ...activeEnquiry, status });
         }
+        if (!opts?.silent) toastSuccess("Status updated", `Marked as ${status}.`);
+        return true;
       }
+      if (!opts?.silent) toastError("Status Not Updated", "Failed to update enquiry status.");
+      return false;
     } catch (err) {
       console.error("Failed to update enquiry status:", err);
+      if (!opts?.silent) toastError("Status Not Updated", "A network error occurred — please try again.");
+      return false;
     }
   };
 
-  const handleSendReply = (e: React.FormEvent) => {
+  const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim() || !activeEnquiry) return;
-    setReplySent(true);
-    handleUpdateStatus(activeEnquiry.id, "resolved");
-    setTimeout(() => {
+    const ok = await handleUpdateStatus(activeEnquiry.id, "resolved", { silent: true });
+    if (ok) {
+      toastSuccess("Response recorded", "Status marked as resolved.");
       setReplyText("");
-      setReplySent(false);
-    }, 2000);
+    } else {
+      toastError("Reply Not Sent", "Could not record the response — please try again.");
+    }
   };
 
   return (
@@ -253,13 +261,6 @@ export default function AdminEnquiriesPage() {
                   placeholder={`Draft official response to ${activeEnquiry.customerName}...`}
                   className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-800 focus:border-[#10469B] focus:outline-none"
                 />
-
-                {replySent && (
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Response recorded and status marked as resolved!
-                  </div>
-                )}
 
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">Recorded with audit trail</span>

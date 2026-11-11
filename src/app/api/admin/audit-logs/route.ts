@@ -31,7 +31,8 @@ export async function GET(req: NextRequest) {
 
     const search = searchParams.get("search");
     if (search && search.trim()) {
-      const regex = new RegExp(search.trim(), "i");
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").slice(0, 40);
+      const regex = new RegExp(escaped, "i");
       query.$or = [
         { actorName: regex },
         { action: regex },

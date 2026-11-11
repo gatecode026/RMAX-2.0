@@ -11,7 +11,6 @@ import {
   homeStats as seedHomeStats,
   policyPages as seedPolicies,
   productTrust as seedProductTrust,
-  products as seedProducts,
   reviewSummary as seedReviewSummary,
   testimonials as seedTestimonials,
 } from "@/data/seed";
@@ -28,24 +27,31 @@ export type PolicyDTO = IPolicyPage & { _id: string };
 
 // Catalogue / help / policy content changes rarely → cached for hours, refreshed on demand with cacheTag.
 
-/** The whole catalogue, including the vending machine. */
+/**
+ * The whole catalogue, including the vending machine.
+ *
+ * No seed/fallback content: the database is the only source of truth for products. If it's
+ * unreachable, or the catalogue is genuinely empty, this returns an empty list rather than a
+ * fixed set of built-in products — pages that list or search products are expected to render a
+ * graceful "no products available" state for an empty result, not treat it as an error.
+ */
 async function readAllProducts(): Promise<ProductDTO[]> {
   "use cache";
   cacheLife("hours");
   cacheTag("products");
   try {
     await connectDB();
-    const rows = await Product.find().sort({ sortOrder: 1 }).lean();
-    if (rows && rows.length > 0) {
-      return plain<ProductDTO[]>(rows);
-    }
+    // Published only — this is the public catalogue. Draft and archived products never appear
+    // here regardless of who's asking; see getProductBySlugAnyStatus for the admin preview path.
+    const rows = await Product.find({ status: "published" }).sort({ sortOrder: 1 }).lean();
+    return plain<ProductDTO[]>(rows);
   } catch {
-    console.warn("[content] Could not read products from MongoDB — using built-in seed content.");
+    console.warn("[content] Could not read products from MongoDB — returning an empty catalogue.");
+    return [];
   }
-  return seedProducts.map((p) => ({ ...p, _id: `seed-${p.slug}` }));
 }
 
-/** Every catalogue item (listing page, product detail, related products, cart lookups). */
+/** Every published catalogue item (listing page, product detail, related products, cart lookups). */
 export function getAllProducts(): Promise<ProductDTO[]> {
   return readAllProducts();
 }
@@ -53,6 +59,26 @@ export function getAllProducts(): Promise<ProductDTO[]> {
 /** The three incinerator models — used by Compare, the footer, search, quote and contact forms. */
 export async function getProducts(): Promise<ProductDTO[]> {
   return (await getAllProducts()).filter((p) => p.category !== "pad-vending");
+}
+
+/**
+ * Status-agnostic, uncached single lookup — used only by the product detail page's admin
+ * preview path (a draft or archived product, viewed by an authenticated staff session). Never
+ * call this for an anonymous request: it does not filter by publication status.
+ */
+export async function getProductBySlugAnyStatus(slug: string): Promise<ProductDTO | null> {
+  try {
+    await connectDB();
+    const doc = await Product.findOne({ slug }).lean();
+    if (doc) return plain<ProductDTO>(doc);
+    if (slug === "pad-vending") {
+      const alt = await Product.findOne({ slug: "pad-vending-coin" }).lean();
+      if (alt) return plain<ProductDTO>(alt);
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductDTO | null> {

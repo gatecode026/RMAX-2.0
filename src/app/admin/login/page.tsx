@@ -93,9 +93,11 @@ function AdminLoginForm() {
         document.body.classList.remove("modal-open");
       }
 
-      // Successful login -> Direct routing based on exact role
+      // Successful login -> Direct routing based on exact role.
+      // router.replace (not push) so /admin/login never sits in browser history — otherwise
+      // pressing Back from the dashboard would land back on the login form instead of the site.
       if (res.role === "manager") {
-        router.push("/manager/dashboard");
+        router.replace("/manager/dashboard");
         router.refresh();
         return;
       }
@@ -107,11 +109,11 @@ function AdminLoginForm() {
           nextUrl !== "/login"
             ? nextUrl
             : "/admin/dashboard";
-        router.push(dest);
+        router.replace(dest);
         router.refresh();
         return;
       }
-      router.push("/account");
+      router.replace("/account");
       router.refresh();
     } catch {
       setFormError("Unable to connect to authentication server. Please check your connection.");

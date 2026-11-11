@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/Toast";
 import {
   User,
   Mail,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 
 export default function ManagerProfilePage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [profile, setProfile] = useState<{
     name: string;
     email: string;
@@ -41,15 +43,21 @@ export default function ManagerProfilePage() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
-      setMessage({ type: "error", text: "New password must be at least 6 characters long." });
+      const text = "New password must be at least 6 characters long.";
+      setMessage({ type: "error", text });
+      toastError("Password Not Updated", text);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setMessage({ type: "error", text: "Passwords do not match." });
+      const text = "Passwords do not match.";
+      setMessage({ type: "error", text });
+      toastError("Password Not Updated", text);
       return;
     }
     if (currentPassword && newPassword === currentPassword) {
-      setMessage({ type: "error", text: "New password cannot be the same as your previous password." });
+      const text = "New password cannot be the same as your previous password.";
+      setMessage({ type: "error", text });
+      toastError("Password Not Updated", text);
       return;
     }
 
@@ -59,11 +67,13 @@ export default function ManagerProfilePage() {
       // In production environment this calls password update
       await new Promise((r) => setTimeout(r, 600));
       setMessage({ type: "success", text: "Password updated successfully!" });
+      toastSuccess("Password updated", "Your password has been updated successfully.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch {
       setMessage({ type: "error", text: "Failed to update password." });
+      toastError("Password Not Updated", "Failed to update password.");
     } finally {
       setSaving(false);
     }

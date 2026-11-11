@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
 import {
   ArrowLeft,
   Building2,
@@ -51,6 +52,7 @@ export default function ManagerLeadDetailPage() {
   const params = useParams();
   const router = useRouter();
   const leadId = params?.id as string;
+  const { success: toastSuccess, error: toastError } = useToast();
 
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,13 +110,14 @@ export default function ManagerLeadDetailPage() {
         method: "DELETE",
       });
       if (res.ok) {
+        toastSuccess("Lead deleted");
         router.push("/manager/leads");
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete lead");
+        toastError("Lead Not Deleted", data.error || "Failed to delete lead.");
       }
     } catch {
-      alert("Error deleting lead");
+      toastError("Lead Not Deleted", "A network error occurred — please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -138,10 +141,13 @@ export default function ManagerLeadDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setLead(data.lead);
-        alert("Lead status and schedule updated successfully!");
+        toastSuccess("Lead updated", "Status and schedule updated successfully.");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Lead Not Updated", data.error || "Failed to update lead.");
       }
     } catch {
-      alert("Failed to update lead.");
+      toastError("Lead Not Updated", "A network error occurred — please try again.");
     } finally {
       setSaving(false);
     }
@@ -163,9 +169,13 @@ export default function ManagerLeadDetailPage() {
         const data = await res.json();
         setLead(data.lead);
         setNewNote("");
+        toastSuccess("Note added");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Note Not Added", data.error || "Failed to post note.");
       }
     } catch {
-      alert("Failed to post note.");
+      toastError("Note Not Added", "A network error occurred — please try again.");
     } finally {
       setSaving(false);
     }
@@ -192,9 +202,13 @@ export default function ManagerLeadDetailPage() {
         setLead(data.lead);
         setShowCallModal(false);
         setCallNotes("");
+        toastSuccess("Call recorded", `Outcome: ${callOutcome}.`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Call Not Recorded", data.error || "Failed to record call.");
       }
     } catch {
-      alert("Failed to record call.");
+      toastError("Call Not Recorded", "A network error occurred — please try again.");
     } finally {
       setSaving(false);
     }

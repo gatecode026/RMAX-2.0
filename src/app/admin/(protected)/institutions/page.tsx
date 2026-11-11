@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import { useToast } from "@/components/ui/Toast";
 import { Plus, Search, Building2, MapPin, CheckCircle2, X, AlertCircle } from "lucide-react";
 
 export interface InstitutionItem {
@@ -18,6 +19,7 @@ export interface InstitutionItem {
 }
 
 export default function AdminInstitutionsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [institutions, setInstitutions] = useState<InstitutionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -72,7 +74,9 @@ export default function AdminInstitutionsPage() {
   const handleAddInstitution = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newInst.name.trim() || !newInst.city.trim()) {
-      setErrorMsg("Institution name and city are required");
+      const msg = "Institution name and city are required";
+      setErrorMsg(msg);
+      toastError("Institution Not Added", msg);
       return;
     }
     setSubmitting(true);
@@ -86,12 +90,15 @@ export default function AdminInstitutionsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErrorMsg(data.error || "Failed to add institution");
+        const msg = data.error || "Failed to add institution";
+        setErrorMsg(msg);
+        toastError("Institution Not Added", msg);
         setSubmitting(false);
         return;
       }
 
       setShowAddModal(false);
+      toastSuccess("Institution added", `${newInst.name} has been added.`);
       setNewInst({
         name: "",
         type: "School",
@@ -106,6 +113,7 @@ export default function AdminInstitutionsPage() {
       fetchInstitutions();
     } catch {
       setErrorMsg("Network error adding institution");
+      toastError("Institution Not Added", "A network error occurred — please try again.");
     } finally {
       setSubmitting(false);
     }

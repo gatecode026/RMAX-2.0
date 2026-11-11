@@ -1,7 +1,5 @@
 import Image from "next/image";
 import { ButtonLink } from "@/components/ui/Button";
-import { capacityRange } from "@/lib/home";
-import { formatINR } from "@/lib/format";
 import type { HomeStat, ProductDTO } from "@/lib/data/content";
 
 /** Headline + hero card, then the four-number strip. */
@@ -37,18 +35,16 @@ export function HomeHero({ featured, stats }: { featured?: ProductDTO; stats: Ho
             style={{ width: "100%", height: "auto" }}
             className="w-full object-cover"
           />
-          {featured && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-3 p-3.5 sm:p-4 lg:gap-x-5 xl:gap-x-8 xl:pt-[15px]">
-              <div className="min-w-[170px] lg:min-w-[180px] xl:min-w-[242px] rounded-[16px] xl:rounded-[20px] bg-charcoal px-4 py-3 sm:px-5 sm:py-4 text-white">
-                <p className="text-body-sm text-muted-dark">Burning capacity</p>
-                <p className="font-heading text-[26px]/8 lg:text-[28px]/9 xl:text-[36px]/11 font-extrabold">{capacityRange(featured.specs.dailyCapacity)}</p>
-              </div>
-              <div>
-                <p className="text-body-sm text-muted">{featured.name} incinerator</p>
-                <p className="font-heading text-[26px]/8 lg:text-[28px]/9 xl:text-[36px]/11 font-extrabold text-charcoal">{formatINR(featured.price)}</p>
-              </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 p-3.5 sm:p-4 lg:gap-x-5 xl:gap-x-8 xl:pt-[15px]">
+            <div className="min-w-[170px] lg:min-w-[180px] xl:min-w-[242px] rounded-[16px] xl:rounded-[20px] bg-charcoal px-4 py-3 sm:px-5 sm:py-4 text-white">
+              <p className="text-body-sm text-muted-dark">Burning capacity</p>
+              <p className="font-heading text-[26px]/8 lg:text-[28px]/9 xl:text-[36px]/11 font-extrabold">400-500</p>
             </div>
-          )}
+            <div>
+              <p className="text-body-sm text-muted">Pro-Max incinerator</p>
+              <p className="font-heading text-[26px]/8 lg:text-[28px]/9 xl:text-[36px]/11 font-extrabold text-charcoal">₹6,500</p>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -565,7 +565,7 @@ export function QuoteForm({
         </div>
         {preview && (
           <Card className="p-5 sm:p-7">
-            <Image src={preview.image.src} alt={preview.image.alt} width={310} height={220} className="h-[220px] w-full rounded-[24px] object-cover" />
+            <Image src={preview.image.src} alt={preview.image.alt} width={310} height={220} unoptimized={preview.image.src.startsWith("http")} className="h-[220px] w-full rounded-[24px] object-cover" />
             <p className="mt-6 font-heading text-title font-extrabold">
               {preview.name} · {formatINR(preview.price)}
             </p>

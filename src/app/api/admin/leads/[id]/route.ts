@@ -28,7 +28,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Forbidden: You are not authorized to view this lead" }, { status: 403 });
     }
 
-    return NextResponse.json({ lead });
+    const managerDoc = lead.assignedManager
+      ? await User.findById(lead.assignedManager).select("name email").lean()
+      : null;
+
+    return NextResponse.json({
+      lead: {
+        ...lead,
+        institutionName: lead.institution,
+        assignedManager: lead.assignedManager
+          ? {
+              _id: String(lead.assignedManager),
+              name: managerDoc?.name || lead.assignedManagerName || "Unassigned",
+              email: managerDoc?.email || "",
+            }
+          : undefined,
+      },
+    });
   } catch (error) {
     console.error("Lead GET by ID error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -252,7 +268,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     });
 
-    return NextResponse.json({ success: true, lead });
+    const managerDoc = lead.assignedManager
+      ? await User.findById(lead.assignedManager).select("name email").lean()
+      : null;
+    const leadObj = lead.toObject();
+
+    return NextResponse.json({
+      success: true,
+      lead: {
+        ...leadObj,
+        institutionName: leadObj.institution,
+        assignedManager: lead.assignedManager
+          ? {
+              _id: String(lead.assignedManager),
+              name: managerDoc?.name || lead.assignedManagerName || "Unassigned",
+              email: managerDoc?.email || "",
+            }
+          : undefined,
+      },
+    });
   } catch (error) {
     console.error("Lead PATCH error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

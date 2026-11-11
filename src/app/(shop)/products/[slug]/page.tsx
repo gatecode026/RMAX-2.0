@@ -4,6 +4,7 @@ import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { PurchasePanel } from "@/components/catalog/PurchasePanel";
 import { ProductTabs, type TabItem } from "@/components/catalog/ProductTabs";
 import { RelatedCard } from "@/components/catalog/cards";
+import { ProductFaqCard } from "@/components/catalog/ProductFaqCard";
 import {
   ApplicationsCard,
   FeaturesCard,
@@ -16,8 +17,17 @@ import {
 } from "@/components/catalog/DetailSections";
 import { ButtonLink } from "@/components/ui/Button";
 import { FeaturedTestimonial } from "@/components/home/Testimonials";
-import { getAllProducts, getProductBySlug, getProductTestimonial, getReviewSummary, getTrustPoints } from "@/lib/data/content";
+import {
+  getAllProducts,
+  getProductBySlug,
+  getProductBySlugAnyStatus,
+  getProductTestimonial,
+  getReviewSummary,
+  getTrustPoints,
+} from "@/lib/data/content";
+import { getSessionUser } from "@/lib/session";
 import { SITE_URL } from "@/lib/constants";
+import { cn } from "@/lib/cn";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -42,11 +52,26 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 /** Quote-form model keys; other catalogue items are enquired about through Contact Us. */
-const QUOTE_MODELS = new Set(["basic", "pro", "pro-max"]);
+const QUOTE_MODELS = new Set(["basic", "pro", "pro-max", "dust-remover-machine", "plastic-waste-shredder-machine", "plastic-bailing-machine"]);
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  let product = await getProductBySlug(slug);
+  let isDraftPreview = false;
+
+  // Not published (or doesn't exist) for the public — but an authenticated Admin/Manager may
+  // still be previewing a draft/archived product via its real slug (PRD §4N/§5). Ordinary
+  // visitors never reach this branch's result: without a staff session it still 404s.
+  if (!product) {
+    const staff = await getSessionUser("staff");
+    if (staff) {
+      const draft = await getProductBySlugAnyStatus(slug);
+      if (draft) {
+        product = draft;
+        isDraftPreview = draft.status !== "published";
+      }
+    }
+  }
   if (!product) notFound();
 
   const [all, trust, reviews, testimonial] = await Promise.all([
@@ -57,10 +82,40 @@ export default async function ProductPage({ params }: Params) {
   ]);
   const related = all.filter((p) => p.slug !== slug).slice(0, 3);
   const isIncinerator = product.category === "incinerator";
+  const isDustRemover = product.slug === "dust-remover-machine";
+  const isShredder = product.slug === "plastic-waste-shredder-machine";
+  const isBailing = product.slug === "plastic-bailing-machine";
+  const isPlasticWaste =
+    product.category === "plastic-waste-machinery" ||
+    product.category === "plastic-waste-management" ||
+    isDustRemover ||
+    isShredder ||
+    isBailing;
   const s = product.specs;
   const batchKnown = s.batchCapacity !== "Not specified";
 
-  const tiles = isIncinerator
+  const tiles = isBailing
+    ? [
+        { value: "Up to 50 Tonnes", label: "Bailing Capacity" },
+        { value: "7.5 HP", label: "Motor Power" },
+        { value: "50–60 kg", label: "Bale Weight" },
+        { value: "1 Year", label: "Manufacturer Warranty" },
+      ]
+    : isShredder
+    ? [
+        { value: "1 Tonne/day", label: "Processing Capacity" },
+        { value: "10 HP", label: "Motor Power" },
+        { value: "4 + 2", label: "Rotary and Stationary Blades" },
+        { value: "300 kg", label: "Weighing Pan Capacity" },
+      ]
+    : isDustRemover
+    ? [
+        { value: "120–200 kg/hr", label: "Machine Output" },
+        { value: "915 mm", label: "Drum Diameter" },
+        { value: "10–15 HP", label: "Main Motor" },
+        { value: "2100 mm", label: "Drum Length" },
+      ]
+    : isIncinerator
     ? [
         { value: s.power.replace(" W", "W"), label: "Power" },
         { value: s.weight, label: "Weight" },
@@ -74,6 +129,20 @@ export default async function ProductPage({ params }: Params) {
         { value: "1 Year", label: "Warranty" },
       ];
 
+  const displayTrust = isBailing
+    ? [
+        { icon: "shield" as const, title: "1-Year Warranty", body: "Manufacturer warranty as stated in the catalogue" },
+        { icon: "truck" as const, title: "100% Made in India", body: "PAN India delivery & in-house industrial manufacturing" },
+        { icon: "cog" as const, title: "Post-warranty support", body: "Spare parts & servicing available from manufacturer" },
+      ]
+    : isPlasticWaste
+    ? [
+        { icon: "shield" as const, title: "Genuine RMAX Quality", body: "Contact RMAX Solutions for warranty & installation" },
+        { icon: "truck" as const, title: "100% Made in India", body: "PAN India delivery & in-house industrial manufacturing" },
+        { icon: "cog" as const, title: "Post-warranty support", body: "Spare parts & servicing available from manufacturer" },
+      ]
+    : trust;
+
   const gallery = product.gallery?.length
     ? product.gallery
     : [{ src: product.image.src, thumb: product.image.src, alt: product.image.alt, kind: "image" as const }];
@@ -83,7 +152,7 @@ export default async function ProductPage({ params }: Params) {
     { label: "Specifications", id: "specifications" },
     ...(product.features?.length ? [{ label: "Features", id: "features" }] : []),
     ...(product.applications?.length ? [{ label: "Applications", id: "applications" }] : []),
-    { label: "FAQs", href: "/help" },
+    ...(product.faqs?.length ? [{ label: "FAQs", id: "faqs" }] : [{ label: "FAQs", href: "/help" }]),
     { label: "Support", href: "/contact-us" },
   ];
 
@@ -101,37 +170,38 @@ export default async function ProductPage({ params }: Params) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
+      {isDraftPreview && (
+        <div className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-amber-400 px-4 py-2 text-center text-[13px] font-bold text-charcoal">
+          Admin preview — this product is {product.status} and is not visible to customers.
+        </div>
+      )}
+
       {/* Gallery + summary + price */}
       <section className="mx-auto w-full max-w-(--container-page) px-5 pt-2 sm:px-8 md:pt-4 lg:px-8 xl:px-16">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
           <ProductGallery items={gallery} title={product.title} />
 
           <div className="flex flex-col gap-6">
-            <div>
-              <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
-              <h1 className="mt-3 font-heading text-[28px]/9 font-extrabold tracking-[-1px] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
-              {product.intro && <p className="mt-4 text-body leading-relaxed text-muted">{product.intro}</p>}
-              {tiles.length > 0 && <SpecTiles tiles={tiles} />}
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+              <div>
+                <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
+                <h1 className="mt-3 font-heading text-[28px]/9 font-extrabold tracking-[-1px] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
+                {product.intro && <p className="mt-4 text-body leading-relaxed text-muted">{product.intro}</p>}
+                {tiles.length > 0 && <SpecTiles tiles={tiles} />}
+              </div>
+
+              {/* Price card — sits beside the title/description/spec-tiles column on wide screens */}
+              <PurchasePanel
+                slug={product.slug}
+                price={product.price}
+                mrp={product.mrp}
+                colours={product.colours}
+                quoteModel={QUOTE_MODELS.has(product.slug) ? product.slug : null}
+                showOptions={true}
+              />
             </div>
 
-            {/* Purchase Panel positioned underneath description and spec tiles */}
-            <PurchasePanel
-              slug={product.slug}
-              price={product.price}
-              mrp={product.mrp}
-              colours={product.colours}
-              quoteModel={QUOTE_MODELS.has(product.slug) ? product.slug : null}
-              showOptions={true}
-              models={all.map((m) => ({
-                slug: m.slug,
-                name: m.name,
-                price: m.price,
-                dailyCapacity: m.specs?.dailyCapacity,
-                category: m.category,
-              }))}
-            />
-
-            <TrustRow points={trust} />
+            <TrustRow points={displayTrust} />
           </div>
         </div>
       </section>
@@ -161,6 +231,8 @@ export default async function ProductPage({ params }: Params) {
             {product.applications?.length ? <ApplicationsCard items={product.applications} /> : null}
           </div>
         ) : null}
+
+        {Boolean(product.faqs?.length) && <ProductFaqCard faqs={product.faqs!} />}
       </div>
 
       {related.length > 0 && (
@@ -173,7 +245,12 @@ export default async function ProductPage({ params }: Params) {
               View all products →
             </ButtonLink>
           </div>
-          <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <ul
+            className={cn(
+              "mt-6 grid gap-6",
+              related.length >= 3 ? "md:grid-cols-2 lg:grid-cols-3" : related.length === 2 ? "sm:grid-cols-2 max-w-3xl" : "max-w-sm",
+            )}
+          >
             {related.map((p) => (
               <li key={p.slug} className="h-full">
                 <RelatedCard product={p} />

@@ -12,7 +12,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
   const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [viewerSize, setViewerSize] = useState({ width: 461, height: 543 });
+  const [viewerSize, setViewerSize] = useState({ width: 392, height: 462 });
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
   const [lensSize, setLensSize] = useState({ width: 184, height: 217 });
   const [zoomRatio, setZoomRatio] = useState({ x: 0.5, y: 0.5 });
@@ -107,7 +107,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                     isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
                   )}
                 >
-                  <Image src={g.thumb} alt="" width={66} height={89} className="size-full object-cover" />
+                  <Image src={g.thumb} alt="" width={66} height={89} unoptimized={g.thumb.startsWith("http")} className="size-full object-cover" />
                   {/* Small thumbnail active zoom indicator */}
                   {isCurrent && isHovering && !isVideo && (
                     <span
@@ -146,7 +146,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "group relative aspect-[461/543] w-full overflow-hidden rounded-[24px] bg-soft sm:w-[461px] sm:max-w-full select-none",
+          "group relative aspect-[461/543] w-full overflow-hidden rounded-[24px] bg-soft sm:w-[392px] sm:max-w-full select-none",
           !isVideo && "cursor-crosshair",
         )}
       >
@@ -156,6 +156,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           alt={current.alt}
           width={922}
           height={1086}
+          unoptimized={current.src.startsWith("http")}
           priority={active === 0}
           className="size-full object-cover pointer-events-none"
         />
@@ -186,7 +187,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
         {/* Mobile / Tablet Picture-in-Picture Mini-Map when zoomed */}
         {isHovering && !isVideo && (
           <div className="lg:hidden pointer-events-none absolute top-3 right-3 h-[85px] w-[65px] overflow-hidden rounded-xl border-2 border-white/90 bg-white shadow-lg">
-            <Image src={current.src} alt="" width={65} height={85} className="size-full object-cover" />
+            <Image src={current.src} alt="" width={65} height={85} unoptimized={current.src.startsWith("http")} className="size-full object-cover" />
             <span
               aria-hidden
               className="absolute border border-navy bg-navy/35 rounded-[2px]"

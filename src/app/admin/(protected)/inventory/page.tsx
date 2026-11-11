@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import { useToast } from "@/components/ui/Toast";
 import { Search, AlertTriangle, CheckCircle2, Edit3, X, RefreshCw } from "lucide-react";
 
 export interface InventoryItem {
@@ -17,6 +18,7 @@ export interface InventoryItem {
 }
 
 export default function AdminInventoryPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -79,10 +81,15 @@ export default function AdminInventoryPage() {
               : i
           )
         );
+        toastSuccess("Stock updated", `${editingItem.name} is now at ${val} units.`);
         setEditingItem(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Stock Not Updated", data.error || "Failed to update stock.");
       }
     } catch (err) {
       console.error("Failed to update stock:", err);
+      toastError("Stock Not Updated", "A network error occurred — please try again.");
     } finally {
       setSaving(false);
     }

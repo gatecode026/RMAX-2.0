@@ -62,7 +62,8 @@ export async function GET(req: NextRequest) {
 
     const search = searchParams.get("search");
     if (search && search.trim()) {
-      const regex = new RegExp(search.trim(), "i");
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").slice(0, 40);
+      const regex = new RegExp(escaped, "i");
       andConditions.push({
         $or: [
           { name: regex },
@@ -112,20 +113,31 @@ export async function GET(req: NextRequest) {
       statusCounts.all += c.count;
     });
 
+    const managerIds = [...new Set(leads.map((l) => l.assignedManager).filter(Boolean).map((id) => String(id)))];
+    const managerDocs = managerIds.length
+      ? await User.find({ _id: { $in: managerIds } }).select("name email").lean()
+      : [];
+    const managerById = new Map(managerDocs.map((m) => [String(m._id), m]));
+
     return NextResponse.json({
       leads: leads.map((l) => ({
-        id: String(l._id),
+        _id: String(l._id),
         leadNumber: l.leadNumber,
         name: l.name,
-        institution: l.institution,
+        institutionName: l.institution,
         institutionType: l.institutionType,
         email: l.email,
         phone: l.phone,
         source: l.source,
         status: l.status,
         priority: l.priority,
-        assignedManager: l.assignedManager ? String(l.assignedManager) : null,
-        assignedManagerName: l.assignedManagerName || "Unassigned",
+        assignedManager: l.assignedManager
+          ? {
+              _id: String(l.assignedManager),
+              name: managerById.get(String(l.assignedManager))?.name || l.assignedManagerName || "Unassigned",
+              email: managerById.get(String(l.assignedManager))?.email || "",
+            }
+          : undefined,
         preferredModel: l.preferredModel,
         quantity: l.quantity,
         estimatedValue: l.estimatedValue,

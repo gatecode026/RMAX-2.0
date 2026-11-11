@@ -163,6 +163,7 @@ export function HeaderCart({ initialCart, className }: HeaderCartProps) {
                           src={line.product.image.src}
                           alt={line.product.title}
                           fill
+                          unoptimized={line.product.image.src.startsWith("http")}
                           className="object-cover"
                           sizes="60px"
                         />

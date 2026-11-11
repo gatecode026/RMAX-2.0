@@ -47,3 +47,20 @@ scripts/*.ps1
 .agents/
 skills-lock.json
 
+# local photo dumps & extraction scratch
+src/images/
+bailing_*.jpg
+bailing_*.webp
+dust_remover_*.jpg
+dust_remover_*.webp
+shredder_*.jpg
+shredder_*.webp
+decoded_image_*
+extracted_*
+page1_montage.jpg
+page2_dust_remover.jpg
+pdf_image_*
+imagekit_*_uploaded.json
+imagekit_uploaded.json
+prd_product_*.txt
+

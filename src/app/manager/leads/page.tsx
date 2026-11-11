@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
 import {
   Search,
   RefreshCw,
@@ -33,6 +34,7 @@ interface LeadItem {
 }
 
 export default function ManagerLeadsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -50,13 +52,14 @@ export default function ManagerLeadsPage() {
       });
       if (res.ok) {
         setLeads((prev) => prev.filter((l) => l._id !== deleteLeadItem._id));
+        toastSuccess("Lead deleted", `${deleteLeadItem.name} has been removed.`);
         setDeleteLeadItem(null);
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete lead");
+        toastError("Lead Not Deleted", data.error || "Failed to delete lead.");
       }
     } catch {
-      alert("Error deleting lead");
+      toastError("Lead Not Deleted", "A network error occurred — please try again.");
     } finally {
       setIsDeleting(false);
     }

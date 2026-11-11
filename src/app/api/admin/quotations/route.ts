@@ -26,13 +26,14 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").slice(0, 40);
       query.$or = [
-        { quoteNumber: { $regex: search, $options: "i" } },
-        { organizationName: { $regex: search, $options: "i" } },
-        { contactPerson: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-        { preferredModel: { $regex: search, $options: "i" } },
+        { quoteNumber: { $regex: escapedSearch, $options: "i" } },
+        { organizationName: { $regex: escapedSearch, $options: "i" } },
+        { contactPerson: { $regex: escapedSearch, $options: "i" } },
+        { email: { $regex: escapedSearch, $options: "i" } },
+        { phone: { $regex: escapedSearch, $options: "i" } },
+        { preferredModel: { $regex: escapedSearch, $options: "i" } },
       ];
     }
 

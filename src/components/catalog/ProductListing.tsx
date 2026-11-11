@@ -8,13 +8,14 @@ import { cn } from "@/lib/cn";
 import { formatINR } from "@/lib/format";
 import type { ProductDTO } from "@/lib/data/content";
 
-type CategoryKey = "all" | "disposable" | "vending" | "gps";
+type CategoryKey = "all" | "disposable" | "vending" | "plastic-waste" | "gps";
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
 const CATEGORIES: { key: CategoryKey; label: string }[] = [
   { key: "all", label: "All solutions" },
   { key: "disposable", label: "Pad disposable machines" },
   { key: "vending", label: "Pad vending machines" },
+  { key: "plastic-waste", label: "Plastic Waste Management Machinery" },
   { key: "gps", label: "GPS trackers (KIOSK banking)" },
 ];
 
@@ -184,8 +185,10 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
   const visible = useMemo(() => {
     let list = products.filter((p) => {
       if (category === "gps") return false;
-      if (category === "vending") return p.category === "pad-vending";
-      if (p.category === "pad-vending") return false; // "All solutions" shows the incinerator range, as drawn
+      if (category === "vending") return p.category === "pad-vending" || p.category.includes("vending");
+      if (category === "disposable") return p.category === "incinerator";
+      if (category === "plastic-waste") return p.category === "plastic-waste-machinery" || p.category === "plastic-waste-management";
+      if (p.category === "pad-vending") return false; // "All solutions" excludes pad-vending legacy fallback
       return true;
     });
     if (tiers.length) list = list.filter((p) => tiers.includes(p.slug));

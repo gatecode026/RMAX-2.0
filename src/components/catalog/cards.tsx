@@ -47,6 +47,7 @@ function UnifiedProductCard({
           alt={img.alt || product.title}
           width={img.width || 400}
           height={img.height || 340}
+          unoptimized={img.src.startsWith("http")}
           className="size-full object-cover object-center"
         />
 

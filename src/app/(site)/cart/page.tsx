@@ -26,7 +26,6 @@ const BASE_LEAD = "Review your model and quantity before checkout.";
 async function CartContent() {
   const [cart, customer] = await Promise.all([getCart(), getSessionUser("customer")]);
   const empty = cart.lines.length === 0;
-  const hasMaxQuantity = cart.lines.some((l) => l.quantity >= 5);
 
   return (
     <>
@@ -74,7 +73,12 @@ async function CartContent() {
                         specLine={buildSpecLine(l.product.specs)}
                         price={l.lineTotal}
                       >
-                        <CartLineControls slug={l.product.slug} quantity={l.quantity} />
+                        <CartLineControls
+                          slug={l.product.slug}
+                          quantity={l.quantity}
+                          title={l.product.title}
+                          price={l.product.price}
+                        />
                       </LineItem>
                       <p className="mt-5 text-body-sm text-muted">
                         Launch price {formatINR(l.product.price)} · Original price {formatINR(l.product.originalPrice)} ·{" "}
@@ -84,23 +88,6 @@ async function CartContent() {
                   ))}
                 </div>
               </Card>
-
-              {hasMaxQuantity && (
-                <div className="mt-6 rounded-[16px] bg-[#EFF6FF] border border-[#BFDBFE] p-4 text-body-sm text-[#1E40AF]">
-                  <p className="font-bold">Direct orders are limited to 5 units max per item.</p>
-                  <p className="mt-1 text-[#3B82F6]">
-                    Need more units for your campus or hospital? Submit an{" "}
-                    <a href="/institutional-quote" className="font-bold underline hover:text-[#1D4ED8]">
-                      institutional bulk inquiry
-                    </a>{" "}
-                    or email us at{" "}
-                    <a href="mailto:mukesh@rmaxelectro.com" className="font-bold underline hover:text-[#1D4ED8]">
-                      mukesh@rmaxelectro.com
-                    </a>{" "}
-                    for wholesale pricing and custom installation.
-                  </p>
-                </div>
-              )}
 
               <Card tone="tint" className="mt-6 rounded-input p-5">
                 <p className="text-body-sm font-bold">Buying for an institution?</p>

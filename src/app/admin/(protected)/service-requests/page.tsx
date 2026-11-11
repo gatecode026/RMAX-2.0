@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
+import { useToast } from "@/components/ui/Toast";
 import { Plus, Search, CheckCircle2, Clock, Calendar, AlertTriangle, User, MapPin, X, AlertCircle } from "lucide-react";
 
 export interface ServiceRequestItem {
@@ -22,6 +23,7 @@ export interface ServiceRequestItem {
 }
 
 export default function AdminServiceRequestsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [requests, setRequests] = useState<ServiceRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -79,7 +81,9 @@ export default function AdminServiceRequestsPage() {
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTicket.institution.trim() || !newTicket.location.trim()) {
-      setErrorMsg("Institution name and location are required");
+      const msg = "Institution name and location are required";
+      setErrorMsg(msg);
+      toastError("Ticket Not Created", msg);
       return;
     }
     setSubmitting(true);
@@ -93,12 +97,15 @@ export default function AdminServiceRequestsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErrorMsg(data.error || "Failed to create service ticket");
+        const msg = data.error || "Failed to create service ticket";
+        setErrorMsg(msg);
+        toastError("Ticket Not Created", msg);
         setSubmitting(false);
         return;
       }
 
       setShowModal(false);
+      toastSuccess("Service ticket created", `A ticket for ${newTicket.institution} has been scheduled.`);
       setNewTicket({
         institution: "",
         location: "",
@@ -115,6 +122,7 @@ export default function AdminServiceRequestsPage() {
       fetchTickets();
     } catch {
       setErrorMsg("Network error creating ticket");
+      toastError("Ticket Not Created", "A network error occurred — please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -131,10 +139,14 @@ export default function AdminServiceRequestsPage() {
         if (selectedTicket && (selectedTicket._id === ticketId || selectedTicket.id === ticketId)) {
           setSelectedTicket({ ...selectedTicket, status: newStatus });
         }
+        toastSuccess("Status updated", `Ticket marked as ${newStatus}.`);
         fetchTickets();
+      } else {
+        toastError("Status Not Updated", "Failed to update ticket status.");
       }
     } catch (err) {
       console.error("Failed to update status:", err);
+      toastError("Status Not Updated", "A network error occurred — please try again.");
     }
   };
 
