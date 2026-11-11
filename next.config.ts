@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* Deployment build: imagekit remotePatterns and CDN optimization enabled */
   cacheComponents: true,
   partialPrefetching: true,
   images: {
