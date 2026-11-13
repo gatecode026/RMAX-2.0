@@ -35,100 +35,6 @@ const COLOURS = [
 const PRICE_MAX = 15000;
 const PRICE_DEFAULT = 8550; // the design's slider rests at ~57 %
 
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "featured", label: "Sort by: Featured" },
-  { value: "price-asc", label: "Sort by: Price, low to high" },
-  { value: "price-desc", label: "Sort by: Price, high to low" },
-  { value: "name", label: "Sort by: Name" },
-];
-
-function SortDropdown({
-  value,
-  onChange,
-}: {
-  value: SortKey;
-  onChange: (val: SortKey) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
-
-  const currentOption = SORT_OPTIONS.find((o) => o.value === value) ?? SORT_OPTIONS[0];
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label="Sort products"
-        onClick={() => setOpen((prev) => !prev)}
-        className={cn(
-          "flex h-10 w-[214px] items-center justify-between rounded-[14px] border border-line bg-card px-4 text-[13px] font-semibold text-charcoal transition-all",
-          "hover:border-navy/40 hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-navy/20",
-          open && "border-navy ring-2 ring-navy/20"
-        )}
-      >
-        <span className="truncate">{currentOption.label}</span>
-        <ChevronDown
-          aria-hidden
-          className={cn("size-4 text-charcoal transition-transform duration-200", open && "rotate-180 text-navy")}
-        />
-      </button>
-
-      {open && (
-        <ul
-          role="listbox"
-          aria-label="Sort options"
-          className="absolute right-0 top-full mt-1.5 z-50 w-[220px] rounded-[16px] border border-line bg-card p-1.5 shadow-[0_12px_36px_rgba(0,41,112,0.12)] animate-in fade-in zoom-in-95 duration-150"
-        >
-          {SORT_OPTIONS.map((opt) => {
-            const isSelected = opt.value === value;
-            return (
-              <li
-                key={opt.value}
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "flex items-center justify-between rounded-[10px] px-3.5 py-2.5 text-[13px] transition-colors cursor-pointer",
-                  isSelected
-                    ? "bg-soft font-bold text-navy"
-                    : "font-medium text-charcoal hover:bg-soft/70 hover:text-navy"
-                )}
-              >
-                <span>{opt.label}</span>
-                {isSelected && <Check className="size-4 text-navy shrink-0 ml-2" />}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 /** Accordion section — styled according to Figma reference */
 function Section({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children?: React.ReactNode }) {
   const id = useId();
@@ -214,25 +120,22 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
 
   return (
     <div className="mx-auto w-full max-w-(--container-page) px-5 sm:px-8 lg:px-8 xl:px-16">
-      {/* Category pills + sort */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div role="group" aria-label="Product category" className="flex flex-wrap gap-2.5 sm:gap-3">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              aria-pressed={category === c.key}
-              onClick={() => setCategory(c.key)}
-              className={cn(
-                "h-10 rounded-full border px-4 sm:px-5 text-body-sm font-semibold transition",
-                category === c.key ? "border-navy bg-navy text-white" : "border-line bg-card text-charcoal hover:border-navy",
-              )}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-        <SortDropdown value={sort} onChange={setSort} />
+      {/* Category pills */}
+      <div role="group" aria-label="Product category" className="flex flex-wrap gap-2.5 sm:gap-3">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            aria-pressed={category === c.key}
+            onClick={() => setCategory(c.key)}
+            className={cn(
+              "h-10 rounded-full border px-4 sm:px-5 text-body-sm font-semibold transition",
+              category === c.key ? "border-navy bg-navy text-white" : "border-line bg-card text-charcoal hover:border-navy",
+            )}
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
 
       <div className="mt-5 sm:mt-6 grid items-start gap-6 lg:grid-cols-[302px_1fr] xl:gap-8">
@@ -450,7 +353,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
             </div>
           ) : (
             <ul
-              className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 xl:gap-5"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-7 xl:gap-8"
               aria-label="Products"
             >
               {cards.map((item) => (

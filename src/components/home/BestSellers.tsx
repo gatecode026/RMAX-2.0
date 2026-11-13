@@ -16,7 +16,7 @@ export function BestSellers({ products }: { products: ProductDTO[] }) {
           Compare
         </ButtonLink>
       </div>
-      <div className="mt-6 md:mt-[34px] grid gap-3.5 sm:gap-4 md:grid-cols-3 xl:gap-7">
+      <div className="mt-6 md:mt-[34px] grid gap-6 sm:gap-6 md:grid-cols-3 xl:gap-8">
         {/* Three products with photos first; the rest live on the full catalogue page. */}
         {[...products].sort((a, b) => Number(Boolean(b.image?.src)) - Number(Boolean(a.image?.src))).slice(0, 3).map((p) => (
           <ShowcaseCard key={p.slug} product={p} />

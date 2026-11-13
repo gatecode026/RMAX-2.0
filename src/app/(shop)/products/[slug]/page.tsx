@@ -176,22 +176,24 @@ export default async function ProductPage({ params }: Params) {
       )}
 
       {/* Gallery + summary + price */}
-      <section className="mx-auto w-full max-w-(--container-page) px-5 pt-2 sm:px-8 md:pt-4 lg:px-8 xl:px-16">
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
+      <section className="mx-auto w-full max-w-(--container-page) px-5 pt-1 sm:px-6 md:pt-2.5 lg:px-8 xl:px-10 2xl:px-16">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:gap-7 xl:gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
           {gallery.length ? (
             <ProductGallery items={gallery} title={product.title} />
           ) : (
-            <div className="grid aspect-[461/543] w-full place-items-center rounded-[24px] bg-soft px-6 text-center font-heading text-[18px] font-extrabold text-navy/60 sm:w-[392px] sm:max-w-full">
+            <div className="grid aspect-[461/530] w-full max-h-[430px] place-items-center rounded-[24px] bg-soft px-6 text-center font-heading text-[18px] font-extrabold text-navy/60 sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full">
               Product photo coming soon
             </div>
           )}
 
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+          <div className="flex flex-col justify-between gap-5">
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_310px] 2xl:grid-cols-[minmax(0,1fr)_350px] xl:items-start">
               <div>
                 <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
-                <h1 className="mt-3 font-heading text-[28px]/9 font-extrabold tracking-[-1px] text-charcoal md:text-[36px]/[44px]">{product.title}.</h1>
-                {product.intro && <p className="mt-4 text-body leading-relaxed text-muted">{product.intro}</p>}
+                <h1 className="mt-2 font-heading text-[24px]/[32px] sm:text-[28px]/[36px] xl:text-[30px]/[38px] 2xl:text-[34px]/[42px] font-extrabold tracking-[-0.8px] text-charcoal">
+                  {product.title}.
+                </h1>
+                {product.intro && <p className="mt-2.5 text-body-sm sm:text-body leading-relaxed text-muted">{product.intro}</p>}
                 {tiles.length > 0 && <SpecTiles tiles={tiles} />}
               </div>
 

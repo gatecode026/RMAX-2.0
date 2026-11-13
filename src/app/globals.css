@@ -105,7 +105,7 @@
   color-scheme: light !important;
   supported-color-schemes: light !important;
   forced-color-adjust: none !important;
-  --header-height: 92px;
+  --header-height: 80px;
 }
 
 /* Diagonal price cut */

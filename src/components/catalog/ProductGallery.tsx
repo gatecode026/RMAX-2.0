@@ -12,16 +12,16 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
   const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [viewerSize, setViewerSize] = useState({ width: 392, height: 462 });
+  const [viewerSize, setViewerSize] = useState({ width: 365, height: 420 });
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
-  const [lensSize, setLensSize] = useState({ width: 184, height: 217 });
+  const [lensSize, setLensSize] = useState({ width: 146, height: 168 });
   const [zoomRatio, setZoomRatio] = useState({ x: 0.5, y: 0.5 });
 
   const updateSize = useCallback(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const w = rect.width || 461;
-      const h = rect.height || 543;
+      const w = rect.width || 365;
+      const h = rect.height || 420;
       setViewerSize({ width: w, height: h });
       const lw = Math.round(w * 0.4);
       const lh = Math.round(h * 0.4);
@@ -84,9 +84,9 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
   };
 
   return (
-    <div className="relative flex min-w-0 flex-col-reverse gap-4 sm:flex-row sm:gap-[15px]" aria-label={`${title} gallery`} role="group">
+    <div className="relative flex min-w-0 flex-col-reverse gap-3 sm:flex-row sm:gap-3" aria-label={`${title} gallery`} role="group">
       {/* Thumbnail rail: Always shown (empty slots rendered when fewer images, never hidden) */}
-      <ul className="flex shrink-0 gap-3 overflow-x-auto pb-1 sm:w-[72px] sm:flex-col sm:gap-[15px] sm:overflow-visible sm:pb-0">
+      <ul className="flex shrink-0 gap-2 overflow-x-auto pb-1 sm:w-[62px] sm:flex-col sm:gap-2.5 sm:overflow-visible sm:pb-0">
         {Array.from({ length: Math.max(5, items.length) }).map((_, i) => {
           const g = items[i];
           const isCurrent = i === active;
@@ -103,11 +103,11 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                   aria-label={g.kind === "video" ? `Play video: ${g.alt}` : `Show image ${i + 1}: ${g.alt}`}
                   aria-current={isCurrent}
                   className={cn(
-                    "relative block h-[95px] w-[72px] overflow-hidden rounded-[14px] border-2 bg-soft transition cursor-pointer",
+                    "relative block h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] overflow-hidden rounded-[12px] border-2 bg-soft transition cursor-pointer",
                     isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
                   )}
                 >
-                  <Image src={g.thumb} alt="" width={66} height={89} unoptimized={g.thumb.startsWith("http")} className="size-full object-cover" />
+                  <Image src={g.thumb} alt="" width={62} height={78} unoptimized={g.thumb.startsWith("http")} className="size-full object-cover" />
                   {/* Small thumbnail active zoom indicator */}
                   {isCurrent && isHovering && !isVideo && (
                     <span
@@ -129,8 +129,8 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           // Placeholder slot when image is not present ("agar multiple image nhi ho to empty show kro but hide nhi")
           return (
             <li key={`empty-slot-${i}`} className="shrink-0" aria-hidden="true">
-              <div className="relative flex h-[95px] w-[72px] flex-col items-center justify-center rounded-[14px] border border-dashed border-[#CBD5E1] bg-[#F8FAFC] text-[#94A3B8] transition select-none">
-                <div className="flex size-6 items-center justify-center rounded-md border border-dashed border-[#CBD5E1] opacity-60">
+              <div className="relative flex h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] flex-col items-center justify-center rounded-[12px] border border-dashed border-[#CBD5E1] bg-[#F8FAFC] text-[#94A3B8] transition select-none">
+                <div className="flex size-5 items-center justify-center rounded-md border border-dashed border-[#CBD5E1] opacity-60">
                   <span className="size-1 rounded-full bg-[#94A3B8]" />
                 </div>
               </div>
@@ -146,7 +146,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "group relative aspect-[461/543] w-full overflow-hidden rounded-[24px] bg-soft sm:w-[392px] sm:max-w-full select-none",
+          "group relative aspect-[461/530] w-full max-h-[430px] overflow-hidden rounded-[24px] bg-soft sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
           !isVideo && "cursor-crosshair",
         )}
       >
