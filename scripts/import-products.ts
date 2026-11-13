@@ -7,6 +7,8 @@
  * Existing seeded products keep their ImageKit photos; new products get none (the storefront
  * shows its photo-pending fallback) until a matching photo is uploaded via Admin → Products.
  */
+import fs from "node:fs";
+import ImageKit from "imagekit";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { Product } from "../src/models/Product";
@@ -17,6 +19,7 @@ import { CATALOGUE, GROUPS, type CatalogueItem } from "./product-catalogue";
 dotenv.config({ path: ".env.local", quiet: true });
 dotenv.config({ path: ".env", quiet: true });
 
+const PHOTO_DIR = "scripts/product-photos";
 const dryRun = process.argv.includes("--dry-run");
 const NS = "Not specified";
 const point = (list: [string, string][] = [], icon: "cog" | "institution") =>
@@ -40,6 +43,20 @@ function contentFields(it: CatalogueItem, order: number, categoryId: unknown, br
     ...(it.warranty ? { warranty: { available: true, ...it.warranty } } : {}),
     seo: { title: `${it.name} | RMAX Solutions`, metaDescription: it.summary, focusKeyword: it.name },
   };
+}
+
+/** Uploads one photo to /rmax/products/{slug}/main and saves the reference only after the upload succeeds. */
+async function uploadPhoto(it: CatalogueItem, file: string) {
+  const ik = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY!, privateKey: process.env.IMAGEKIT_PRIVATE_KEY!, urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!,
+  });
+  const r = await ik.upload({ file: fs.readFileSync(file), fileName: `${it.slug}-main.jpg`, folder: `/rmax/products/${it.slug}/main`, useUniqueFileName: false });
+  const img = { src: r.url, alt: it.name, width: r.width ?? 0, height: r.height ?? 0 };
+  await Product.updateOne({ slug: it.slug }, { $set: {
+    image: img, cardImage: img, overviewImage: img,
+    images: [{ fileId: r.fileId, url: r.url, filePath: r.filePath, type: "main", alt: it.name, isPrimary: true, sortOrder: 0, width: r.width, height: r.height }],
+    gallery: [{ src: r.url, thumb: r.url, alt: it.name, kind: "image" }],
+  } });
 }
 
 async function main() {
@@ -66,7 +83,9 @@ async function main() {
     try {
       const existing = await Product.findOne({ slug: it.slug }).select("images").lean();
       const photos = existing?.images?.length ?? 0;
-      const label = `${it.slug.padEnd(52)} ${existing ? "update" : "create"}  photos: ${photos ? `${photos} existing ImageKit (kept)` : "none → fallback"}`;
+      const file = `${PHOTO_DIR}/${it.slug}.jpg`;
+      const upload = !photos && fs.existsSync(file);
+      const label = `${it.slug.padEnd(52)} ${existing ? "update" : "create"}  photos: ${photos ? `${photos} existing ImageKit (kept)` : upload ? "upload " + file : "none → fallback"}`;
       if (it.existing && !existing) throw new Error("expected an existing seeded product");
       if (dryRun) { console.log(`  ${label}`); continue; }
 
@@ -77,6 +96,7 @@ async function main() {
       };
       const res = await Product.updateOne({ slug: it.slug }, { $set: fields, $setOnInsert: insertOnly }, { upsert: true, runValidators: true });
       if (res.upsertedCount) tally.created++; else if (res.modifiedCount) tally.updated++; else tally.unchanged++;
+      if (upload) await uploadPhoto(it, file);
       console.log(`  ${label}`);
     } catch (e) {
       failures.push(`${it.slug}: ${(e as Error).message}`);
