@@ -75,8 +75,8 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
 
   const currentModelName = models?.find((m) => m.slug === slug)?.name ?? slug;
   const onRequest = price <= 0; // quotation-only product: no published price
-  const displayPrice = price;
-  const displayMrp = mrp && mrp > price ? mrp : undefined;
+  const displayPrice = price * qty;
+  const displayMrp = mrp && mrp > price ? mrp * qty : undefined;
   const stepper = "grid size-7 place-items-center rounded-full bg-soft text-navy transition hover:bg-line disabled:opacity-40 cursor-pointer";
   const quoteHref = showOptions
     ? `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`
@@ -139,10 +139,15 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             M.R.P.: <span className="font-bold line-through text-[#94A3B8]">{formatINR(displayMrp)}</span>
           </p>
         ) : null}
-        <div className="flex items-baseline gap-2">
+        <div className="flex flex-wrap items-baseline gap-2.5">
           <span className="font-heading text-section md:text-[38px]/[44px] font-extrabold tracking-[-1px] text-charcoal">
             {onRequest ? "Price on request" : formatINR(displayPrice)}
           </span>
+          {qty > 1 && !onRequest && (
+            <span className="text-body-sm font-semibold text-muted">
+              ({formatINR(price)} / piece)
+            </span>
+          )}
         </div>
         {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Inclusive of all taxes</span>}
       </div>
