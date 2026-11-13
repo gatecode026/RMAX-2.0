@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { BuyButton } from "@/components/sections/BuyButton";
 import { formatINR } from "@/lib/format";
 import { SPEC_ROWS } from "@/lib/specs";
@@ -14,21 +15,67 @@ interface CompareViewProps {
   initialSelectedSlugs?: string[];
 }
 
-/** Matches the exact studio card images from the Figma reference */
+const DEFAULT_FALLBACK_SLUGS = [
+  "sanitary-pad-disposal-machine-100-pad",
+  "sanitary-pad-disposal-machine",
+  "sanitary-pad-disposal-machine-500-pad",
+];
+
+const SLUG_ALIASES: Record<string, string> = {
+  basic: "sanitary-pad-disposal-machine-100-pad",
+  pro: "sanitary-pad-disposal-machine",
+  "pro-max": "sanitary-pad-disposal-machine-500-pad",
+};
+
+/** Matches studio card images or falls back to product image */
 const COMPARE_IMAGES: Record<string, string> = {
   basic: "/images/home/card-basic.png",
   pro: "/images/home/card-pro.png",
   "pro-max": "/images/home/card-pro-max.png",
+  "sanitary-pad-disposal-machine-100-pad": "/images/home/card-basic.png",
+  "sanitary-pad-disposal-machine": "/images/home/card-pro.png",
+  "sanitary-pad-disposal-machine-500-pad": "/images/home/card-pro-max.png",
 };
 
 export function CompareView({
   allProducts,
-  initialSelectedSlugs = ["basic", "pro", "pro-max"],
+  initialSelectedSlugs = DEFAULT_FALLBACK_SLUGS,
 }: CompareViewProps) {
-  // Ensure the 3 standard incinerator models in exact order
-  const targetSlugs = initialSelectedSlugs.length > 0 ? initialSelectedSlugs.slice(0, 3) : ["basic", "pro", "pro-max"];
-  const models = targetSlugs
-    .map((slug) => allProducts.find((p) => p.slug === slug))
+  const [, startTransition] = useTransition();
+
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>(() => {
+    const raw = initialSelectedSlugs.length > 0 ? initialSelectedSlugs : DEFAULT_FALLBACK_SLUGS;
+    const resolved = raw.map((s) => SLUG_ALIASES[s] || s);
+    const result: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const candidate = resolved[i] || DEFAULT_FALLBACK_SLUGS[i];
+      const exists = allProducts.some((p) => p.slug === candidate);
+      result.push(exists ? candidate : DEFAULT_FALLBACK_SLUGS[i] || allProducts[i]?.slug || "");
+    }
+    return result;
+  });
+
+  const handleModelChange = (colIndex: number, newSlug: string) => {
+    startTransition(() => {
+      const next = [...selectedSlugs];
+      next[colIndex] = newSlug;
+      setSelectedSlugs(next);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("models", next.join(","));
+        window.history.replaceState({}, "", url.toString());
+      }
+    });
+  };
+
+  const models = selectedSlugs
+    .map((slug, idx) => {
+      return (
+        allProducts.find((p) => p.slug === slug) ||
+        allProducts.find((p) => p.slug === DEFAULT_FALLBACK_SLUGS[idx]) ||
+        allProducts[idx % allProducts.length]
+      );
+    })
     .filter((p): p is ProductDTO => p !== undefined);
 
   return (
@@ -77,17 +124,44 @@ export function CompareView({
                   Find your fit.
                 </h2>
                 <p className="font-sans text-[14px]/[23px] text-[#62748E]">
-                  All three models share enclosed operation and low maintenance.
+                  Select any models from our complete catalogue to compare features, pricing and specifications.
                 </p>
               </div>
 
               {/* 3 Model columns (280px each) */}
-              {models.map((p) => {
-                const imgSrc = COMPARE_IMAGES[p.slug] || p.image.src;
+              {models.map((p, colIndex) => {
+                const imgSrc = COMPARE_IMAGES[p.slug] || p.image?.src || p.cardImage?.src || "/images/home/card-basic.png";
                 return (
-                  <div key={p.slug} className="flex flex-col">
+                  <div key={`${p.slug}-${colIndex}`} className="flex flex-col">
+                    {/* Model Selector Dropdown */}
+                    <div className="mb-3">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#62748E] mb-1">
+                        Select Model {colIndex + 1}
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={p.slug}
+                          onChange={(e) => handleModelChange(colIndex, e.target.value)}
+                          aria-label={`Select model for column ${colIndex + 1}`}
+                          className="w-full appearance-none rounded-[12px] border border-[#CBD5E1] bg-white py-2 pl-3 pr-8 font-sans text-[13px] font-semibold text-[#0F172A] shadow-xs focus:border-[#0B62FF] focus:outline-none cursor-pointer truncate"
+                        >
+                          {allProducts.map((prod) => (
+                            <option key={prod.slug} value={prod.slug}>
+                              {prod.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-[#64748B]">
+                          <ChevronDown className="size-4" />
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Product Image */}
-                    <Link href={`/products/${p.slug}`} className="group relative block h-[190px] w-full overflow-hidden rounded-[24px] bg-[#F1F5F9] hover:opacity-95 transition-opacity">
+                    <Link
+                      href={`/products/${p.slug}`}
+                      className="group relative block h-[190px] w-full overflow-hidden rounded-[24px] bg-[#F1F5F9] hover:opacity-95 transition-opacity"
+                    >
                       <Image
                         src={imgSrc}
                         alt={p.name}
@@ -100,7 +174,7 @@ export function CompareView({
                     </Link>
 
                     {/* Heading */}
-                    <h3 className="mt-3.5 font-jakarta text-[24px]/[28px] font-extrabold text-[#020618]">
+                    <h3 className="mt-3.5 font-jakarta text-[22px]/[26px] font-extrabold text-[#020618] line-clamp-2 min-h-[52px]">
                       <Link href={`/products/${p.slug}`} className="hover:text-[#0B62FF] transition-colors">
                         {p.name}
                       </Link>
@@ -108,10 +182,10 @@ export function CompareView({
 
                     {/* Price and Original Price */}
                     <div className="mt-2 flex flex-col">
-                      <p className="font-jakarta text-[28px]/[35px] font-extrabold text-[#020618]">
-                        {formatINR(p.price)}
+                      <p className="font-jakarta text-[26px]/[32px] font-extrabold text-[#020618]">
+                        {p.price > 0 ? formatINR(p.price) : "Price on request"}
                       </p>
-                      {p.originalPrice > p.price ? (
+                      {p.originalPrice > p.price && p.price > 0 ? (
                         <p className="font-sans text-[13px]/[18px] text-[#62748E] line-through">
                           {formatINR(p.originalPrice)}
                         </p>
@@ -154,12 +228,12 @@ export function CompareView({
                     <div className="font-sans font-bold text-[14px] leading-[19px] text-[#0F172A]">
                       {row.label}
                     </div>
-                    {models.map((p) => (
+                    {models.map((p, colIdx) => (
                       <div
-                        key={p.slug}
-                        className="font-sans font-normal text-[14px] leading-[21px] text-[#62748E]"
+                        key={`${p.slug}-${colIdx}-${row.key}`}
+                        className="font-sans font-normal text-[14px] leading-[21px] text-[#62748E] truncate"
                       >
-                        {p.specs[row.key] || "—"}
+                        {p.specs?.[row.key] || "—"}
                       </div>
                     ))}
                   </div>

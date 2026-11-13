@@ -4,6 +4,7 @@ import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
 import { checkApiRole } from "@/lib/session";
 import { logAuditEvent } from "@/lib/audit";
+import { deleteProductImage } from "@/lib/imagekit";
 import { revalidateTag } from "next/cache";
 
 interface RouteParams {
@@ -131,6 +132,24 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const updateDoc: Record<string, unknown> = { $set: { ...setFields, updatedBy: user.id } };
     if ($push) updateDoc.$push = $push;
 
+    // Synchronize ImageKit deletions: If an admin removed images from the product, delete them from ImageKit
+    if (Array.isArray(body.images) && Array.isArray(existing.images)) {
+      const newFileIds = new Set(
+        body.images
+          .map((img: { fileId?: string }) => img?.fileId)
+          .filter((id: unknown): id is string => typeof id === "string" && Boolean(id)),
+      );
+      for (const oldImg of existing.images) {
+        if (oldImg.fileId && !newFileIds.has(oldImg.fileId)) {
+          try {
+            await deleteProductImage(oldImg.fileId);
+          } catch (err) {
+            console.warn(`[admin/products/patch] Failed to delete removed ImageKit asset ${oldImg.fileId}:`, err);
+          }
+        }
+      }
+    }
+
     const updated = await Product.findByIdAndUpdate(existing._id, updateDoc, { new: true, runValidators: true });
 
     const productName = updated?.name || existing.name;
@@ -187,6 +206,19 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         { error: "This product is referenced by at least one order and cannot be permanently deleted. Archive it instead." },
         { status: 409 },
       );
+    }
+
+    // Delete all associated ImageKit assets when the product is deleted
+    if (Array.isArray(existing.images)) {
+      for (const img of existing.images) {
+        if (img?.fileId) {
+          try {
+            await deleteProductImage(img.fileId);
+          } catch (err) {
+            console.warn(`[admin/products/delete] Failed to delete ImageKit asset ${img.fileId}:`, err);
+          }
+        }
+      }
     }
 
     await Product.findByIdAndDelete(existing._id);

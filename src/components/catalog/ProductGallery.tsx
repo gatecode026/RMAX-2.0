@@ -85,13 +85,12 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
 
   return (
     <div className="relative flex min-w-0 flex-col-reverse gap-3 sm:flex-row sm:gap-3" aria-label={`${title} gallery`} role="group">
-      {/* Thumbnail rail: Always shown (empty slots rendered when fewer images, never hidden) */}
-      <ul className="flex shrink-0 gap-2 overflow-x-auto pb-1 sm:w-[62px] sm:flex-col sm:gap-2.5 sm:overflow-visible sm:pb-0">
-        {Array.from({ length: Math.max(5, items.length) }).map((_, i) => {
-          const g = items[i];
-          const isCurrent = i === active;
+      {/* Thumbnail rail: Rendered when there are multiple images */}
+      {items.length > 1 && (
+        <ul className="flex shrink-0 gap-2 overflow-x-auto pb-1 sm:w-[62px] sm:flex-col sm:gap-2.5 sm:overflow-visible sm:pb-0">
+          {items.map((g, i) => {
+            const isCurrent = i === active;
 
-          if (g) {
             return (
               <li key={g.thumb || i} className="shrink-0">
                 <button
@@ -124,20 +123,9 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                 </button>
               </li>
             );
-          }
-
-          // Placeholder slot when image is not present ("agar multiple image nhi ho to empty show kro but hide nhi")
-          return (
-            <li key={`empty-slot-${i}`} className="shrink-0" aria-hidden="true">
-              <div className="relative flex h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] flex-col items-center justify-center rounded-[12px] border border-dashed border-[#CBD5E1] bg-[#F8FAFC] text-[#94A3B8] transition select-none">
-                <div className="flex size-5 items-center justify-center rounded-md border border-dashed border-[#CBD5E1] opacity-60">
-                  <span className="size-1 rounded-full bg-[#94A3B8]" />
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+          })}
+        </ul>
+      )}
 
       {/* Main image viewer with Amazon lens box */}
       <div

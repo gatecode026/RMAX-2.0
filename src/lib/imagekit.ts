@@ -1,5 +1,6 @@
 import "server-only";
 import ImageKit from "imagekit";
+import sharp from "sharp";
 
 /**
  * Single ImageKit client for the whole app — product media is uploaded and deleted exclusively
@@ -33,7 +34,7 @@ export type UploadedImage = {
 };
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
-const MAX_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_BYTES = 15 * 1024 * 1024; // 15MB
 
 function slugifyFileBase(name: string): string {
   const base = name.replace(/\.[^.]+$/, "");
@@ -42,28 +43,42 @@ function slugifyFileBase(name: string): string {
 
 /**
  * Uploads one image to ImageKit under /rmax/products/{productSlug}/{imageType}/.
- * Validates MIME type and size before ever contacting ImageKit — a rejected validation never
- * produces an uploaded asset or a database record.
+ * Automatically converts and compresses every image to WebP format before storing in ImageKit.
+ * Accepts either a browser File (from FormData) or a Node.js Buffer payload.
  */
 export async function uploadProductImage(
-  file: File,
+  file: File | { buffer: Buffer; name: string; type?: string; size?: number },
   productSlug: string,
   imageType: "main" | "gallery" | "variants" | "thumbnails",
 ): Promise<UploadedImage> {
-  if (!ALLOWED_MIME.has(file.type)) {
+  const isBrowserFile = typeof (file as File).arrayBuffer === "function";
+  const rawBuffer = isBrowserFile
+    ? Buffer.from(await (file as File).arrayBuffer())
+    : (file as { buffer: Buffer }).buffer;
+  const fileNameInput = file.name;
+  const mime = file.type || "image/jpeg";
+
+  if (!ALLOWED_MIME.has(mime) && !fileNameInput.match(/\.(jpe?g|png|webp|avif|gif)$/i)) {
     throw new Error("Only JPEG, PNG, WEBP, AVIF or GIF images are allowed.");
   }
-  if (file.size > MAX_BYTES) {
-    throw new Error("Image must be smaller than 10MB.");
+  if (rawBuffer.length > MAX_BYTES) {
+    throw new Error("Image must be smaller than 15MB.");
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const base = slugifyFileBase(file.name);
-  const fileName = `${base}-${Date.now()}`;
+  // Convert to high-quality optimized WebP with EXIF auto-rotation
+  const webpBuffer = await sharp(rawBuffer)
+    .rotate()
+    .webp({ quality: 88, effort: 4 })
+    .toBuffer();
+
+  const metadata = await sharp(webpBuffer).metadata();
+
+  const base = slugifyFileBase(fileNameInput);
+  const fileName = `${base}-${Date.now()}.webp`;
   const folder = `/rmax/products/${productSlug}/${imageType}`;
 
   const result = await getClient().upload({
-    file: buffer,
+    file: webpBuffer,
     fileName,
     folder,
     useUniqueFileName: true,
@@ -74,13 +89,13 @@ export async function uploadProductImage(
     url: result.url,
     filePath: result.filePath,
     name: result.name,
-    width: typeof result.width === "number" ? result.width : undefined,
-    height: typeof result.height === "number" ? result.height : undefined,
-    size: result.size ?? file.size,
+    width: typeof result.width === "number" ? result.width : metadata.width,
+    height: typeof result.height === "number" ? result.height : metadata.height,
+    size: webpBuffer.length,
   };
 }
 
-/** Deletes an asset by its ImageKit file id. Failures are caught by the caller — see callers for the "only delete after replacement succeeds" policy. */
+/** Deletes an asset by its ImageKit file id. Failures are caught by the caller. */
 export async function deleteProductImage(fileId: string): Promise<void> {
   await getClient().deleteFile(fileId);
 }
@@ -89,8 +104,8 @@ export async function deleteProductImage(fileId: string): Promise<void> {
 export function transformedUrl(url: string, opts: { width?: number; quality?: number } = {}): string {
   const params: string[] = [];
   if (opts.width) params.push(`w-${opts.width}`);
-  params.push(`q-${opts.quality ?? 80}`);
-  params.push("f-auto"); // automatic WebP/AVIF negotiation
+  params.push(`q-${opts.quality ?? 85}`);
+  params.push("f-webp"); // WebP delivery
   const tr = params.join(",");
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}tr=${tr}`;
