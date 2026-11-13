@@ -462,6 +462,11 @@ export function ProductForm({ mode, initial }: { mode: "create" | "edit"; initia
                   <option value="automatic-vending">Automatic Vending</option>
                   <option value="manual-vending">Manual Vending</option>
                   <option value="push-button-vending">Push Button Vending</option>
+                  <option value="vending-machine">Vending Machine</option>
+                  <option value="disposal-machine">Disposal Machine</option>
+                  <option value="plastic-waste-machinery">Plastic Waste Machinery</option>
+                  <option value="waste-sanitation">Waste Management &amp; Sanitation</option>
+                  <option value="iot-smart-tech">IoT &amp; Smart Technology</option>
                   <option value="pad-vending">Pad Vending (legacy)</option>
                 </select>
               </Field>

@@ -1,5 +1,5 @@
 import { Schema, model, models, type Model, type Types } from "mongoose";
-import { INSTITUTION_TYPES, QUOTE_MODELS } from "@/lib/enums";
+import { INSTITUTION_TYPES } from "@/lib/enums";
 
 export interface IQuoteRequest {
   _id?: Types.ObjectId;
@@ -10,7 +10,7 @@ export interface IQuoteRequest {
   role?: string;
   email: string;
   phone: string;
-  preferredModel: (typeof QUOTE_MODELS)[number];
+  preferredModel: string;
   quantity: number;
   expectedDailyUsage: string;
   deliveryCityPostal: string;
@@ -37,7 +37,7 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     role: { type: String, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
     phone: { type: String, required: true, trim: true },
-    preferredModel: { type: String, enum: QUOTE_MODELS, required: true },
+    preferredModel: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1 },
     expectedDailyUsage: { type: String, required: true, trim: true },
     deliveryCityPostal: { type: String, required: true, trim: true },

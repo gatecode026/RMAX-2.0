@@ -514,7 +514,7 @@ export function QuoteForm({
                 </option>
                 {products.map((p) => (
                   <option key={p.slug} value={p.slug}>
-                    {p.name} · {p.specs.dailyCapacity}
+                    {p.name}{p.specs.dailyCapacity !== "Not specified" ? ` · ${p.specs.dailyCapacity}` : ""}
                   </option>
                 ))}
                 <option value="help-me-choose">Help me choose</option>

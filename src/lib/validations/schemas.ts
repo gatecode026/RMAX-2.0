@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CONTACT_MODELS, ENQUIRY_TYPES, INSTITUTION_TYPES, QUOTE_MODELS } from "@/lib/enums";
+import { CONTACT_MODELS, ENQUIRY_TYPES, INSTITUTION_TYPES } from "@/lib/enums";
 import { cleanText, email, optionalText, password, phone, text } from "./common";
 
 /* ---------- Institutional quote ---------- */
@@ -13,7 +13,8 @@ export const quoteRequestSchema = z.object({
   role: optionalText(80),
   email,
   phone,
-  preferredModel: z.enum(QUOTE_MODELS, { error: "Select a model" }),
+  // Any published product slug (or "help-me-choose"); existence is checked against the DB in the API route.
+  preferredModel: z.string({ error: "Select a model" }).trim().min(1, "Select a model").max(100),
   quantity: z.coerce
     .number({ error: "Enter a quantity" })
     .int("Enter a whole number")

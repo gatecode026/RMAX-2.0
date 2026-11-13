@@ -61,10 +61,13 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
       ];
 
   const currentModelName = models?.find((m) => m.slug === slug)?.name ?? slug;
+  const onRequest = price <= 0; // quotation-only product: no published price
   const totalPrice = price * qty;
   const totalMrp = mrp ? mrp * qty : undefined;
   const stepper = "grid size-7 place-items-center rounded-full bg-soft text-navy transition hover:bg-line disabled:opacity-40 cursor-pointer";
-  const quoteHref = `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`;
+  const quoteHref = showOptions
+    ? `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`
+    : `/request-quotation?model=${encodeURIComponent(slug)}`;
 
   async function handleBuyNow() {
     setIsAdding(true);
@@ -127,14 +130,14 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
           ) : null}
           <div className="flex flex-wrap items-baseline gap-2.5">
             <span className="font-heading text-section md:text-[40px]/[48px] font-extrabold tracking-[-1px] text-charcoal">
-              {formatINR(totalPrice)}
+              {onRequest ? "Price on request" : formatINR(totalPrice)}
             </span>
-            {qty > 1 && (
+            {qty > 1 && !onRequest && (
               <span className="text-body-sm font-semibold text-muted">
                 ({formatINR(price)} / unit)
               </span>
             )}
-            <span className="text-[12px] text-muted-dark font-medium">Include of all tax</span>
+            {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Include of all tax</span>}
           </div>
         </div>
       </div>
@@ -296,17 +299,19 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         <ButtonLink href={quoteHref} className="h-[48px] w-full sm:flex-1">
           Request a Quote
         </ButtonLink>
-        <button
-          type="button"
-          onClick={handleBuyNow}
-          disabled={isAdding}
-          className={cn(
-            buttonClasses({ variant: "outline", size: "sm" }),
-            "h-[48px] w-full sm:flex-1 cursor-pointer"
-          )}
-        >
-          {isAdding ? "Adding…" : "Buy Now"}
-        </button>
+        {!onRequest && (
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={isAdding}
+            className={cn(
+              buttonClasses({ variant: "outline", size: "sm" }),
+              "h-[48px] w-full sm:flex-1 cursor-pointer"
+            )}
+          >
+            {isAdding ? "Adding…" : "Buy Now"}
+          </button>
+        )}
       </div>
 
       {buyError && (

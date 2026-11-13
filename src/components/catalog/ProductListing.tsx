@@ -8,15 +8,15 @@ import { cn } from "@/lib/cn";
 import { formatINR } from "@/lib/format";
 import type { ProductDTO } from "@/lib/data/content";
 
-type CategoryKey = "all" | "disposable" | "vending" | "plastic-waste" | "gps";
+type CategoryKey = "all" | "disposable" | "vending" | "plastic-waste" | "iot";
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";
 
 const CATEGORIES: { key: CategoryKey; label: string }[] = [
   { key: "all", label: "All solutions" },
   { key: "disposable", label: "Pad disposable machines" },
   { key: "vending", label: "Pad vending machines" },
-  { key: "plastic-waste", label: "Plastic Waste Management Machinery" },
-  { key: "gps", label: "GPS trackers (KIOSK banking)" },
+  { key: "plastic-waste", label: "Waste management & sanitation" },
+  { key: "iot", label: "IoT & smart technology" },
 ];
 
 const TIERS = [
@@ -184,10 +184,10 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
 
   const visible = useMemo(() => {
     let list = products.filter((p) => {
-      if (category === "gps") return false;
-      if (category === "vending") return p.category === "pad-vending" || p.category.includes("vending");
-      if (category === "disposable") return p.category === "incinerator";
-      if (category === "plastic-waste") return p.category === "plastic-waste-machinery" || p.category === "plastic-waste-management";
+      if (category === "vending") return p.category.includes("vending");
+      if (category === "disposable") return p.category === "incinerator" || p.category === "disposal-machine";
+      if (category === "plastic-waste") return ["plastic-waste-machinery", "plastic-waste-management", "waste-sanitation"].includes(p.category);
+      if (category === "iot") return p.category === "iot-smart-tech";
       if (p.category === "pad-vending") return false; // "All solutions" excludes pad-vending legacy fallback
       return true;
     });
@@ -205,10 +205,6 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
     const list: { key: string; product: ProductDTO; type: "showcase" | "detail" }[] = [];
     visible.forEach((p) => {
       list.push({ key: `s-${p.slug}`, product: p, type: "showcase" });
-    });
-    const incinerators = visible.filter((p) => p.category === "incinerator");
-    incinerators.forEach((p) => {
-      list.push({ key: `d-${p.slug}`, product: p, type: "detail" });
     });
     return list;
   }, [visible]);
@@ -446,7 +442,7 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
           {cards.length === 0 ? (
             <div className="rounded-[32px] border border-line bg-card p-8 text-center" role="status">
               <p className="font-heading text-title font-extrabold">
-                {category === "gps" ? "GPS trackers are coming soon." : "No products match your filters."}
+                No products match your filters.
               </p>
               <button type="button" onClick={clear} className="mt-4 font-bold text-navy underline underline-offset-4">
                 Clear all filters

@@ -17,7 +17,15 @@ export const POST = route(async (req: Request) => {
 
   try {
     await connectDB();
-    
+
+    // The model is a free slug now, so reject anything that isn't a catalogue product.
+    if (parsed.data.preferredModel !== "help-me-choose") {
+      const { Product } = await import("@/models/Product");
+      if (!(await Product.exists({ slug: parsed.data.preferredModel, status: "published" }))) {
+        return fail("Select a valid model.", 400);
+      }
+    }
+
     // Robust quote number generation using nextSequence
     let quoteNumber = `QT-2026-${Date.now().toString().slice(-4)}`;
     try {

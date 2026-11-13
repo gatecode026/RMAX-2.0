@@ -22,12 +22,12 @@ async function QuoteContent({ searchParams }: { searchParams: QuoteSearch }) {
   ]);
   const valid = products.some((p) => p.slug === model);
   const quantity = Math.min(Math.max(Number.parseInt(qty ?? "", 10) || 1, 1), 999);
-  // The design opens on "Pro · 200–250/day".
+  const fallbackModel = products.find((p) => p.slug === "pro")?.slug ?? "help-me-choose";
   return (
     <QuoteForm
-      key={`${valid ? model! : "pro"}-${quantity}`}
+      key={`${valid ? model! : fallbackModel}-${quantity}`}
       products={products}
-      initialModel={valid ? model! : "pro"}
+      initialModel={valid ? model! : fallbackModel}
       initialQuantity={quantity}
       currentUser={user ? {
         id: user._id,

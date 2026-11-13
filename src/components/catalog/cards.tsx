@@ -42,14 +42,19 @@ function UnifiedProductCard({
       <div
         className="relative w-full overflow-hidden rounded-[16px] sm:rounded-[20px] bg-gradient-to-b from-[#eaf0f8] to-[#f4f7fb] flex items-center justify-center h-[200px] sm:h-[220px] lg:h-[260px] xl:h-[300px]"
       >
-        <Image
-          src={img.src}
-          alt={img.alt || product.title}
-          width={img.width || 400}
-          height={img.height || 340}
-          unoptimized={img.src.startsWith("http")}
-          className="size-full object-cover object-center"
-        />
+        {img.src ? (
+          <Image
+            src={img.src}
+            alt={img.alt || product.title}
+            width={img.width || 400}
+            height={img.height || 340}
+            unoptimized={img.src.startsWith("http")}
+            className={cn("size-full object-center", product.category === "incinerator" || isBakedImage ? "object-cover" : "object-contain")}
+          />
+        ) : (
+          // Fallback while a product photo is pending — never show another product's image.
+          <span className="px-6 text-center font-heading text-[14px] font-extrabold text-navy/60">RMAX Solutions</span>
+        )}
 
         {!isBakedImage && product.badge && (
           <span
@@ -109,8 +114,8 @@ function UnifiedProductCard({
                 <span className="diagonal-strike">{formatINR(product.originalPrice)}</span>
               </p>
             )}
-            <p className="font-heading text-[18px] sm:text-[20px] lg:text-[24px] xl:text-[28px] font-extrabold text-charcoal leading-none tracking-tight">
-              {formatINR(product.price)}
+            <p className={cn("font-heading font-extrabold text-charcoal leading-none tracking-tight", product.price > 0 ? "text-[18px] sm:text-[20px] lg:text-[24px] xl:text-[28px]" : "text-[15px] sm:text-[16px] xl:text-[18px]")}>
+              {product.price > 0 ? formatINR(product.price) : "Price on request"}
             </p>
           </div>
 
@@ -118,9 +123,16 @@ function UnifiedProductCard({
             className="relative z-20 inline-flex shrink-0 items-center justify-center rounded-full bg-charcoal group-hover:bg-navy px-4 sm:px-5 py-2 sm:py-2.5 text-[12px] sm:text-[13px] xl:text-[14px] font-bold text-white shadow-xs transition-colors pointer-events-none"
             aria-hidden="true"
           >
-            View
+            View Details
           </span>
         </div>
+
+        <Link
+          href={`/request-quotation?model=${encodeURIComponent(product.slug)}`}
+          className="relative z-20 mt-3 inline-flex h-10 items-center justify-center rounded-full border border-line bg-card px-4 text-[13px] font-bold text-navy transition hover:border-navy hover:bg-soft"
+        >
+          Request a Quotation
+        </Link>
       </div>
     </article>
   );

@@ -127,7 +127,7 @@ export type StockStatus = "in-stock" | "out-of-stock" | "limited-stock" | "made-
 
 export interface IProduct {
   /** "incinerator", "automatic-vending", "manual-vending", "push-button-vending", "plastic-waste-machinery", or legacy "pad-vending". Drives existing frontend branching — kept as-is. */
-  category: "incinerator" | "pad-vending" | "automatic-vending" | "manual-vending" | "push-button-vending" | "plastic-waste-machinery" | "plastic-waste-management";
+  category: "incinerator" | "pad-vending" | "automatic-vending" | "manual-vending" | "push-button-vending" | "plastic-waste-machinery" | "plastic-waste-management" | "vending-machine" | "disposal-machine" | "waste-sanitation" | "iot-smart-tech";
   /** Optional link to a ProductCategory document, for the admin-managed category list (PRD §2/§6). Independent of the `category` enum above. */
   categoryId?: Types.ObjectId;
   subcategory?: string;
@@ -285,6 +285,10 @@ const productSchema = new Schema<IProduct>(
         "push-button-vending",
         "plastic-waste-machinery",
         "plastic-waste-management",
+        "vending-machine",
+        "disposal-machine",
+        "waste-sanitation",
+        "iot-smart-tech",
       ],
       default: "incinerator",
       index: true,

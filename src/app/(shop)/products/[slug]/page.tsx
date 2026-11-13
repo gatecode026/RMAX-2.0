@@ -51,9 +51,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-/** Quote-form model keys; other catalogue items are enquired about through Contact Us. */
-const QUOTE_MODELS = new Set(["basic", "pro", "pro-max", "dust-remover-machine", "plastic-waste-shredder-machine", "plastic-bailing-machine"]);
-
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
   let product = await getProductBySlug(slug);
@@ -80,23 +77,20 @@ export default async function ProductPage({ params }: Params) {
     getReviewSummary(),
     getProductTestimonial(slug),
   ]);
-  const related = all.filter((p) => p.slug !== slug).slice(0, 3);
+  const others = all.filter((p) => p.slug !== slug);
+  const related = [...others.filter((p) => p.category === product.category), ...others.filter((p) => p.category !== product.category)].slice(0, 3);
   const isIncinerator = product.category === "incinerator";
   const isDustRemover = product.slug === "dust-remover-machine";
   const isShredder = product.slug === "plastic-waste-shredder-machine";
   const isBailing = product.slug === "plastic-bailing-machine";
-  const isPlasticWaste =
-    product.category === "plastic-waste-machinery" ||
-    product.category === "plastic-waste-management" ||
-    isDustRemover ||
-    isShredder ||
-    isBailing;
+  // Hygiene models keep the settings-based trust points; every other catalogue item gets neutral, documented ones.
+  const useNeutralTrust = product.category !== "incinerator" && product.category !== "pad-vending";
   const s = product.specs;
   const batchKnown = s.batchCapacity !== "Not specified";
 
   const tiles = isBailing
     ? [
-        { value: "Up to 50 Tonnes", label: "Bailing Capacity" },
+        { value: "Hydraulic", label: "Vertical Clamping" },
         { value: "7.5 HP", label: "Motor Power" },
         { value: "50–60 kg", label: "Bale Weight" },
         { value: "1 Year", label: "Manufacturer Warranty" },
@@ -115,19 +109,21 @@ export default async function ProductPage({ params }: Params) {
         { value: "10–15 HP", label: "Main Motor" },
         { value: "2100 mm", label: "Drum Length" },
       ]
-    : isIncinerator
+    : isIncinerator && s.power !== "Not specified"
     ? [
         { value: s.power.replace(" W", "W"), label: "Power" },
         { value: s.weight, label: "Weight" },
         { value: s.dailyCapacity, label: "Capacity" },
         { value: batchKnown ? s.batchCapacity : s.colours, label: batchKnown ? "Burning at once" : "Colours" },
       ]
-    : [
+    : product.category === "pad-vending"
+    ? [
         { value: "Automatic / Manual", label: "Operation" },
         { value: "Push Button", label: "Free Dispense" },
         { value: "Wall Mount", label: "Installation" },
         { value: "1 Year", label: "Warranty" },
-      ];
+      ]
+    : [];
 
   const displayTrust = isBailing
     ? [
@@ -135,17 +131,20 @@ export default async function ProductPage({ params }: Params) {
         { icon: "truck" as const, title: "100% Made in India", body: "PAN India delivery & in-house industrial manufacturing" },
         { icon: "cog" as const, title: "Post-warranty support", body: "Spare parts & servicing available from manufacturer" },
       ]
-    : isPlasticWaste
+    : useNeutralTrust
     ? [
-        { icon: "shield" as const, title: "Genuine RMAX Quality", body: "Contact RMAX Solutions for warranty & installation" },
-        { icon: "truck" as const, title: "100% Made in India", body: "PAN India delivery & in-house industrial manufacturing" },
-        { icon: "cog" as const, title: "Post-warranty support", body: "Spare parts & servicing available from manufacturer" },
+        { icon: "shield" as const, title: "In-house manufacturing", body: "Designed and built at the RMAX facility in Jaipur" },
+        { icon: "truck" as const, title: "Installation support", body: "On-site installation, demonstration and user training" },
+        { icon: "cog" as const, title: "After-sales service", body: "Spares, maintenance and responsive support" },
       ]
     : trust;
 
+  const hasImage = Boolean(product.image?.src);
   const gallery = product.gallery?.length
     ? product.gallery
-    : [{ src: product.image.src, thumb: product.image.src, alt: product.image.alt, kind: "image" as const }];
+    : hasImage
+    ? [{ src: product.image.src, thumb: product.image.src, alt: product.image.alt, kind: "image" as const }]
+    : [];
 
   const tabs: TabItem[] = [
     { label: "Overview", id: "overview" },
@@ -161,9 +160,9 @@ export default async function ProductPage({ params }: Params) {
     "@type": "Product",
     name: product.title,
     description: product.intro ?? product.summary,
-    image: `${SITE_URL}${product.image.src}`,
+    ...(hasImage ? { image: product.image.src.startsWith("http") ? product.image.src : `${SITE_URL}${product.image.src}` } : {}),
     brand: { "@type": "Brand", name: "RMAX Solutions" },
-    offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: "https://schema.org/InStock" },
+    ...(product.price > 0 ? { offers: { "@type": "Offer", priceCurrency: "INR", price: product.price, availability: "https://schema.org/InStock" } } : {}),
   };
 
   return (
@@ -179,7 +178,13 @@ export default async function ProductPage({ params }: Params) {
       {/* Gallery + summary + price */}
       <section className="mx-auto w-full max-w-(--container-page) px-5 pt-2 sm:px-8 md:pt-4 lg:px-8 xl:px-16">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
-          <ProductGallery items={gallery} title={product.title} />
+          {gallery.length ? (
+            <ProductGallery items={gallery} title={product.title} />
+          ) : (
+            <div className="grid aspect-[461/543] w-full place-items-center rounded-[24px] bg-soft px-6 text-center font-heading text-[18px] font-extrabold text-navy/60 sm:w-[392px] sm:max-w-full">
+              Product photo coming soon
+            </div>
+          )}
 
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
@@ -196,8 +201,8 @@ export default async function ProductPage({ params }: Params) {
                 price={product.price}
                 mrp={product.mrp}
                 colours={product.colours}
-                quoteModel={QUOTE_MODELS.has(product.slug) ? product.slug : null}
-                showOptions={true}
+                quoteModel={product.slug}
+                showOptions={product.price > 0}
               />
             </div>
 

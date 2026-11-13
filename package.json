@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
+    "import:products": "tsx scripts/import-products.ts",
     "dev:db": "tsx scripts/dev-db.ts"
   },
   "dependencies": {
