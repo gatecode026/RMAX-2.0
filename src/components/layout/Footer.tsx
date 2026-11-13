@@ -8,7 +8,6 @@ import {
   HOME_FOOTER_TAGLINE,
 } from "@/lib/constants";
 import { getProducts } from "@/lib/data/content";
-import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 /**
@@ -78,10 +77,10 @@ export async function Footer({ variant = "default" }: { variant?: FooterVariant 
             <p className={cn("text-white", c.tagline)}>{tagline}</p>
           </div>
           <Column title={t("Our Products")} headingClass={c.heading} listClass={c.list}>
-            {products.map((p) => (
+            {products.slice(0, 3).map((p) => (
               <li key={p.slug}>
                 <Link href={newCopy ? `/products/${p.slug}` : "/compare-models"} className={link}>
-                  {p.name} · {formatINR(p.price)}
+                  {p.name}
                 </Link>
               </li>
             ))}
