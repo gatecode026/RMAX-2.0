@@ -187,7 +187,7 @@ export default async function ProductPage({ params }: Params) {
           )}
 
           <div className="flex flex-col justify-between gap-5">
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_310px] 2xl:grid-cols-[minmax(0,1fr)_350px] xl:items-start">
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_330px] 2xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
               <div>
                 <RatingRow rating={reviews.rating} stars={reviews.stars} label={reviews.label} />
                 <h1 className="mt-2 font-heading text-[24px]/[32px] sm:text-[28px]/[36px] xl:text-[30px]/[38px] 2xl:text-[34px]/[42px] font-extrabold tracking-[-0.8px] text-charcoal">

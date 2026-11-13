@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ChevronRight, ChevronDown, Check, Search } from "lucide-react";
 import { BuyButton } from "@/components/sections/BuyButton";
 import { formatINR } from "@/lib/format";
 import { SPEC_ROWS } from "@/lib/specs";
@@ -37,12 +37,120 @@ const COMPARE_IMAGES: Record<string, string> = {
   "sanitary-pad-disposal-machine-500-pad": "/images/home/card-pro-max.png",
 };
 
+function ModelDropdown({
+  colIndex,
+  currentSlug,
+  allProducts,
+  onSelect,
+}: {
+  colIndex: number;
+  currentSlug: string;
+  allProducts: ProductDTO[];
+  onSelect: (slug: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const currentProduct = allProducts.find((p) => p.slug === currentSlug);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      inputRef.current?.focus();
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  const filtered = allProducts.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.category && p.category.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <div className="relative mb-3" ref={dropdownRef}>
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#62748E] mb-1">
+        Select Model {colIndex + 1}
+      </label>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={cn(
+          "w-full flex items-center justify-between gap-2 rounded-[12px] border bg-white py-2 pl-3 pr-2.5 font-sans text-[13px] font-semibold text-[#0F172A] shadow-xs transition-all text-left cursor-pointer",
+          open ? "border-[#0B62FF] ring-2 ring-[#0B62FF]/15" : "border-[#CBD5E1] hover:border-[#94A3B8]"
+        )}
+      >
+        <span className="truncate">{currentProduct?.name || "Choose a product"}</span>
+        <ChevronDown className={cn("size-4 text-[#64748B] shrink-0 transition-transform duration-150", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-[300px] rounded-[16px] border border-[#E2E8F0] bg-white p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-100">
+          <div className="relative mb-1.5 px-1 pt-1">
+            <Search className="absolute left-3.5 top-3.5 size-3.5 text-[#94A3B8]" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search 26 models..."
+              className="w-full rounded-[10px] border border-[#E2E8F0] bg-[#F8FAFC] py-1.5 pl-8 pr-3 text-[12px] font-medium text-[#0F172A] placeholder:text-[#94A3B8] focus:border-[#0B62FF] focus:bg-white focus:outline-none"
+            />
+          </div>
+
+          <div className="max-h-[260px] overflow-y-auto space-y-0.5 pr-1">
+            {filtered.length === 0 ? (
+              <p className="p-3 text-center text-[12px] text-[#94A3B8]">No matching models</p>
+            ) : (
+              filtered.map((prod) => {
+                const isSelected = prod.slug === currentSlug;
+                return (
+                  <button
+                    key={prod.slug}
+                    type="button"
+                    onClick={() => {
+                      onSelect(prod.slug);
+                      setOpen(false);
+                      setSearch("");
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between gap-2 rounded-[10px] px-2.5 py-2 text-left transition-colors cursor-pointer text-[12.5px]",
+                      isSelected
+                        ? "bg-[#EFF6FF] text-[#0B62FF] font-bold"
+                        : "text-[#1E293B] hover:bg-[#F1F5F9] font-medium"
+                    )}
+                  >
+                    <div className="flex flex-col min-w-0 pr-1">
+                      <span className="truncate leading-tight">{prod.name}</span>
+                      <span className="text-[10.5px] text-[#64748B] font-semibold mt-0.5">
+                        {prod.price > 0 ? formatINR(prod.price) : "Price on request"}
+                      </span>
+                    </div>
+                    {isSelected && <Check className="size-4 text-[#0B62FF] shrink-0" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CompareView({
   allProducts,
   initialSelectedSlugs = DEFAULT_FALLBACK_SLUGS,
 }: CompareViewProps) {
-  const [, startTransition] = useTransition();
-
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>(() => {
     const raw = initialSelectedSlugs.length > 0 ? initialSelectedSlugs : DEFAULT_FALLBACK_SLUGS;
     const resolved = raw.map((s) => SLUG_ALIASES[s] || s);
@@ -56,16 +164,14 @@ export function CompareView({
   });
 
   const handleModelChange = (colIndex: number, newSlug: string) => {
-    startTransition(() => {
-      const next = [...selectedSlugs];
-      next[colIndex] = newSlug;
-      setSelectedSlugs(next);
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.set("models", next.join(","));
-        window.history.replaceState({}, "", url.toString());
-      }
-    });
+    const next = [...selectedSlugs];
+    next[colIndex] = newSlug;
+    setSelectedSlugs(next);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("models", next.join(","));
+      window.history.replaceState({}, "", url.toString());
+    }
   };
 
   const models = selectedSlugs
@@ -130,47 +236,38 @@ export function CompareView({
 
               {/* 3 Model columns (280px each) */}
               {models.map((p, colIndex) => {
-                const imgSrc = COMPARE_IMAGES[p.slug] || p.image?.src || p.cardImage?.src || "/images/home/card-basic.png";
+                const imgSrc = p.image?.src || p.cardImage?.src || COMPARE_IMAGES[p.slug];
                 return (
-                  <div key={`${p.slug}-${colIndex}`} className="flex flex-col">
-                    {/* Model Selector Dropdown */}
-                    <div className="mb-3">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-[#62748E] mb-1">
-                        Select Model {colIndex + 1}
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={p.slug}
-                          onChange={(e) => handleModelChange(colIndex, e.target.value)}
-                          aria-label={`Select model for column ${colIndex + 1}`}
-                          className="w-full appearance-none rounded-[12px] border border-[#CBD5E1] bg-white py-2 pl-3 pr-8 font-sans text-[13px] font-semibold text-[#0F172A] shadow-xs focus:border-[#0B62FF] focus:outline-none cursor-pointer truncate"
-                        >
-                          {allProducts.map((prod) => (
-                            <option key={prod.slug} value={prod.slug}>
-                              {prod.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-[#64748B]">
-                          <ChevronDown className="size-4" />
-                        </div>
-                      </div>
-                    </div>
+                  <div key={`col-${colIndex}-${p.slug}`} className="flex flex-col">
+                    {/* Model Selector Custom Dropdown */}
+                    <ModelDropdown
+                      colIndex={colIndex}
+                      currentSlug={p.slug}
+                      allProducts={allProducts}
+                      onSelect={(newSlug) => handleModelChange(colIndex, newSlug)}
+                    />
 
                     {/* Product Image */}
                     <Link
                       href={`/products/${p.slug}`}
                       className="group relative block h-[190px] w-full overflow-hidden rounded-[24px] bg-[#F1F5F9] hover:opacity-95 transition-opacity"
                     >
-                      <Image
-                        src={imgSrc}
-                        alt={p.name}
-                        fill
-                        sizes="280px"
-                        priority
-                        unoptimized={imgSrc.startsWith("http")}
-                        className="size-full object-cover rounded-[24px] group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {imgSrc ? (
+                        <Image
+                          src={imgSrc}
+                          alt={p.name}
+                          fill
+                          sizes="280px"
+                          priority
+                          unoptimized={imgSrc.startsWith("http")}
+                          className="size-full object-cover rounded-[24px] group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="flex size-full flex-col items-center justify-center bg-[#F1F5F9] p-4 text-center rounded-[24px]">
+                          <span className="font-jakarta text-[15px] font-bold text-[#0F172A] line-clamp-2">{p.name}</span>
+                          <span className="mt-1 font-sans text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">Photo coming soon</span>
+                        </div>
+                      )}
                     </Link>
 
                     {/* Heading */}

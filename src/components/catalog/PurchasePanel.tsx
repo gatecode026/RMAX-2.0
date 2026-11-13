@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Minus, Plus } from "lucide-react";
+import { ChevronDown, Minus, Plus, Check } from "lucide-react";
 import { ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { BulkOrderModal } from "@/components/sections/BulkOrderModal";
 import { cn } from "@/lib/cn";
@@ -38,6 +38,19 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
   const [qty, setQty] = useState(1);
   const [colour, setColour] = useState(colours[0] ?? "");
   const [selectedType, setSelectedType] = useState("Automatic");
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setTypeDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkQuantity, setBulkQuantity] = useState(6);
   // Quantity to restore if the bulk popup is dismissed without the visitor choosing to proceed —
@@ -62,8 +75,8 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
 
   const currentModelName = models?.find((m) => m.slug === slug)?.name ?? slug;
   const onRequest = price <= 0; // quotation-only product: no published price
-  const totalPrice = price * qty;
-  const totalMrp = mrp ? mrp * qty : undefined;
+  const displayPrice = price;
+  const displayMrp = mrp && mrp > price ? mrp : undefined;
   const stepper = "grid size-7 place-items-center rounded-full bg-soft text-navy transition hover:bg-line disabled:opacity-40 cursor-pointer";
   const quoteHref = showOptions
     ? `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`
@@ -120,26 +133,18 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
 
   return (
     <div className="rounded-[24px] border border-line bg-card p-6 shadow-sm">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          {totalMrp ? (
-            <p className="text-body-sm text-muted-dark">
-              M.R.P.: <span className="font-bold diagonal-strike">{formatINR(totalMrp)}</span>
-              {qty > 1 && mrp ? <span className="ml-1.5 text-xs text-muted font-normal">({formatINR(mrp)} / unit)</span> : null}
-            </p>
-          ) : null}
-          <div className="flex flex-wrap items-baseline gap-2.5">
-            <span className="font-heading text-section md:text-[40px]/[48px] font-extrabold tracking-[-1px] text-charcoal">
-              {onRequest ? "Price on request" : formatINR(totalPrice)}
-            </span>
-            {qty > 1 && !onRequest && (
-              <span className="text-body-sm font-semibold text-muted">
-                ({formatINR(price)} / unit)
-              </span>
-            )}
-            {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Include of all tax</span>}
-          </div>
+      <div className="flex flex-col gap-1">
+        {displayMrp ? (
+          <p className="text-body-sm text-muted-dark">
+            M.R.P.: <span className="font-bold line-through text-[#94A3B8]">{formatINR(displayMrp)}</span>
+          </p>
+        ) : null}
+        <div className="flex items-baseline gap-2">
+          <span className="font-heading text-section md:text-[38px]/[44px] font-extrabold tracking-[-1px] text-charcoal">
+            {onRequest ? "Price on request" : formatINR(displayPrice)}
+          </span>
         </div>
+        {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Inclusive of all taxes</span>}
       </div>
 
       {models && models.length > 0 && (
@@ -238,22 +243,54 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
 
           <div className="flex items-center justify-between gap-3">
             <dt className="font-medium text-charcoal">
-              <label htmlFor={typeId}>Type:</label>
+              <label id={typeId}>Type:</label>
             </dt>
-            <dd className="relative">
-              <select
-                id={typeId}
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="h-9 min-w-[140px] appearance-none rounded-[10px] border border-line bg-card pr-8 pl-3 text-body-sm font-semibold text-charcoal focus:border-navy focus:outline-none"
+            <dd className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setTypeDropdownOpen((prev) => !prev)}
+                aria-haspopup="listbox"
+                aria-expanded={typeDropdownOpen}
+                aria-labelledby={typeId}
+                className="flex h-9 min-w-[140px] items-center justify-between rounded-[10px] border border-line bg-card px-3 text-body-sm font-semibold text-charcoal shadow-xs hover:border-navy focus:border-navy focus:outline-none transition-colors cursor-pointer"
               >
-                {typeOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown aria-hidden className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-charcoal" />
+                <span>{typeOptions.find((o) => o.value === selectedType)?.label || selectedType}</span>
+                <ChevronDown
+                  className={cn("size-4 text-charcoal transition-transform duration-200 ml-2", typeDropdownOpen && "rotate-180")}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {typeDropdownOpen && (
+                <div
+                  role="listbox"
+                  className="absolute right-0 top-full mt-1.5 z-40 min-w-[180px] overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.12)] animate-in fade-in slide-in-from-top-1 duration-150"
+                >
+                  {typeOptions.map((opt) => {
+                    const isSelected = opt.value === selectedType;
+                    return (
+                      <div
+                        key={opt.value}
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => {
+                          setSelectedType(opt.value);
+                          setTypeDropdownOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2 rounded-[8px] text-[13px] font-semibold transition-colors cursor-pointer",
+                          isSelected
+                            ? "bg-[#EFF6FF] text-navy font-bold"
+                            : "text-[#0F172A] hover:bg-[#F8FAFC] hover:text-navy"
+                        )}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="size-4 text-navy ml-2 shrink-0" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </dd>
           </div>
 
@@ -295,8 +332,8 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         </p>
       )}
 
-      <div className="mt-5 flex flex-col sm:flex-row items-center gap-3.5">
-        <ButtonLink href={quoteHref} className="h-[48px] w-full sm:flex-1">
+      <div className="mt-5 flex flex-col gap-2.5 w-full">
+        <ButtonLink href={quoteHref} className="h-[48px] w-full justify-center">
           Request a Quote
         </ButtonLink>
         {!onRequest && (
@@ -305,8 +342,8 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             onClick={handleBuyNow}
             disabled={isAdding}
             className={cn(
-              buttonClasses({ variant: "outline", size: "sm" }),
-              "h-[48px] w-full sm:flex-1 cursor-pointer"
+              buttonClasses({ variant: "outline", size: "md" }),
+              "h-[48px] w-full justify-center font-bold text-navy border-line hover:border-navy hover:bg-navy/5 cursor-pointer"
             )}
           >
             {isAdding ? "Adding…" : "Buy Now"}

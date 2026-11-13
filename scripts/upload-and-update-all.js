@@ -298,3 +298,4 @@ run().catch((err) => {
   console.error('Fatal error during migration:', err);
   process.exit(1);
 });
+
