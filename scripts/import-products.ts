@@ -50,7 +50,7 @@ async function uploadPhoto(it: CatalogueItem, file: string) {
   const ik = new ImageKit({
     publicKey: process.env.IMAGEKIT_PUBLIC_KEY!, privateKey: process.env.IMAGEKIT_PRIVATE_KEY!, urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!,
   });
-  const r = await ik.upload({ file: fs.readFileSync(file), fileName: `${it.slug}-main.jpg`, folder: `/rmax/products/${it.slug}/main`, useUniqueFileName: false });
+  const r = await ik.upload({ file: fs.readFileSync(file), fileName: `${it.slug}-main.webp`, folder: `/rmax/products/${it.slug}/main`, useUniqueFileName: false });
   const img = { src: r.url, alt: it.name, width: r.width ?? 0, height: r.height ?? 0 };
   await Product.updateOne({ slug: it.slug }, { $set: {
     image: img, cardImage: img, overviewImage: img,
@@ -83,7 +83,7 @@ async function main() {
     try {
       const existing = await Product.findOne({ slug: it.slug }).select("images").lean();
       const photos = existing?.images?.length ?? 0;
-      const file = `${PHOTO_DIR}/${it.slug}.jpg`;
+      const file = `${PHOTO_DIR}/${it.slug}.webp`;
       const upload = !photos && fs.existsSync(file);
       const label = `${it.slug.padEnd(52)} ${existing ? "update" : "create"}  photos: ${photos ? `${photos} existing ImageKit (kept)` : upload ? "upload " + file : "none → fallback"}`;
       if (it.existing && !existing) throw new Error("expected an existing seeded product");
