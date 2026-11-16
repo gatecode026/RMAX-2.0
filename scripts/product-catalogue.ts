@@ -252,12 +252,6 @@ export const CATALOGUE: CatalogueItem[] = [
     chips: ["Vehicles", "Assets", "Fleet"],
   },
   {
-    slug: "usb-gps-receiver", name: "USB GPS Receiver", category: "iot-smart-tech", group: I,
-    summary: "USB GPS receiver for location tracking applications.",
-    overview: "A USB GPS receiver supplied alongside RMAX GPS trackers for location tracking applications.",
-    chips: ["USB", "GPS"],
-  },
-  {
     slug: "max-can-obd-scanner", name: "MAX-CAN OBD Scanner", category: "iot-smart-tech", group: I,
     summary: "CAN-bus fleet diagnostics scanner for live vehicle health, fault codes and performance data.",
     overview: "The MAX-CAN OBD Scanner is a CAN-bus fleet diagnostics scanner providing live vehicle health, fault codes and performance data.",

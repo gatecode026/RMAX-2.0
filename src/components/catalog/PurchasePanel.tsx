@@ -32,12 +32,16 @@ type Props = {
   }[];
 };
 
+/** Bank variants printed on the GEOSAT GPS device label (the GPS tracker is customised per bank). */
+const GPS_BANKS = ["SBI", "BOB", "BOI", "BOM", "CBI", "PNB", "Others"].map((b) => ({ value: b, label: b }));
+
 /** Price card: M.R.P., price, model switcher, quantity, type, colour, CTAs, and bulk policy. */
 export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptions, models }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(1);
   const [colour, setColour] = useState(colours[0] ?? "");
-  const [selectedType, setSelectedType] = useState("Automatic");
+  const isGps = slug === "gps-trackers";
+  const [selectedTypeRaw, setSelectedType] = useState(isGps ? GPS_BANKS[0].value : "Automatic");
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +66,9 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
   const typeId = useId();
 
   const isVending = slug.includes("vending");
-  const typeOptions = isVending
+  const typeOptions = isGps
+    ? GPS_BANKS
+    : isVending
     ? [
         { value: "Automatic", label: "Automatic" },
         { value: "Manual", label: "Manual" },
@@ -73,6 +79,8 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         { value: "Manual", label: "Manual" },
       ];
 
+  // Fall back to the first option if the product changed under a mounted panel (e.g. model switch).
+  const selectedType = typeOptions.some((o) => o.value === selectedTypeRaw) ? selectedTypeRaw : typeOptions[0].value;
   const currentModelName = models?.find((m) => m.slug === slug)?.name ?? slug;
   const onRequest = price <= 0; // quotation-only product: no published price
   const displayPrice = price * qty;
@@ -248,7 +256,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
 
           <div className="flex items-center justify-between gap-3">
             <dt className="font-medium text-charcoal">
-              <label id={typeId}>Type:</label>
+              <label id={typeId}>{isGps ? "Bank Type:" : "Type:"}</label>
             </dt>
             <dd className="relative" ref={dropdownRef}>
               <button
@@ -370,7 +378,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         initialQuantity={bulkQuantity}
         details={[
           ...(colour ? [{ label: "Selected Colour", value: colour }] : []),
-          ...(isVending ? [{ label: "Operating Mode", value: selectedType }] : []),
+          ...(isGps ? [{ label: "Bank Type", value: selectedType }] : isVending ? [{ label: "Operating Mode", value: selectedType }] : []),
         ]}
         quoteHref={(qty) =>
           `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`

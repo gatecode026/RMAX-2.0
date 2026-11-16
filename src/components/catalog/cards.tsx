@@ -74,9 +74,6 @@ function getCardSpecs(product: ProductDTO): string[] {
   if (slug === "gps-trackers") {
     return ["Live Tracking", "Geofencing", "SOS Alert", "Multi-Vehicle"];
   }
-  if (slug === "usb-gps-receiver") {
-    return ["USB Interface", "Plug & Play", "High Sensitivity", "Universal OS"];
-  }
   if (slug === "max-can-obd-scanner") {
     return ["OBD-II CAN-Bus", "Diagnostics", "Live Telemetry", "Heavy Vehicles"];
   }
