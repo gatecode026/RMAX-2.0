@@ -136,8 +136,8 @@ export function OverviewSection({ text, image }: { text: string; image?: { src: 
   );
 }
 
-function IconTile({ icon }: { icon: DetailIcon }) {
-  const Icon = ICONS[icon] || Settings;
+function IconTile({ icon, title }: { icon: DetailIcon; title?: string }) {
+  const Icon = resolveApplicationIcon(icon, title) || ICONS[icon] || Settings;
   return (
     <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-soft text-navy">
       <Icon className="size-5" strokeWidth={1.6} />
@@ -154,7 +154,7 @@ export function FeaturesCard({ items }: { items: IDetailPoint[] }) {
       <ul className="mt-6 grid flex-1 grid-rows-[repeat(4,1fr)] gap-x-6 sm:grid-cols-2 sm:grid-rows-2">
         {items.map((f, i) => (
           <li key={f.title} className={cn("flex items-start gap-4 py-5", i >= 1 && "border-t border-line sm:border-t-0", i >= 2 && "sm:border-t sm:border-line")}>
-            <IconTile icon={f.icon} />
+            <IconTile icon={f.icon} title={f.title} />
             <div>
               <h3 className="text-body-sm font-bold text-charcoal">{f.title}</h3>
               <p className="mt-1 text-body-sm text-muted">{f.body}</p>
@@ -167,48 +167,28 @@ export function FeaturesCard({ items }: { items: IDetailPoint[] }) {
 }
 
 export function ApplicationsCard({ items }: { items: IDetailPoint[] }) {
-  const count = items.length;
-  const gridClass =
-    count === 1
-      ? "grid-cols-1"
-      : count === 2
-      ? "grid-cols-1 sm:grid-cols-2"
-      : count === 3
-      ? "grid-cols-1 sm:grid-cols-3"
-      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
-
   return (
     <section id="applications" aria-labelledby="applications-h" className={cn(card, "flex flex-1 scroll-mt-20 flex-col p-7 md:p-8")}>
-      <div className="flex items-center justify-between">
-        <h2 id="applications-h" className={h2}>
-          Applications.
-        </h2>
-        <span className="text-[12px] font-semibold text-muted bg-soft px-3 py-1 rounded-full">
-          {items.length} Environments
-        </span>
-      </div>
-      <ul className={cn("mt-6 grid flex-1 content-start gap-4", gridClass)}>
-        {items.map((a) => {
-          const Icon = resolveApplicationIcon(a.icon, a.title);
-          return (
-            <li
-              key={a.title}
-              className="group flex flex-col justify-between rounded-[20px] border border-line/70 bg-[#F8FAFC] p-5 transition-all duration-200 hover:border-navy/30 hover:bg-white hover:shadow-xs"
-            >
-              <div>
-                <div className="grid size-11 place-items-center rounded-[14px] bg-white text-navy shadow-[0_2px_8px_rgba(47,85,150,0.08)] border border-line/40 transition-transform duration-200 group-hover:scale-105">
-                  <Icon className="size-5" strokeWidth={1.8} aria-hidden />
-                </div>
-                <h3 className="mt-4 text-[14px]/[20px] font-bold text-charcoal group-hover:text-navy transition-colors">
-                  {a.title}
-                </h3>
-                <p className="mt-1.5 text-[12.5px]/[19px] text-muted leading-relaxed">
-                  {a.body}
-                </p>
-              </div>
-            </li>
-          );
-        })}
+      <h2 id="applications-h" className={h2}>
+        Applications.
+      </h2>
+      <ul className="mt-6 grid flex-1 gap-x-6 sm:grid-cols-2">
+        {items.map((a, i) => (
+          <li
+            key={a.title}
+            className={cn(
+              "flex items-start gap-4 py-5",
+              i >= 1 && "border-t border-line sm:border-t-0",
+              i >= 2 && "sm:border-t sm:border-line"
+            )}
+          >
+            <IconTile icon={a.icon} title={a.title} />
+            <div>
+              <h3 className="text-body-sm font-bold text-charcoal">{a.title}</h3>
+              <p className="mt-1 text-body-sm text-muted">{a.body}</p>
+            </div>
+          </li>
+        ))}
       </ul>
     </section>
   );
