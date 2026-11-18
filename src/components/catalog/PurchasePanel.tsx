@@ -169,33 +169,55 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
               {models.find((m) => m.slug === slug)?.name ?? "Selected"}
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div
+            className={cn(
+              "grid gap-2",
+              models.length === 3
+                ? "grid-cols-3"
+                : models.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-2 sm:grid-cols-4"
+            )}
+          >
             {models.map((m) => {
               const active = m.slug === slug;
+              const capText = m.dailyCapacity
+                ? m.dailyCapacity
+                    .replace(/\s*\/\s*batch/i, " pads")
+                    .replace(/\/day/i, " pads/d")
+                    .trim()
+                : m.category === "incinerator"
+                ? "Incinerator"
+                : "Standard";
+
               return (
                 <button
                   key={m.slug}
                   type="button"
+                  title={`${m.name}${m.dailyCapacity ? ` (${m.dailyCapacity})` : ""}`}
                   onClick={() => {
                     if (m.slug !== slug) {
                       router.push(`/products/${m.slug}`);
                     }
                   }}
                   className={cn(
-                    "flex flex-col items-start p-2.5 rounded-[12px] border text-left transition-all cursor-pointer",
+                    "flex flex-col items-center justify-center py-2.5 px-1.5 rounded-[12px] border text-center transition-all cursor-pointer min-h-[72px]",
                     active
                       ? "border-navy bg-[#EFF6FF] ring-2 ring-navy text-navy font-bold shadow-xs"
                       : "border-line bg-card hover:border-navy/40 hover:bg-soft text-charcoal"
                   )}
                 >
-                  <span className="text-[12.5px] font-bold leading-tight line-clamp-1">{m.name}</span>
-                  <span className="mt-1 text-[12.5px] font-extrabold text-charcoal">
-                    {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "Price on request"}
+                  <span className="text-[12.5px] font-bold leading-tight">{m.name}</span>
+                  <span
+                    className={cn(
+                      "mt-1 text-[11px] font-extrabold whitespace-nowrap leading-tight",
+                      active ? "text-navy" : "text-charcoal"
+                    )}
+                  >
+                    {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "On Request"}
                   </span>
-                  <span className="mt-0.5 text-[9.5px] text-muted truncate w-full">
-                    {m.category === "incinerator"
-                      ? (m.dailyCapacity ? m.dailyCapacity.replace("/day", " pads/d") : "Incinerator")
-                      : "3 Types (Push/Auto)"}
+                  <span className="mt-0.5 text-[9.5px] text-muted font-medium whitespace-nowrap leading-tight">
+                    {capText}
                   </span>
                 </button>
               );
