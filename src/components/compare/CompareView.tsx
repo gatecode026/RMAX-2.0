@@ -253,7 +253,7 @@ export function CompareView({
                     {/* Product Image */}
                     <Link
                       href={`/products/${p.slug}`}
-                      className="group relative block h-[190px] w-full overflow-hidden rounded-[24px] bg-[#F1F5F9] hover:opacity-95 transition-opacity"
+                      className="group relative flex h-[190px] w-full items-center justify-center overflow-hidden rounded-[24px] bg-[#F8FAFC] border border-line/40 p-3 hover:opacity-95 transition-opacity"
                     >
                       {imgSrc ? (
                         <Image
@@ -263,7 +263,7 @@ export function CompareView({
                           sizes="280px"
                           priority
                           unoptimized={imgSrc.startsWith("http")}
-                          className="size-full object-cover rounded-[24px] group-hover:scale-105 transition-transform duration-300"
+                          className="size-full object-contain p-2 rounded-[20px] group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <div className="flex size-full flex-col items-center justify-center bg-[#F1F5F9] p-4 text-center rounded-[24px]">
