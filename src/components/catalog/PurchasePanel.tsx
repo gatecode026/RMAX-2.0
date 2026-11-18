@@ -181,48 +181,32 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
           >
             {models.map((m) => {
               const active = m.slug === slug;
-              const capText = m.dailyCapacity
-                ? m.dailyCapacity
-                    .replace(/\s*\/\s*batch/i, " pads")
-                    .replace(/\/day/i, " pads/d")
-                    .trim()
-                : m.category === "incinerator"
-                ? "Incinerator"
-                : "Standard";
 
               return (
                 <button
                   key={m.slug}
                   type="button"
-                  title={`${m.name}${m.dailyCapacity ? ` (${m.dailyCapacity})` : ""}`}
+                  title={m.name}
                   onClick={() => {
                     if (m.slug !== slug) {
                       router.push(`/products/${m.slug}`);
                     }
                   }}
                   className={cn(
-                    "flex flex-col items-center justify-center py-2.5 px-1.5 rounded-[12px] border text-center transition-all cursor-pointer min-h-[72px]",
+                    "flex flex-col items-center justify-center py-2 px-1.5 rounded-[12px] border text-center transition-all cursor-pointer min-h-[56px]",
                     active
                       ? "border-navy bg-[#EFF6FF] ring-2 ring-navy text-navy font-bold shadow-xs"
                       : "border-line bg-card hover:border-navy/40 hover:bg-soft text-charcoal"
                   )}
                 >
-                  <span className="text-[12.5px] font-bold leading-tight">{m.name}</span>
+                  <span className="text-[13px] font-bold leading-tight">{m.name}</span>
                   <span
                     className={cn(
-                      "mt-1 text-[11px] font-extrabold whitespace-nowrap leading-tight",
+                      "mt-1 text-[11.5px] font-extrabold whitespace-nowrap leading-tight",
                       active ? "text-navy" : "text-charcoal"
                     )}
                   >
                     {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "Quote"}
-                  </span>
-                  <span
-                    className={cn(
-                      "mt-0.5 text-[9.5px] font-medium whitespace-nowrap leading-tight",
-                      active ? "text-navy/75" : "text-muted"
-                    )}
-                  >
-                    {capText}
                   </span>
                 </button>
               );

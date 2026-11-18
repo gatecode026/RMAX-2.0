@@ -146,7 +146,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           height={1086}
           unoptimized={current.src.startsWith("http")}
           priority={active === 0}
-          className="size-full object-contain p-2.5 sm:p-3 pointer-events-none drop-shadow-sm transition-transform duration-200"
+          className="size-full object-contain p-1 sm:p-1.5 pointer-events-none drop-shadow-sm transition-transform duration-200"
         />
 
         {/* Amazon Lens Box: highlights exactly which part is being magnified */}
