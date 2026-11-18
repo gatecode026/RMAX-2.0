@@ -214,9 +214,14 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
                       active ? "text-navy" : "text-charcoal"
                     )}
                   >
-                    {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "On Request"}
+                    {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "Quote"}
                   </span>
-                  <span className="mt-0.5 text-[9.5px] text-muted font-medium whitespace-nowrap leading-tight">
+                  <span
+                    className={cn(
+                      "mt-0.5 text-[9.5px] font-medium whitespace-nowrap leading-tight",
+                      active ? "text-navy/75" : "text-muted"
+                    )}
+                  >
                     {capText}
                   </span>
                 </button>
