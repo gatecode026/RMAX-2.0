@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
   FileText,
   Search,
@@ -154,18 +155,21 @@ export default function ManagerQuotationsPage() {
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-slate-500">Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-10 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-700 focus:border-[#10469B] focus:outline-none bg-white cursor-pointer"
-          >
-            <option value="all">All Statuses</option>
-            <option value="new">New</option>
-            <option value="in_review">In Review</option>
-            <option value="quote_sent">Quote Sent</option>
-            <option value="approved">Approved</option>
-            <option value="declined">Declined</option>
-          </select>
+          <div className="w-40">
+            <CustomSelect
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={[
+                { value: "all", label: "All Statuses" },
+                { value: "new", label: "New", colorDot: "bg-blue-600" },
+                { value: "in_review", label: "In Review", colorDot: "bg-amber-600" },
+                { value: "quote_sent", label: "Quote Sent", colorDot: "bg-purple-600" },
+                { value: "approved", label: "Approved", colorDot: "bg-emerald-600" },
+                { value: "declined", label: "Declined", colorDot: "bg-red-500" },
+              ]}
+              triggerClassName="h-10 bg-white"
+            />
+          </div>
         </div>
       </div>
 

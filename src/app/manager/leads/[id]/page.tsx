@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
   ArrowLeft,
   Building2,
@@ -349,16 +350,17 @@ export default function ManagerLeadDetailPage() {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Priority Rating
                 </label>
-                <select
+                <CustomSelect
                   value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-[#F4F7FC]/60 px-3 py-2 text-xs text-slate-800 focus:border-[#10469B] focus:bg-white focus:outline-hidden"
-                >
-                  <option value="low">Low Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="high">High Priority</option>
-                  <option value="urgent">Urgent Priority</option>
-                </select>
+                  onChange={(val) => setPriority(val)}
+                  options={[
+                    { value: "low", label: "Low Priority", colorDot: "bg-slate-400" },
+                    { value: "medium", label: "Medium Priority", colorDot: "bg-amber-500" },
+                    { value: "high", label: "High Priority", colorDot: "bg-red-500" },
+                    { value: "urgent", label: "Urgent Priority", colorDot: "bg-purple-600" },
+                  ]}
+                  triggerClassName="bg-[#F4F7FC]/60 hover:bg-white"
+                />
               </div>
 
               <div>
@@ -535,18 +537,19 @@ export default function ManagerLeadDetailPage() {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Call Outcome
                 </label>
-                <select
+                <CustomSelect
                   value={callOutcome}
-                  onChange={(e) => setCallOutcome(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-[#F4F7FC]/60 px-3 py-2 text-xs text-slate-800 focus:border-[#10469B] focus:bg-white focus:outline-hidden"
-                >
-                  <option value="Connected - Positive Interest">Connected - Positive Interest</option>
-                  <option value="Connected - Requested Quotation">Connected - Requested Quotation</option>
-                  <option value="Connected - Demo Scheduled">Connected - Demo Scheduled</option>
-                  <option value="Connected - Not Interested">Connected - Not Interested</option>
-                  <option value="No Answer / Busy">No Answer / Busy</option>
-                  <option value="Callback Requested">Callback Requested</option>
-                </select>
+                  onChange={(val) => setCallOutcome(val)}
+                  options={[
+                    { value: "Connected - Positive Interest", label: "Connected - Positive Interest", colorDot: "bg-emerald-500" },
+                    { value: "Connected - Requested Quotation", label: "Connected - Requested Quotation", colorDot: "bg-blue-600" },
+                    { value: "Connected - Demo Scheduled", label: "Connected - Demo Scheduled", colorDot: "bg-purple-600" },
+                    { value: "Connected - Not Interested", label: "Connected - Not Interested", colorDot: "bg-slate-400" },
+                    { value: "No Answer / Busy", label: "No Answer / Busy", colorDot: "bg-amber-500" },
+                    { value: "Callback Requested", label: "Callback Requested", colorDot: "bg-cyan-600" },
+                  ]}
+                  triggerClassName="bg-[#F4F7FC]/60 hover:bg-white"
+                />
               </div>
 
               <div>

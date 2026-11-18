@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
 import { Download, TrendingUp, ShieldCheck, Leaf, School, BarChart3, PieChart, RefreshCw } from "lucide-react";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 export default function AdminReportsPage() {
   const [period, setPeriod] = useState("FY 2026-27");
@@ -105,15 +106,14 @@ export default function AdminReportsPage() {
         ]}
         actions={
           <div className="flex shrink-0 items-center gap-2.5">
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="h-9 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs focus:border-[#10469B] focus:outline-none cursor-pointer"
-            >
-              <option value="FY 2026-27">FY 2026-27</option>
-              <option value="Last 6 Months">Last 6 Months</option>
-              <option value="Full Year 2026">Full Year 2026</option>
-            </select>
+            <div className="w-36">
+              <CustomSelect
+                value={period}
+                onChange={(val) => setPeriod(val)}
+                options={["FY 2026-27", "Last 6 Months", "Full Year 2026"]}
+                triggerClassName="h-9 font-semibold text-slate-700 shadow-xs"
+              />
+            </div>
             <button
               onClick={handleExportReport}
               className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[#10469B] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#0B2450] transition"

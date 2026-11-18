@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
   Search,
   RefreshCw,
@@ -141,31 +142,37 @@ export default function ManagerLeadsPage() {
             />
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-[#F4F7FC]/60 px-3 py-2 text-xs font-medium text-slate-700 focus:border-[#10469B] focus:bg-white focus:outline-hidden"
-          >
-            <option value="all">All Statuses</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="qualified">Qualified</option>
-            <option value="proposal_sent">Proposal Sent</option>
-            <option value="converted">Converted</option>
-            <option value="lost">Lost</option>
-          </select>
+          <div className="w-36">
+            <CustomSelect
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={[
+                { value: "all", label: "All Statuses" },
+                { value: "new", label: "New", colorDot: "bg-blue-600" },
+                { value: "contacted", label: "Contacted", colorDot: "bg-amber-600" },
+                { value: "qualified", label: "Qualified", colorDot: "bg-purple-600" },
+                { value: "proposal_sent", label: "Proposal Sent", colorDot: "bg-indigo-600" },
+                { value: "converted", label: "Converted", colorDot: "bg-green-600" },
+                { value: "lost", label: "Lost", colorDot: "bg-slate-400" },
+              ]}
+              triggerClassName="bg-[#F4F7FC]/60 hover:bg-white"
+            />
+          </div>
 
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-[#F4F7FC]/60 px-3 py-2 text-xs font-medium text-slate-700 focus:border-[#10469B] focus:bg-white focus:outline-hidden"
-          >
-            <option value="all">All Priorities</option>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+          <div className="w-36">
+            <CustomSelect
+              value={priorityFilter}
+              onChange={(val) => setPriorityFilter(val)}
+              options={[
+                { value: "all", label: "All Priorities" },
+                { value: "urgent", label: "Urgent", colorDot: "bg-purple-600" },
+                { value: "high", label: "High", colorDot: "bg-red-500" },
+                { value: "medium", label: "Medium", colorDot: "bg-amber-500" },
+                { value: "low", label: "Low", colorDot: "bg-slate-400" },
+              ]}
+              triggerClassName="bg-[#F4F7FC]/60 hover:bg-white"
+            />
+          </div>
         </div>
 
         <span className="text-xs font-medium text-slate-400">
