@@ -102,11 +102,11 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                   aria-label={g.kind === "video" ? `Play video: ${g.alt}` : `Show image ${i + 1}: ${g.alt}`}
                   aria-current={isCurrent}
                   className={cn(
-                    "relative block h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] overflow-hidden rounded-[12px] border-2 bg-[#F8FAFC] transition cursor-pointer p-1",
+                    "relative block h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] overflow-hidden rounded-[12px] border-2 bg-soft transition cursor-pointer",
                     isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
                   )}
                 >
-                  <Image src={g.thumb} alt="" width={62} height={78} unoptimized={g.thumb.startsWith("http")} className="size-full object-contain" />
+                  <Image src={g.thumb} alt="" width={62} height={78} unoptimized={g.thumb.startsWith("http")} className="size-full object-contain p-1" />
                   {/* Small thumbnail active zoom indicator */}
                   {isCurrent && isHovering && !isVideo && (
                     <span
@@ -134,7 +134,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "group relative aspect-[461/530] w-full max-h-[430px] overflow-hidden rounded-[24px] bg-[#F8FAFC] border border-line/60 sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none flex items-center justify-center p-3 sm:p-4",
+          "group relative aspect-[461/530] w-full max-h-[430px] overflow-hidden rounded-[24px] bg-soft sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
           !isVideo && "cursor-crosshair",
         )}
       >
@@ -146,7 +146,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           height={1086}
           unoptimized={current.src.startsWith("http")}
           priority={active === 0}
-          className="size-full object-contain pointer-events-none drop-shadow-xs transition-transform duration-300"
+          className="size-full object-contain p-2.5 sm:p-3 pointer-events-none drop-shadow-sm transition-transform duration-200"
         />
 
         {/* Amazon Lens Box: highlights exactly which part is being magnified */}
@@ -174,8 +174,8 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
 
         {/* Mobile / Tablet Picture-in-Picture Mini-Map when zoomed */}
         {isHovering && !isVideo && (
-          <div className="lg:hidden pointer-events-none absolute top-3 right-3 h-[85px] w-[65px] overflow-hidden rounded-xl border-2 border-white/90 bg-[#F8FAFC] p-1 shadow-lg">
-            <Image src={current.src} alt="" width={65} height={85} unoptimized={current.src.startsWith("http")} className="size-full object-contain" />
+          <div className="lg:hidden pointer-events-none absolute top-3 right-3 h-[85px] w-[65px] overflow-hidden rounded-xl border-2 border-white/90 bg-white shadow-lg">
+            <Image src={current.src} alt="" width={65} height={85} unoptimized={current.src.startsWith("http")} className="size-full object-contain p-0.5" />
             <span
               aria-hidden
               className="absolute border border-navy bg-navy/35 rounded-[2px]"

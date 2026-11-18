@@ -133,7 +133,7 @@ function UnifiedProductCard({
         {/* Product Image Frame */}
         <Link
           href={productHref(product)}
-          className="relative flex h-[310px] w-full items-center justify-center overflow-hidden rounded-[16px] bg-[#F8FAFC] border border-line/40 p-4 isolation-auto"
+          className="relative block h-[310px] w-full overflow-hidden rounded-[16px] bg-[#F4F2EE] isolation-auto"
         >
           {discountPercent ? (
             <div className="absolute left-4 top-4 z-10 flex h-6 items-center justify-center rounded-[12px] bg-[#FDFDFD] px-3 shadow-[0px_1px_2px_-1px_rgba(0,0,0,0.1),0px_1px_3px_rgba(0,0,0,0.1)]">
@@ -150,7 +150,7 @@ function UnifiedProductCard({
               width={img.width || 400}
               height={img.height || 310}
               unoptimized={img.src.startsWith("http")}
-              className="size-full object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
+              className="size-full object-contain p-2.5 transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex size-full items-center justify-center bg-[#F4F2EE] px-4 text-center font-heading text-[16px] font-extrabold text-[#002970]/50 tracking-wider uppercase">
