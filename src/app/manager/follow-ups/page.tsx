@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 
 interface FollowUpItem {
-  _id: string;
+  _id?: string;
+  id?: string;
   leadNumber: string;
   name: string;
   phone: string;
   institutionName?: string;
+  institution?: string;
   nextFollowUpAt?: string;
   status: string;
   priority: string;
@@ -177,71 +179,76 @@ export default function ManagerFollowUpsPage() {
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {filtered.map((item) => (
-              <div
-                key={item._id}
-                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-slate-50/70 transition"
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl ${
-                      activeTab === "overdue"
-                        ? "bg-red-100 text-red-600"
-                        : "bg-blue-100 text-[#10469B]"
-                    }`}
-                  >
-                    <Calendar className="size-4.5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-[#10469B]">
-                        {item.leadNumber}
-                      </span>
-                      <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
-                      <span className="rounded-md bg-slate-100 px-2 py-0.2 text-[10px] font-bold text-slate-600 uppercase">
-                        {item.priority}
-                      </span>
+            {filtered.map((item, index) => {
+              const leadId = item._id || item.id || `fu-${index}`;
+              return (
+                <div
+                  key={leadId}
+                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-slate-50/70 transition"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl ${
+                        activeTab === "overdue"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-blue-100 text-[#10469B]"
+                      }`}
+                    >
+                      <Calendar className="size-4.5" />
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {item.institutionName || "Individual Enquiry"} • Phone: {item.phone}
-                    </p>
-                    <div className="mt-1 flex items-center gap-2 text-[11px] font-medium text-slate-400">
-                      <span>Scheduled Date:</span>
-                      <span
-                        className={
-                          activeTab === "overdue"
-                            ? "font-bold text-red-600"
-                            : "font-semibold text-slate-700"
-                        }
-                      >
-                        {item.nextFollowUpAt
-                          ? new Date(item.nextFollowUpAt).toLocaleDateString([], {
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Unscheduled"}
-                      </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-[#10469B]">
+                          {item.leadNumber}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
+                        <span className="rounded-md bg-slate-100 px-2 py-0.2 text-[10px] font-bold text-slate-600 uppercase">
+                          {item.priority}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {item.institutionName || item.institution || "Individual Enquiry"} • Phone: {item.phone}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-[11px] font-medium text-slate-400">
+                        <span>Scheduled Date:</span>
+                        <span
+                          className={
+                            activeTab === "overdue"
+                              ? "font-bold text-red-600"
+                              : "font-semibold text-slate-700"
+                          }
+                        >
+                          {item.nextFollowUpAt
+                            ? new Date(item.nextFollowUpAt).toLocaleDateString([], {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "Unscheduled"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-auto">
-                  <a
-                    href={`tel:${item.phone}`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
-                  >
-                    <Phone className="size-3 text-[#10469B]" /> Call
-                  </a>
-                  <Link
-                    href={`/manager/leads/${item._id}`}
-                    className="inline-flex items-center gap-1 rounded-xl bg-[#10469B] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#0B2450] transition"
-                  >
-                    Open Lead <ChevronRight className="size-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    {item.phone && (
+                      <a
+                        href={`tel:${item.phone}`}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                      >
+                        <Phone className="size-3 text-[#10469B]" /> Call
+                      </a>
+                    )}
+                    <Link
+                      href={`/manager/leads/${leadId}`}
+                      className="inline-flex items-center gap-1 rounded-xl bg-[#10469B] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#0B2450] transition"
+                    >
+                      Open Lead <ChevronRight className="size-3.5" />
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

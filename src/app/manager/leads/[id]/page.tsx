@@ -23,9 +23,13 @@ import {
 } from "lucide-react";
 
 interface ActivityItem {
-  action: string;
-  performedByName: string;
-  timestamp: string;
+  _id?: string;
+  type?: string;
+  action?: string;
+  performedByName?: string;
+  createdAt?: string | Date;
+  timestamp?: string | Date;
+  description?: string;
   notes?: string;
 }
 
@@ -390,30 +394,35 @@ export default function ManagerLeadDetailPage() {
 
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
               {lead.activities && lead.activities.length > 0 ? (
-                lead.activities.map((act, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 text-xs"
-                  >
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
-                      <span className="font-bold text-slate-800 capitalize">
-                        {act.action.replace(/_/g, " ")}
-                      </span>
-                      <span className="flex items-center gap-1 font-mono text-[10px]">
-                        <Clock className="size-3" />
-                        {new Date(act.timestamp).toLocaleString()}
+                lead.activities.map((act, i) => {
+                  const actionName = (act.action || act.type || "Activity").replace(/_/g, " ");
+                  const activityDate = act.createdAt || act.timestamp;
+                  const activityContent = act.description || act.notes;
+                  return (
+                    <div
+                      key={act._id || i}
+                      className="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 text-xs"
+                    >
+                      <div className="flex items-center justify-between text-[11px] text-slate-400">
+                        <span className="font-bold text-slate-800 capitalize">
+                          {actionName}
+                        </span>
+                        <span className="flex items-center gap-1 font-mono text-[10px]">
+                          <Clock className="size-3" />
+                          {activityDate ? new Date(activityDate).toLocaleString() : "Recently"}
+                        </span>
+                      </div>
+                      {activityContent && (
+                        <p className="mt-2 text-slate-700 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-100">
+                          {activityContent}
+                        </p>
+                      )}
+                      <span className="mt-1.5 block text-[10px] font-medium text-slate-400">
+                        Logged by: {act.performedByName || "Manager"}
                       </span>
                     </div>
-                    {act.notes && (
-                      <p className="mt-2 text-slate-700 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-100">
-                        {act.notes}
-                      </p>
-                    )}
-                    <span className="mt-1.5 block text-[10px] font-medium text-slate-400">
-                      Logged by: {act.performedByName}
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="py-6 text-center text-xs text-slate-400 italic">
                   No activities or calls recorded yet.

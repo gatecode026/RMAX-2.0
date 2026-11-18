@@ -18,11 +18,13 @@ import {
 } from "lucide-react";
 
 interface FollowUpItem {
-  _id: string;
+  _id?: string;
+  id?: string;
   leadNumber: string;
   name: string;
   phone: string;
   institutionName?: string;
+  institution?: string;
   nextFollowUpAt?: string;
   status: string;
   priority: string;
@@ -206,41 +208,44 @@ export default function ManagerDashboard() {
                   No follow-ups due today. You are up to date!
                 </div>
               ) : (
-                dueTodayList.map((item) => (
-                  <div
-                    key={item._id}
-                    className="flex items-center justify-between py-3 hover:bg-slate-50/60 px-2 rounded-xl transition"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-bold text-[#10469B]">
-                          {item.leadNumber}
-                        </span>
-                        <span className="text-xs font-bold text-slate-800">{item.name}</span>
+                dueTodayList.map((item, index) => {
+                  const leadId = item._id || item.id || `due-${index}`;
+                  return (
+                    <div
+                      key={leadId}
+                      className="flex items-center justify-between py-3 hover:bg-slate-50/60 px-2 rounded-xl transition"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-bold text-[#10469B]">
+                            {item.leadNumber}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800">{item.name}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {item.institutionName || item.institution || "Individual"} • {item.phone}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        {item.institutionName || "Individual"} • {item.phone}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {item.phone && (
-                        <a
-                          href={`tel:${item.phone}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition"
-                          title={`Direct call to ${item.phone}`}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {item.phone && (
+                          <a
+                            href={`tel:${item.phone}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                            title={`Direct call to ${item.phone}`}
+                          >
+                            <Phone className="size-3" /> Call
+                          </a>
+                        )}
+                        <Link
+                          href={`/manager/leads/${leadId}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-[#10469B] hover:bg-blue-100 transition"
                         >
-                          <Phone className="size-3" /> Call
-                        </a>
-                      )}
-                      <Link
-                        href={`/manager/leads/${item._id}`}
-                        className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-[#10469B] hover:bg-blue-100 transition"
-                      >
-                        Open <ChevronRight className="size-3" />
-                      </Link>
+                          Open <ChevronRight className="size-3" />
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -277,47 +282,50 @@ export default function ManagerDashboard() {
                   Great job! Zero overdue follow-up calls pending.
                 </div>
               ) : (
-                overdueList.map((item) => (
-                  <div
-                    key={item._id}
-                    className="flex items-center justify-between py-3 hover:bg-red-50/30 px-2 rounded-xl transition"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-bold text-red-600">
-                          {item.leadNumber}
-                        </span>
-                        <span className="text-xs font-bold text-slate-800">{item.name}</span>
-                        <span className="rounded-sm bg-red-100 px-1 py-0.2 text-[9px] font-extrabold text-red-700">
-                          OVERDUE
-                        </span>
+                overdueList.map((item, index) => {
+                  const leadId = item._id || item.id || `overdue-${index}`;
+                  return (
+                    <div
+                      key={leadId}
+                      className="flex items-center justify-between py-3 hover:bg-red-50/30 px-2 rounded-xl transition"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-bold text-red-600">
+                            {item.leadNumber}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800">{item.name}</span>
+                          <span className="rounded-sm bg-red-100 px-1 py-0.2 text-[9px] font-extrabold text-red-700">
+                            OVERDUE
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          {item.institutionName || item.institution || "Individual"} • Was due:{" "}
+                          {item.nextFollowUpAt
+                            ? new Date(item.nextFollowUpAt).toLocaleDateString()
+                            : "Past"}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        {item.institutionName || "Individual"} • Was due:{" "}
-                        {item.nextFollowUpAt
-                          ? new Date(item.nextFollowUpAt).toLocaleDateString()
-                          : "Past"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {item.phone && (
-                        <a
-                          href={`tel:${item.phone}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition"
-                          title={`Direct call to ${item.phone}`}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {item.phone && (
+                          <a
+                            href={`tel:${item.phone}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition"
+                            title={`Direct call to ${item.phone}`}
+                          >
+                            <Phone className="size-3" /> Call
+                          </a>
+                        )}
+                        <Link
+                          href={`/manager/leads/${leadId}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 hover:bg-red-200 transition"
                         >
-                          <Phone className="size-3" /> Call
-                        </a>
-                      )}
-                      <Link
-                        href={`/manager/leads/${item._id}`}
-                        className="inline-flex items-center gap-1 rounded-lg bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 hover:bg-red-200 transition"
-                      >
-                        Open <ChevronRight className="size-3" />
-                      </Link>
+                          Open <ChevronRight className="size-3" />
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

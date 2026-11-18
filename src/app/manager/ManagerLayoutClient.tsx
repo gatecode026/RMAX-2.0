@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -48,6 +48,32 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setNotificationsOpen(false);
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const {
     notifications,
@@ -194,7 +220,7 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
           {/* Right Action Icons */}
           <div className="flex items-center gap-3">
             {/* Notifications Dropdown */}
-            <div className="relative">
+            <div ref={notifRef} className="relative">
               <button
                 type="button"
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
@@ -314,7 +340,7 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
             </div>
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div ref={profileRef} className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 p-1 sm:px-2.5 sm:py-1.5 hover:bg-slate-50 transition"

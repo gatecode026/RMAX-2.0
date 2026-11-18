@@ -21,8 +21,8 @@ export default function AdminPageHeader({
   actions,
 }: AdminPageHeaderProps) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 flex-1 pr-4">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <nav className="mb-1.5 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
             {breadcrumbs.map((bc, idx) => (
@@ -40,10 +40,10 @@ export default function AdminPageHeader({
           </nav>
         )}
         <h1 className="text-2xl font-bold tracking-tight text-[#0B2450]">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-slate-500 mt-0.5 max-w-2xl">{subtitle}</p>}
       </div>
 
-      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
+      {actions && <div className="flex shrink-0 items-center gap-2.5">{actions}</div>}
     </div>
   );
 }

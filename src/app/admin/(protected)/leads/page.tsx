@@ -1048,23 +1048,28 @@ export default function SuperAdminLeadsPage() {
                 </h4>
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                   {selectedLead.activities && selectedLead.activities.length > 0 ? (
-                    selectedLead.activities.map((act, i) => (
-                      <div
-                        key={i}
-                        className="rounded-xl border border-slate-100 bg-white p-3 text-xs"
-                      >
-                        <div className="flex items-center justify-between text-[11px] text-slate-400">
-                          <span className="font-semibold text-slate-700 capitalize">
-                            {act.action.replace("_", " ")}
+                    selectedLead.activities.map((act: any, i: number) => {
+                      const actionName = (act.action || act.type || "Activity").replace(/_/g, " ");
+                      const activityDate = act.createdAt || act.timestamp;
+                      const activityContent = act.description || act.notes;
+                      return (
+                        <div
+                          key={act._id || i}
+                          className="rounded-xl border border-slate-100 bg-white p-3 text-xs"
+                        >
+                          <div className="flex items-center justify-between text-[11px] text-slate-400">
+                            <span className="font-semibold text-slate-700 capitalize">
+                              {actionName}
+                            </span>
+                            <span>{activityDate ? new Date(activityDate).toLocaleString() : "Recently"}</span>
+                          </div>
+                          {activityContent && <p className="mt-1 text-slate-600">{activityContent}</p>}
+                          <span className="mt-1 block text-[10px] text-slate-400 font-medium">
+                            By: {act.performedByName || "Admin"}
                           </span>
-                          <span>{new Date(act.timestamp).toLocaleString()}</span>
                         </div>
-                        {act.notes && <p className="mt-1 text-slate-600">{act.notes}</p>}
-                        <span className="mt-1 block text-[10px] text-slate-400 font-medium">
-                          By: {act.performedByName}
-                        </span>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <p className="text-xs text-slate-400 italic">No recorded activity yet.</p>
                   )}

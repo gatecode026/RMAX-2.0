@@ -104,11 +104,11 @@ export default function AdminReportsPage() {
           { label: "Reports" },
         ]}
         actions={
-          <div className="flex items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-2.5">
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs focus:border-[#10469B] focus:outline-none"
+              className="h-9 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs focus:border-[#10469B] focus:outline-none cursor-pointer"
             >
               <option value="FY 2026-27">FY 2026-27</option>
               <option value="Last 6 Months">Last 6 Months</option>
@@ -116,10 +116,10 @@ export default function AdminReportsPage() {
             </select>
             <button
               onClick={handleExportReport}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#10469B] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#0B2450] transition"
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[#10469B] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#0B2450] transition"
             >
-              <Download className="size-3.5" />
-              Export Report
+              <Download className="size-4 shrink-0" />
+              <span>Export Report</span>
             </button>
           </div>
         }

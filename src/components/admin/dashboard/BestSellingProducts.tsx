@@ -8,7 +8,8 @@ interface BestSellingProductsProps {
 }
 
 export function BestSellingProducts({ products }: BestSellingProductsProps) {
-  const maxOrders = Math.max(...products.map((p) => p.ordersCount), 1);
+  const topProducts = products.slice(0, 5);
+  const maxOrders = Math.max(...topProducts.map((p) => p.ordersCount), 1);
 
   return (
     <div className="flex flex-col justify-between rounded-2xl border border-[#E5EBF4] bg-white p-5 shadow-[0_2px_12px_rgb(35_42_50/0.03)] sm:p-6">
@@ -24,9 +25,9 @@ export function BestSellingProducts({ products }: BestSellingProductsProps) {
         </Link>
       </div>
 
-      {/* 3 Product Rows */}
+      {/* Top 5 Product Rows */}
       <div className="mt-4 divide-y divide-gray-100">
-        {products.map((p) => {
+        {topProducts.map((p) => {
           const progressPct = Math.round((p.ordersCount / maxOrders) * 100);
 
           return (

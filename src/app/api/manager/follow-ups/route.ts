@@ -59,10 +59,12 @@ export async function GET(req: NextRequest) {
     ]);
 
     const formatLead = (l: typeof overdue[0]) => ({
+      _id: String(l._id),
       id: String(l._id),
       leadNumber: l.leadNumber,
       name: l.name,
       institution: l.institution,
+      institutionName: l.institution,
       phone: l.phone,
       email: l.email,
       status: l.status,

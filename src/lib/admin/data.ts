@@ -175,27 +175,30 @@ export async function getAdminDashboardOverview() {
       });
     }
 
-    // 4. Genuine Best Selling Products from MongoDB Product collection
-    const bestSellers: BestSellerProduct[] = dbProducts.map((p) => {
-      const pQuotes = dbQuotes.filter((q) => q.preferredModel === p.slug);
-      const pOrders = dbOrders.filter((o) => o.items?.some((item) => item.slug === p.slug));
-      const ordersCount = pQuotes.length + pOrders.length;
+    // 4. Genuine Best Selling Products from MongoDB Product collection (Top 5)
+    const bestSellers: BestSellerProduct[] = dbProducts
+      .map((p) => {
+        const pQuotes = dbQuotes.filter((q) => q.preferredModel === p.slug);
+        const pOrders = dbOrders.filter((o) => o.items?.some((item) => item.slug === p.slug));
+        const ordersCount = pQuotes.length + pOrders.length;
 
-      return {
-        id: String(p._id),
-        slug: p.slug,
-        name: p.name,
-        title: p.title || p.name,
-        price: p.price || 0,
-        specs: p.specs
-          ? `${p.specs.power || ""} • ${p.specs.weight || ""} • ${p.specs.dailyCapacity || ""}`
-          : "OEM Standard",
-        ordersCount,
-        image:
-          p.image?.src ||
-          `/images/products/list-${p.slug === "pad-vending" ? "basic" : p.slug}.png`,
-      };
-    });
+        return {
+          id: String(p._id),
+          slug: p.slug,
+          name: p.name,
+          title: p.title || p.name,
+          price: p.price || 0,
+          specs: p.specs
+            ? `${p.specs.power || ""} • ${p.specs.weight || ""} • ${p.specs.dailyCapacity || ""}`
+            : "OEM Standard",
+          ordersCount,
+          image:
+            p.image?.src ||
+            `/images/products/list-${p.slug === "pad-vending" ? "basic" : p.slug}.png`,
+        };
+      })
+      .sort((a, b) => b.ordersCount - a.ordersCount)
+      .slice(0, 5);
 
     // 5. Genuine Recent Enquiries from ContactMessage
     const recentEnquiries: AdminEnquiry[] = dbMessages.slice(0, 5).map((m) => {
