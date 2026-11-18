@@ -22,8 +22,21 @@ dotenv.config({ path: ".env", quiet: true });
 const PHOTO_DIR = "scripts/product-photos";
 const dryRun = process.argv.includes("--dry-run");
 const NS = "Not specified";
-const point = (list: [string, string][] = [], icon: "cog" | "institution") =>
-  list.map(([title, body], i) => ({ icon, title, body, order: i + 1, active: true }));
+
+function inferPointIcon(title: string, fallback: "cog" | "institution") {
+  const t = title.toLowerCase();
+  if (t.includes("school") || t.includes("college") || t.includes("campus") || t.includes("education") || t.includes("institute") || t.includes("universit")) return "school";
+  if (t.includes("hospital") || t.includes("clinic") || t.includes("health") || t.includes("medical") || t.includes("nursing")) return "hospital";
+  if (t.includes("office") || t.includes("workplace") || t.includes("corporate") || t.includes("workspace")) return "office";
+  if (t.includes("leaf") || t.includes("eco") || t.includes("environment")) return "leaf";
+  if (t.includes("wrench") || t.includes("repair") || t.includes("maintenance")) return "wrench";
+  if (t.includes("shield") || t.includes("safe") || t.includes("warranty")) return "shield";
+  if (t.includes("flame") || t.includes("heat") || t.includes("thermal")) return "flame";
+  return fallback;
+}
+
+const point = (list: [string, string][] = [], icon: "cog" | "institution" = "cog") =>
+  list.map(([title, body], i) => ({ icon: inferPointIcon(title, icon), title, body, order: i + 1, active: true }));
 
 function contentFields(it: CatalogueItem, order: number, categoryId: unknown, brandId: unknown) {
   const d = it.docSpecs ?? {};

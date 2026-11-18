@@ -96,8 +96,10 @@ export const CATALOGUE: CatalogueItem[] = [
       ["Wall-mounted design", "Space-saving wall-mounted installation for washrooms."],
     ],
     applications: [
-      ["Schools & colleges", "Safe and private menstrual hygiene disposal for educational campuses."],
-      ["Offices & small facilities", "Low-to-medium footfall washrooms and corporate restrooms."],
+      ["Schools & institutes", "Safe and private menstrual hygiene disposal for educational campuses."],
+      ["Offices & workspaces", "Discreet wall-mounted disposal for corporate and clinic restrooms."],
+      ["Hostels & guest facilities", "Compact, hygienic sanitary waste management for shared washrooms."],
+      ["Hospitals & clinics", "Clean thermal destruction of sanitary pads in local medical rooms."],
     ],
     specs: [
       ["Dimensions (L × B × H)", "25 × 25 × 43 cm", "cm"],
@@ -124,6 +126,8 @@ export const CATALOGUE: CatalogueItem[] = [
     applications: [
       ["Schools & colleges", "Menstrual waste disposal for medium-footfall educational institutions."],
       ["Offices & workplaces", "Hygienic and discreet disposal for corporate washrooms."],
+      ["Hospitals & nursing homes", "Safe, touchless disposal meeting institutional hygiene standards."],
+      ["Public & commercial facilities", "Reliable waste reduction for shopping complexes and transit centers."],
     ],
     specs: [
       ["Dimensions (L × B × H)", "25 × 25 × 46 cm", "cm"],
@@ -147,8 +151,10 @@ export const CATALOGUE: CatalogueItem[] = [
       ["Wall-mounted design", "Engineered for heavy-duty institutional washroom wall mounting."],
     ],
     applications: [
-      ["Campuses & hostels", "High-capacity menstrual waste processing for residential campuses."],
-      ["Hospitals & public facilities", "Reliable sanitary pad disposal for high-footfall institutions."],
+      ["Campuses & universities", "High-capacity menstrual waste processing for residential campuses."],
+      ["Corporate complexes", "Heavy-duty sanitary disposal for multi-floor commercial complexes."],
+      ["Hospitals & medical centers", "High-temperature thermal destruction for high-footfall institutions."],
+      ["Transit hubs & public facilities", "Continuous-capacity sanitary pad management for airports, railways, and municipal facilities."],
     ],
     specs: [
       ["Dimensions (L × B × H)", "30 × 30 × 60 cm", "cm"],

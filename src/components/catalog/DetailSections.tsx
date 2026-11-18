@@ -1,5 +1,22 @@
 import Image from "next/image";
-import { Building2, Cog, Flame, Hospital, Landmark, Leaf, School, Settings, ShieldCheck, Truck, Wrench, type LucideIcon } from "lucide-react";
+import {
+  Building2,
+  Cog,
+  Flame,
+  Hospital,
+  Landmark,
+  Leaf,
+  School,
+  Settings,
+  ShieldCheck,
+  Truck,
+  Wrench,
+  Hotel,
+  Users,
+  Briefcase,
+  GraduationCap,
+  type LucideIcon,
+} from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Stars } from "@/components/home/Stars";
 import { FeaturedTestimonial } from "@/components/home/Testimonials";
@@ -20,7 +37,25 @@ const ICONS: Record<string, LucideIcon> = {
   hospital: Hospital,
   office: Building2,
   institution: Landmark,
+  hotel: Hotel,
+  users: Users,
+  briefcase: Briefcase,
+  graduation: GraduationCap,
 };
+
+function resolveApplicationIcon(icon?: string, title?: string): LucideIcon {
+  const t = (title || "").toLowerCase();
+  if (t.includes("school") || t.includes("college") || t.includes("campus") || t.includes("education") || t.includes("institute") || t.includes("universit")) return School;
+  if (t.includes("office") || t.includes("workplace") || t.includes("corporate") || t.includes("workspace") || t.includes("business")) return Building2;
+  if (t.includes("hospital") || t.includes("clinic") || t.includes("health") || t.includes("medical") || t.includes("nursing")) return Hospital;
+  if (t.includes("hotel") || t.includes("hospitality") || t.includes("resort") || t.includes("hostel") || t.includes("guest")) return Hotel;
+  if (t.includes("washroom") || t.includes("restroom") || t.includes("toilet") || t.includes("community")) return Users;
+  if (t.includes("transit") || t.includes("station") || t.includes("airport") || t.includes("hub") || t.includes("commercial") || t.includes("public")) return Landmark;
+  if (t.includes("factory") || t.includes("industry") || t.includes("plant") || t.includes("warehouse")) return Cog;
+  if (t.includes("eco") || t.includes("green") || t.includes("waste")) return Leaf;
+  if (icon && ICONS[icon]) return ICONS[icon];
+  return Landmark;
+}
 
 const TRUST_ICONS: Record<TrustPoint["icon"], LucideIcon> = { shield: ShieldCheck, truck: Truck, cog: Cog };
 
@@ -132,19 +167,48 @@ export function FeaturesCard({ items }: { items: IDetailPoint[] }) {
 }
 
 export function ApplicationsCard({ items }: { items: IDetailPoint[] }) {
+  const count = items.length;
+  const gridClass =
+    count === 1
+      ? "grid-cols-1"
+      : count === 2
+      ? "grid-cols-1 sm:grid-cols-2"
+      : count === 3
+      ? "grid-cols-1 sm:grid-cols-3"
+      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
+
   return (
     <section id="applications" aria-labelledby="applications-h" className={cn(card, "flex flex-1 scroll-mt-20 flex-col p-7 md:p-8")}>
-      <h2 id="applications-h" className={h2}>
-        Applications.
-      </h2>
-      <ul className="mt-6 grid flex-1 grid-cols-2 content-center gap-x-4 gap-y-6 sm:grid-cols-4">
-        {items.map((a) => (
-          <li key={a.title}>
-            <IconTile icon={a.icon} />
-            <h3 className="mt-3 text-[12px]/4 font-bold text-charcoal">{a.title}</h3>
-            <p className="mt-1 text-[11px]/4 text-muted">{a.body}</p>
-          </li>
-        ))}
+      <div className="flex items-center justify-between">
+        <h2 id="applications-h" className={h2}>
+          Applications.
+        </h2>
+        <span className="text-[12px] font-semibold text-muted bg-soft px-3 py-1 rounded-full">
+          {items.length} Environments
+        </span>
+      </div>
+      <ul className={cn("mt-6 grid flex-1 content-start gap-4", gridClass)}>
+        {items.map((a) => {
+          const Icon = resolveApplicationIcon(a.icon, a.title);
+          return (
+            <li
+              key={a.title}
+              className="group flex flex-col justify-between rounded-[20px] border border-line/70 bg-[#F8FAFC] p-5 transition-all duration-200 hover:border-navy/30 hover:bg-white hover:shadow-xs"
+            >
+              <div>
+                <div className="grid size-11 place-items-center rounded-[14px] bg-white text-navy shadow-[0_2px_8px_rgba(47,85,150,0.08)] border border-line/40 transition-transform duration-200 group-hover:scale-105">
+                  <Icon className="size-5" strokeWidth={1.8} aria-hidden />
+                </div>
+                <h3 className="mt-4 text-[14px]/[20px] font-bold text-charcoal group-hover:text-navy transition-colors">
+                  {a.title}
+                </h3>
+                <p className="mt-1.5 text-[12.5px]/[19px] text-muted leading-relaxed">
+                  {a.body}
+                </p>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
