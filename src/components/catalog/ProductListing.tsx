@@ -20,9 +20,9 @@ const CATEGORIES: { key: CategoryKey; label: string }[] = [
 ];
 
 const TIERS = [
-  { slug: "basic", label: "Basic" },
-  { slug: "pro", label: "Pro" },
-  { slug: "pro-max", label: "Pro Max" },
+  { slug: "small", label: "Small (25–100 pads)" },
+  { slug: "medium", label: "Medium (250 pads)" },
+  { slug: "large", label: "Large (500 pads)" },
 ];
 
 const COLOURS = [
@@ -97,7 +97,23 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
       if (p.category === "pad-vending") return false; // "All solutions" excludes pad-vending legacy fallback
       return true;
     });
-    if (tiers.length) list = list.filter((p) => tiers.includes(p.slug));
+    if (tiers.length) {
+      list = list.filter((p) => {
+        const s = (p.slug || "").toLowerCase();
+        return tiers.some((t) => {
+          if (t === "small" || t === "basic") {
+            return s.includes("100-pad") || s.includes("small") || s.includes("basic");
+          }
+          if (t === "medium" || t === "pro") {
+            return (s.includes("disposal-machine") && !s.includes("100-pad") && !s.includes("500-pad")) || s.includes("medium") || s.includes("pro");
+          }
+          if (t === "large" || t === "pro-max") {
+            return s.includes("500-pad") || s.includes("large") || s.includes("pro-max");
+          }
+          return s === t;
+        });
+      });
+    }
     list = list.filter((p) => p.price <= maxPrice);
     if (colours.length) list = list.filter((p) => p.colours.some((c) => colours.includes(c)));
     const sorted = [...list];

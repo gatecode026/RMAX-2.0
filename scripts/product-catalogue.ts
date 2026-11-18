@@ -21,7 +21,7 @@ export interface CatalogueItem {
   specs?: Row[];
   chips: string[];
   /** Fields of IProduct.specs that are documented; the rest stay "Not specified". */
-  docSpecs?: Partial<Record<"dailyCapacity" | "batchCapacity" | "power" | "chamber" | "warranty", string>>;
+  docSpecs?: Partial<Record<"dailyCapacity" | "batchCapacity" | "power" | "chamber" | "warranty" | "weight", string>>;
   warranty?: { duration: string; type: string; description: string };
   /** Existing seeded product: only content/ordering fields are touched, its ImageKit photos are kept. */
   existing?: boolean;
@@ -87,31 +87,81 @@ export const CATALOGUE: CatalogueItem[] = [
     chips: ["50 pads", "Push button", "Wall-mountable"], docSpecs: { dailyCapacity: "50 pads" },
   },
   {
-    slug: "sanitary-pad-disposal-machine-100-pad", name: "Sanitary Pad Disposal Machine — 100 Pad", category: "disposal-machine", group: H,
-    summary: "Electric sanitary pad disposal machine, 100-pad variant.",
-    overview: "An electric sanitary pad disposal machine, offered as the 100-pad variant, for washrooms in institutions and public facilities.",
-    features: [["Electric operation", "Powered disposal unit."]],
-    applications: [[HYGIENE_PLACES, "Disposal of used sanitary pads in washrooms."]],
-    specs: [["Variant", "100-pad"]],
-    chips: ["100-pad variant", "Electric"],
+    slug: "sanitary-pad-disposal-machine-100-pad", name: "Small Automatic Sanitary Pad Incinerator", category: "incinerator", group: H, existing: true,
+    summary: "A compact, wall-mounted automatic incinerator with an 800 W heater and a disposal capacity of 25–100 sanitary pads per batch.",
+    overview: "The Small model offers a compact, wall-mounted option for sanitary pad disposal in shared washrooms. It measures 25 × 25 × 43 cm, weighs 10–12 kg, and includes a one-year warranty.",
+    features: [
+      ["Automatic operation", "Enclosed automatic high-temperature incineration system."],
+      ["800 W heater", "Rapid and hygienic thermal disposal for compact facilities."],
+      ["Wall-mounted design", "Space-saving wall-mounted installation for washrooms."],
+    ],
+    applications: [
+      ["Schools & colleges", "Safe and private menstrual hygiene disposal for educational campuses."],
+      ["Offices & small facilities", "Low-to-medium footfall washrooms and corporate restrooms."],
+    ],
+    specs: [
+      ["Dimensions (L × B × H)", "25 × 25 × 43 cm", "cm"],
+      ["Weight", "10–12 kg", "kg"],
+      ["Disposal capacity", "25–100 sanitary pads per batch", "pads/batch"],
+      ["Heater rating", "800 W", "W"],
+      ["Operation", "Automatic"],
+      ["Mounting", "Wall-mounted"],
+      ["Warranty", "1 year"],
+    ],
+    chips: ["25–100 pads/batch", "800 W heater", "Wall-mounted", "1-year warranty"],
+    docSpecs: { dailyCapacity: "25–100 pads/batch", batchCapacity: "25–100 pads", power: "800 W", weight: "10–12 kg", warranty: "1 year" },
+    warranty: { duration: "1 year", type: "Manufacturer warranty", description: "One-year warranty duration as specified." },
   },
   {
-    slug: "sanitary-pad-disposal-machine", name: "Sanitary Pad Disposal Machine", category: "disposal-machine", group: H,
-    summary: "Robust steel body with digital controls.",
-    overview: "A sanitary pad disposal machine with a robust steel body and digital controls, for washrooms in institutions and public facilities.",
-    features: [["Steel body", "Robust steel construction."], ["Digital controls", "Digital control panel."]],
-    applications: [[HYGIENE_PLACES, "Disposal of used sanitary pads in washrooms."]],
-    specs: [["Body", "Steel"], ["Controls", "Digital"]],
-    chips: ["Steel body", "Digital controls"],
+    slug: "sanitary-pad-disposal-machine", name: "Medium Automatic Sanitary Pad Incinerator", category: "incinerator", group: H, existing: true,
+    summary: "A wall-mounted automatic incinerator with a disposal capacity of 250 sanitary pads per batch.",
+    overview: "The Medium model is an option for schools, colleges, offices, and other facilities with shared washrooms. It measures 25 × 25 × 46 cm, weighs 12–15 kg, and includes a one-year warranty.",
+    features: [
+      ["Automatic operation", "Enclosed automatic high-temperature incineration system."],
+      ["250 pads capacity", "Designed for regular batch disposal in institutional washrooms."],
+      ["Wall-mounted design", "Space-saving wall-mounted installation for washrooms."],
+    ],
+    applications: [
+      ["Schools & colleges", "Menstrual waste disposal for medium-footfall educational institutions."],
+      ["Offices & workplaces", "Hygienic and discreet disposal for corporate washrooms."],
+    ],
+    specs: [
+      ["Dimensions (L × B × H)", "25 × 25 × 46 cm", "cm"],
+      ["Weight", "12–15 kg", "kg"],
+      ["Disposal capacity", "250 sanitary pads per batch", "pads/batch"],
+      ["Operation", "Automatic"],
+      ["Mounting", "Wall-mounted"],
+      ["Warranty", "1 year"],
+    ],
+    chips: ["250 pads/batch", "Wall-mounted", "Automatic", "1-year warranty"],
+    docSpecs: { dailyCapacity: "250 pads/batch", batchCapacity: "250 pads", weight: "12–15 kg", warranty: "1 year" },
+    warranty: { duration: "1 year", type: "Manufacturer warranty", description: "One-year warranty duration as specified." },
   },
   {
-    slug: "sanitary-pad-disposal-machine-500-pad", name: "Sanitary Pad Disposal Machine — 500 Pad", category: "disposal-machine", group: H,
-    summary: "Heavy-duty 500-pad variant for hostels and hospitals.",
-    overview: "A heavy-duty sanitary pad disposal machine, offered as the 500-pad variant, for hostels and hospitals.",
-    features: [["Heavy-duty build", "Designed for high-use sites."]],
-    applications: [["Hostels", "Washrooms with many users."], ["Hospitals", "Disposal of used sanitary pads."]],
-    specs: [["Variant", "500-pad"]],
-    chips: ["500-pad variant", "Heavy-duty"],
+    slug: "sanitary-pad-disposal-machine-500-pad", name: "Large Automatic Sanitary Pad Incinerator", category: "incinerator", group: H, existing: true,
+    summary: "A wall-mounted automatic incinerator with a 1,200 W heater and a disposal capacity of 500 sanitary pads per batch.",
+    overview: "The Large model is designed for facilities with higher disposal needs, such as campuses, workplaces, and public facilities. It measures 30 × 30 × 60 cm, weighs 18–20 kg, and includes a one-year warranty.",
+    features: [
+      ["Automatic operation", "High-capacity automatic incineration system."],
+      ["1,200 W heater", "High-performance heater for efficient, rapid thermal disposal."],
+      ["Wall-mounted design", "Engineered for heavy-duty institutional washroom wall mounting."],
+    ],
+    applications: [
+      ["Campuses & hostels", "High-capacity menstrual waste processing for residential campuses."],
+      ["Hospitals & public facilities", "Reliable sanitary pad disposal for high-footfall institutions."],
+    ],
+    specs: [
+      ["Dimensions (L × B × H)", "30 × 30 × 60 cm", "cm"],
+      ["Weight", "18–20 kg", "kg"],
+      ["Disposal capacity", "500 sanitary pads per batch", "pads/batch"],
+      ["Heater rating", "1,200 W", "W"],
+      ["Operation", "Automatic"],
+      ["Mounting", "Wall-mounted"],
+      ["Warranty", "1 year"],
+    ],
+    chips: ["500 pads/batch", "1,200 W heater", "Wall-mounted", "1-year warranty"],
+    docSpecs: { dailyCapacity: "500 pads/batch", batchCapacity: "500 pads", power: "1,200 W", weight: "18–20 kg", warranty: "1 year" },
+    warranty: { duration: "1 year", type: "Manufacturer warranty", description: "One-year warranty duration as specified." },
   },
   {
     slug: "baby-diaper-vending-machine", name: "Baby Diaper Vending Machine", category: "vending-machine", group: H,

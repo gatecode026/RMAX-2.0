@@ -56,6 +56,15 @@ export function getAllProducts(): Promise<ProductDTO[]> {
   return readAllProducts();
 }
 
+export const INCINERATOR_ALIASES: Record<string, string> = {
+  "small-automatic-sanitary-pad-incinerator": "sanitary-pad-disposal-machine-100-pad",
+  "medium-automatic-sanitary-pad-incinerator": "sanitary-pad-disposal-machine",
+  "large-automatic-sanitary-pad-incinerator": "sanitary-pad-disposal-machine-500-pad",
+  basic: "sanitary-pad-disposal-machine-100-pad",
+  pro: "sanitary-pad-disposal-machine",
+  "pro-max": "sanitary-pad-disposal-machine-500-pad",
+};
+
 /** The three incinerator models — used by Compare, the footer, search, quote and contact forms. */
 export async function getProducts(): Promise<ProductDTO[]> {
   return (await getAllProducts()).filter((p) => p.category !== "pad-vending");
@@ -69,7 +78,8 @@ export async function getProducts(): Promise<ProductDTO[]> {
 export async function getProductBySlugAnyStatus(slug: string): Promise<ProductDTO | null> {
   try {
     await connectDB();
-    const doc = await Product.findOne({ slug }).lean();
+    const targetSlug = INCINERATOR_ALIASES[slug] || slug;
+    const doc = await Product.findOne({ slug: targetSlug }).lean();
     if (doc) return plain<ProductDTO>(doc);
     if (slug === "pad-vending") {
       const alt = await Product.findOne({ slug: "pad-vending-coin" }).lean();
@@ -83,8 +93,9 @@ export async function getProductBySlugAnyStatus(slug: string): Promise<ProductDT
 
 export async function getProductBySlug(slug: string): Promise<ProductDTO | null> {
   const all = await getAllProducts();
+  const targetSlug = INCINERATOR_ALIASES[slug] || slug;
   return (
-    all.find((p) => p.slug === slug) ??
+    all.find((p) => p.slug === targetSlug) ??
     (slug === "pad-vending" ? all.find((p) => p.slug === "pad-vending-coin") : null) ??
     null
   );

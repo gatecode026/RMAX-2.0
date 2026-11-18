@@ -23,6 +23,7 @@ type Props = {
   /** Models the quote form knows about; other products are enquired about via Contact Us. */
   quoteModel: string | null;
   showOptions: boolean;
+  stockStatus?: string;
   models?: {
     slug: string;
     name: string;
@@ -36,7 +37,7 @@ type Props = {
 const GPS_BANKS = ["SBI", "BOB", "BOI", "BOM", "CBI", "PNB", "Others"].map((b) => ({ value: b, label: b }));
 
 /** Price card: M.R.P., price, model switcher, quantity, type, colour, CTAs, and bulk policy. */
-export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptions, models }: Props) {
+export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptions, stockStatus, models }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(1);
   const [colour, setColour] = useState(colours[0] ?? "");
@@ -82,7 +83,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
   // Fall back to the first option if the product changed under a mounted panel (e.g. model switch).
   const selectedType = typeOptions.some((o) => o.value === selectedTypeRaw) ? selectedTypeRaw : typeOptions[0].value;
   const currentModelName = models?.find((m) => m.slug === slug)?.name ?? slug;
-  const onRequest = price <= 0; // quotation-only product: no published price
+  const onRequest = price <= 0 || stockStatus === "enquiry-only"; // quotation-only product: no published price
   const displayPrice = price * qty;
   const displayMrp = mrp && mrp > price ? mrp * qty : undefined;
   const stepper = "grid size-7 place-items-center rounded-full bg-soft text-navy transition hover:bg-line disabled:opacity-40 cursor-pointer";
@@ -188,7 +189,9 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
                   )}
                 >
                   <span className="text-[12.5px] font-bold leading-tight line-clamp-1">{m.name}</span>
-                  <span className="mt-1 text-[12.5px] font-extrabold text-charcoal">{formatINR(m.price)}</span>
+                  <span className="mt-1 text-[12.5px] font-extrabold text-charcoal">
+                    {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "Price on request"}
+                  </span>
                   <span className="mt-0.5 text-[9.5px] text-muted truncate w-full">
                     {m.category === "incinerator"
                       ? (m.dailyCapacity ? m.dailyCapacity.replace("/day", " pads/d") : "Incinerator")

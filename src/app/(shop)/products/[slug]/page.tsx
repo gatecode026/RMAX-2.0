@@ -35,7 +35,13 @@ export const instant = false;
 
 export async function generateStaticParams() {
   const all = await getAllProducts();
-  const slugs = new Set([...all.map((p) => p.slug), "pad-vending"]);
+  const slugs = new Set([
+    ...all.map((p) => p.slug),
+    "pad-vending",
+    "small-automatic-sanitary-pad-incinerator",
+    "medium-automatic-sanitary-pad-incinerator",
+    "large-automatic-sanitary-pad-incinerator",
+  ]);
   return Array.from(slugs).map((slug) => ({ slug }));
 }
 
@@ -79,12 +85,20 @@ export default async function ProductPage({ params }: Params) {
   ]);
   const others = all.filter((p) => p.slug !== slug);
   const related = [...others.filter((p) => p.category === product.category), ...others.filter((p) => p.category !== product.category)].slice(0, 3);
-  const isIncinerator = product.category === "incinerator";
+  const incineratorSlugs = [
+    "sanitary-pad-disposal-machine-100-pad",
+    "sanitary-pad-disposal-machine",
+    "sanitary-pad-disposal-machine-500-pad",
+  ];
+  const isIncinerator = product.category === "incinerator" || incineratorSlugs.includes(product.slug);
+  const isSmallIncinerator = product.slug === "sanitary-pad-disposal-machine-100-pad" || product.slug.includes("small");
+  const isMediumIncinerator = (product.slug === "sanitary-pad-disposal-machine" && !isSmallIncinerator && !product.slug.includes("500-pad")) || product.slug.includes("medium");
+  const isLargeIncinerator = product.slug === "sanitary-pad-disposal-machine-500-pad" || product.slug.includes("large");
   const isDustRemover = product.slug === "dust-remover-machine";
   const isShredder = product.slug === "plastic-waste-shredder-machine";
   const isBailing = product.slug === "plastic-bailing-machine";
   // Hygiene models keep the settings-based trust points; every other catalogue item gets neutral, documented ones.
-  const useNeutralTrust = product.category !== "incinerator" && product.category !== "pad-vending";
+  const useNeutralTrust = !isIncinerator && product.category !== "pad-vending";
   const s = product.specs;
   const batchKnown = s.batchCapacity !== "Not specified";
 
@@ -108,6 +122,27 @@ export default async function ProductPage({ params }: Params) {
         { value: "915 mm", label: "Drum Diameter" },
         { value: "10–15 HP", label: "Main Motor" },
         { value: "2100 mm", label: "Drum Length" },
+      ]
+    : isSmallIncinerator
+    ? [
+        { value: "800W", label: "Heater Rating" },
+        { value: "25–100", label: "Pads per Batch" },
+        { value: "10–12 kg", label: "Weight" },
+        { value: "25 × 25 × 43 cm", label: "Dimensions (L×B×H)" },
+      ]
+    : isMediumIncinerator
+    ? [
+        { value: "250 Pads", label: "Batch Capacity" },
+        { value: "12–15 kg", label: "Weight" },
+        { value: "25 × 25 × 46 cm", label: "Dimensions (L×B×H)" },
+        { value: "Wall-Mount", label: "Installation" },
+      ]
+    : isLargeIncinerator
+    ? [
+        { value: "1200W", label: "Heater Rating" },
+        { value: "500 Pads", label: "Batch Capacity" },
+        { value: "18–20 kg", label: "Weight" },
+        { value: "30 × 30 × 60 cm", label: "Dimensions (L×B×H)" },
       ]
     : isIncinerator && s.power !== "Not specified"
     ? [
@@ -204,7 +239,35 @@ export default async function ProductPage({ params }: Params) {
                 mrp={product.mrp}
                 colours={product.colours}
                 quoteModel={product.slug}
-                showOptions={product.price > 0}
+                showOptions={product.price > 0 && product.stockStatus !== "enquiry-only"}
+                models={
+                  isIncinerator
+                    ? [
+                        {
+                          slug: "sanitary-pad-disposal-machine-100-pad",
+                          name: "Small",
+                          price: all.find((p) => p.slug === "sanitary-pad-disposal-machine-100-pad")?.price ?? 3000,
+                          dailyCapacity: "25–100 / batch",
+                          category: "incinerator",
+                        },
+                        {
+                          slug: "sanitary-pad-disposal-machine",
+                          name: "Medium",
+                          price: all.find((p) => p.slug === "sanitary-pad-disposal-machine")?.price ?? 4500,
+                          dailyCapacity: "250 / batch",
+                          category: "incinerator",
+                        },
+                        {
+                          slug: "sanitary-pad-disposal-machine-500-pad",
+                          name: "Large",
+                          price: all.find((p) => p.slug === "sanitary-pad-disposal-machine-500-pad")?.price ?? 6500,
+                          dailyCapacity: "500 / batch",
+                          category: "incinerator",
+                        },
+                      ]
+                    : undefined
+                }
+                stockStatus={product.stockStatus}
               />
             </div>
 

@@ -25,6 +25,9 @@ const SLUG_ALIASES: Record<string, string> = {
   basic: "sanitary-pad-disposal-machine-100-pad",
   pro: "sanitary-pad-disposal-machine",
   "pro-max": "sanitary-pad-disposal-machine-500-pad",
+  "small-automatic-sanitary-pad-incinerator": "sanitary-pad-disposal-machine-100-pad",
+  "medium-automatic-sanitary-pad-incinerator": "sanitary-pad-disposal-machine",
+  "large-automatic-sanitary-pad-incinerator": "sanitary-pad-disposal-machine-500-pad",
 };
 
 /** Matches studio card images or falls back to product image */
@@ -293,11 +296,13 @@ export function CompareView({
 
                     {/* Actions: Buy this model & Request quote */}
                     <div className="mt-3.5 flex flex-col gap-2.5">
-                      <BuyButton
-                        slug={p.slug}
-                        className="w-full"
-                        buttonClassName="h-[50px] w-full rounded-full bg-gradient-to-r from-[#0B62FF] to-[#0EA5E9] font-sans text-[14px] font-bold text-white shadow-xs hover:opacity-95 transition-opacity"
-                      />
+                      {p.price > 0 && p.stockStatus !== "enquiry-only" && (
+                        <BuyButton
+                          slug={p.slug}
+                          className="w-full"
+                          buttonClassName="h-[50px] w-full rounded-full bg-gradient-to-r from-[#0B62FF] to-[#0EA5E9] font-sans text-[14px] font-bold text-white shadow-xs hover:opacity-95 transition-opacity"
+                        />
+                      )}
                       <Link
                         href={`/institutional-quote?model=${p.slug}`}
                         className="flex h-[50px] w-full items-center justify-center rounded-full bg-white border border-[rgba(11,98,255,0.18)] font-sans text-[14px] font-bold text-[#0B62FF] hover:bg-[#F0F5FF] transition-colors"
@@ -325,14 +330,28 @@ export function CompareView({
                     <div className="font-sans font-bold text-[14px] leading-[19px] text-[#0F172A]">
                       {row.label}
                     </div>
-                    {models.map((p, colIdx) => (
-                      <div
-                        key={`${p.slug}-${colIdx}-${row.key}`}
-                        className="font-sans font-normal text-[14px] leading-[21px] text-[#62748E] truncate"
-                      >
-                        {p.specs?.[row.key] || "—"}
-                      </div>
-                    ))}
+                    {models.map((p, colIdx) => {
+                      const isMedium = p.slug === "sanitary-pad-disposal-machine" || p.name.includes("Medium");
+                      if (row.key === "power" && isMedium) {
+                        return (
+                          <div
+                            key={`${p.slug}-${colIdx}-${row.key}`}
+                            className="font-sans font-medium text-[13px] leading-[21px] text-[#94A3B8] italic truncate"
+                          >
+                            Pending confirmation
+                          </div>
+                        );
+                      }
+                      const val = p.specs?.[row.key];
+                      return (
+                        <div
+                          key={`${p.slug}-${colIdx}-${row.key}`}
+                          className="font-sans font-normal text-[14px] leading-[21px] text-[#62748E] truncate"
+                        >
+                          {val && val !== "Not specified" ? val : "—"}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}

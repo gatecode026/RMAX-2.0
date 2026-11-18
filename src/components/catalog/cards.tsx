@@ -11,14 +11,14 @@ function getCardSpecs(product: ProductDTO): string[] {
   const slug = (product.slug || "").toLowerCase();
   const s = product.specs;
 
-  if (slug.includes("basic") || slug === "sanitary-pad-disposal-machine-100-pad") {
-    return ["800 W", "8kg", "80–100 / day", "Blue / Pink"];
+  if (slug.includes("basic") || slug === "sanitary-pad-disposal-machine-100-pad" || slug.includes("small")) {
+    return ["800 W Heater", "10–12 kg", "25–100 / Batch", "Wall Mounted"];
   }
-  if (slug === "sanitary-pad-disposal-machine") {
-    return ["1200 W", "14kg", "150–200 / day", "Blue / Off-White"];
+  if (slug === "sanitary-pad-disposal-machine" || slug.includes("medium")) {
+    return ["250 / Batch", "12–15 kg", "Wall Mounted", "Automatic"];
   }
-  if (slug === "sanitary-pad-disposal-machine-500-pad") {
-    return ["2000 W", "28kg", "500 / day", "Commercial MS"];
+  if (slug === "sanitary-pad-disposal-machine-500-pad" || slug.includes("large") || slug.includes("pro-max")) {
+    return ["1,200 W Heater", "18–20 kg", "500 / Batch", "Wall Mounted"];
   }
   if (slug === "30-pad-sanitary-napkin-vending-machine") {
     return ["30-Pad Capacity", "Coin Operated", "Wall Mount", "1 Year Warranty"];
@@ -191,7 +191,7 @@ function UnifiedProductCard({
       {/* Bottom Frame: Price & View button */}
       <div className="mt-4 flex items-end justify-between gap-3 px-1 pt-1">
         <div className="flex flex-col items-start justify-end">
-          {product.mrp && product.mrp > product.price && product.price > 0 ? (
+          {product.mrp && product.mrp > product.price && product.price > 0 && product.stockStatus !== "enquiry-only" ? (
             <div className="relative inline-block font-sans text-[16px] font-normal leading-[20px] text-[#B8C4D4] -mb-0.5">
               <span className="diagonal-strike">{formatINR(product.mrp)}</span>
             </div>
@@ -199,10 +199,10 @@ function UnifiedProductCard({
           <span
             className={cn(
               "font-heading font-bold text-[#232A32] tracking-tight",
-              product.price > 0 ? "text-[32px] leading-[36px]" : "text-[20px] sm:text-[22px] leading-[28px]"
+              product.price > 0 && product.stockStatus !== "enquiry-only" ? "text-[32px] leading-[36px]" : "text-[20px] sm:text-[22px] leading-[28px]"
             )}
           >
-            {product.price > 0 ? formatINR(product.price) : "Price on request"}
+            {product.price > 0 && product.stockStatus !== "enquiry-only" ? formatINR(product.price) : "Price on request"}
           </span>
         </div>
 

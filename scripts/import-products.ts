@@ -34,7 +34,7 @@ function contentFields(it: CatalogueItem, order: number, categoryId: unknown, br
     techSpecs: (it.specs ?? []).map(([label, value, unit], i) => ({ label, value, unit, order: i + 1, visible: true })),
     faqs: [],
     specs: {
-      dailyCapacity: d.dailyCapacity ?? NS, batchCapacity: d.batchCapacity ?? NS, power: d.power ?? NS, weight: NS, colours: NS,
+      dailyCapacity: d.dailyCapacity ?? NS, batchCapacity: d.batchCapacity ?? NS, power: d.power ?? NS, weight: d.weight ?? NS, colours: NS,
       cycleDuration: NS, chamber: d.chamber ?? NS, maintenance: NS, warranty: d.warranty ?? NS, delivery: NS,
     },
     // Quotation-only: no price is published anywhere in the source documents.
@@ -81,7 +81,7 @@ async function main() {
   const tally = { created: 0, updated: 0, unchanged: 0 };
   for (const [i, it] of CATALOGUE.entries()) {
     try {
-      const existing = await Product.findOne({ slug: it.slug }).select("images").lean();
+      const existing = await Product.findOne({ slug: it.slug }).select("images price originalPrice discountPercent").lean();
       const photos = existing?.images?.length ?? 0;
       const file = `${PHOTO_DIR}/${it.slug}.webp`;
       const upload = !photos && fs.existsSync(file);
@@ -90,6 +90,11 @@ async function main() {
       if (dryRun) { console.log(`  ${label}`); continue; }
 
       const fields = contentFields(it, i + 1, categoryIds[it.group], brandId);
+      if (existing && typeof existing.price === "number") {
+        fields.price = existing.price;
+        fields.originalPrice = typeof existing.originalPrice === "number" ? existing.originalPrice : existing.price;
+        fields.discountPercent = typeof existing.discountPercent === "number" ? existing.discountPercent : 0;
+      }
       const insertOnly = {
         slug: it.slug, image: { src: "", alt: "", width: 0, height: 0 }, images: [], gallery: [], colours: [],
         sku: `RMAX-${String(i + 1).padStart(3, "0")}`,
