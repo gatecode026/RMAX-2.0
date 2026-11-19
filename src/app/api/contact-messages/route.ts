@@ -5,7 +5,7 @@ import { contactSchema } from "@/lib/validations/schemas";
 
 export const POST = route(async (req: Request) => {
   // 1. IP-based rate limiting (5 messages per hour)
-  const rl = limited(req, "contact", 5, 60 * 60_000);
+  const rl = await limited(req, "contact", 5, 60 * 60_000);
   if (rl) return rl;
 
   // 2. Request body JSON validation
@@ -50,18 +50,14 @@ export const POST = route(async (req: Request) => {
   });
 
   let leadId = "";
+  let createdLead: unknown = null;
   let leadNumber = "";
 
   // Auto-create Lead in pipeline so it is tracked by both Admin and Managers
   try {
     const { Lead } = await import("@/models/Lead");
-    const { Counter } = await import("@/models/Counter");
-    const counter = await Counter.findByIdAndUpdate(
-      "leadNumber",
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true }
-    );
-    const seq = (counter?.seq || 1) + 1000;
+    const { nextSequence } = await import("@/models/Counter");
+    const seq = (await nextSequence("leadNumber")) + 1000;
     leadNumber = `LD-${seq}`;
 
     const leadDoc = await Lead.create({
@@ -88,8 +84,14 @@ export const POST = route(async (req: Request) => {
       ],
     });
     leadId = String(leadDoc._id);
+    createdLead = leadDoc;
   } catch (leadErr) {
     console.warn("Failed to create Lead from contact message:", leadErr);
+  }
+
+  if (createdLead) {
+    const { notifyLeadCreated } = await import("@/lib/mail/notify");
+    await notifyLeadCreated(createdLead as never, { customerAck: true });
   }
 
   // Broadcast real-time notification to BOTH Super Admin and Managers

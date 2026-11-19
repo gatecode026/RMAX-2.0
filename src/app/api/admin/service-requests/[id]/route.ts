@@ -11,7 +11,7 @@ interface RouteParams {
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const user = await getSessionUser("staff");
-    if (!user || (user.role !== "super_admin" && user.role !== "admin" && user.role !== "manager")) {
+    if (!user || (user.role !== "super_admin" && user.role !== "admin")) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 

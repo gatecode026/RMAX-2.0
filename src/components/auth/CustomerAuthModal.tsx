@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ResetCodeForm } from "@/components/auth/ResetCodeForm";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +22,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuthModal } from "@/context/AuthModalContext";
+import { useToast } from "@/components/ui/Toast";
 import { loginAction } from "@/lib/actions/auth";
 import { applyFieldErrors, requestJson } from "@/lib/client-api";
 import {
@@ -37,6 +39,7 @@ function CustomerAuthModalContent() {
   const searchParams = useSearchParams();
   const nextParam = searchParams.get("next");
   const { isOpen, tab, setTab, closeModal } = useAuthModal();
+  const { success: toastSuccess } = useToast();
 
   // Password visibility toggles
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +52,6 @@ function CustomerAuthModalContent() {
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [forgotError, setForgotError] = useState<string | null>(null);
   const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
-  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
   // Forms
   const {
@@ -87,18 +89,14 @@ function CustomerAuthModalContent() {
       return;
     }
 
-    setAuthSuccess("Logged in successfully! Loading your session…");
-    setTimeout(() => {
-      closeModal();
-      resetLoginForm();
-      if (typeof document !== "undefined") { document.body.style.overflow = ""; document.documentElement.style.overflow = ""; document.body.classList.remove("modal-open"); }
-      setAuthSuccess(null);
-      if (nextParam && !nextParam.startsWith("/admin") && !nextParam.startsWith("/manager")) {
-        router.push(nextParam);
-      } else {
-        router.refresh();
-      }
-    }, 800);
+    closeModal();
+    resetLoginForm();
+    toastSuccess("Signed in", "Welcome back to RMAX.");
+    if (nextParam && !nextParam.startsWith("/admin") && !nextParam.startsWith("/manager")) {
+      router.push(nextParam);
+    } else {
+      router.refresh();
+    }
   }
 
   // Handle Register Submit
@@ -124,18 +122,14 @@ function CustomerAuthModalContent() {
       return;
     }
 
-    setAuthSuccess("Account created successfully! Welcome to RMAX.");
-    setTimeout(() => {
-      closeModal();
-      resetRegForm();
-      if (typeof document !== "undefined") { document.body.style.overflow = ""; document.documentElement.style.overflow = ""; document.body.classList.remove("modal-open"); }
-      setAuthSuccess(null);
-      if (nextParam && !nextParam.startsWith("/admin") && !nextParam.startsWith("/manager")) {
-        router.push(nextParam);
-      } else {
-        router.refresh();
-      }
-    }, 800);
+    closeModal();
+    resetRegForm();
+    toastSuccess("Account created", "Welcome to RMAX.");
+    if (nextParam && !nextParam.startsWith("/admin") && !nextParam.startsWith("/manager")) {
+      router.push(nextParam);
+    } else {
+      router.refresh();
+    }
   }
 
   // Handle Forgot Password Submit
@@ -199,14 +193,6 @@ function CustomerAuthModalContent() {
               : "Enter your registered email to receive password recovery instructions."}
           </p>
         </div>
-
-        {/* Global Success Banner */}
-        {authSuccess && (
-          <div className="mb-5 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 flex items-center gap-3 text-emerald-800 animate-in fade-in duration-200">
-            <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
-            <span className="text-sm font-semibold">{authSuccess}</span>
-          </div>
-        )}
 
         {/* Segmented Pill Tabs for Login / Register */}
         {tab !== "forgot" && (
@@ -611,25 +597,7 @@ function CustomerAuthModalContent() {
         {tab === "forgot" && (
           <div>
             {forgotSuccess ? (
-              <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800">
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-bold">Password Reset Instructions Sent</h4>
-                    <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
-                      If an account exists for <strong>{forgotSuccess}</strong>, reset instructions
-                      have been dispatched. Please check your inbox and spam folder.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTab("login")}
-                  className="mt-4 w-full h-10 rounded-action bg-navy hover:brightness-110 text-white text-xs font-bold transition-all cursor-pointer"
-                >
-                  Return to Sign In
-                </button>
-              </div>
+              <ResetCodeForm email={forgotSuccess} onDone={() => setTab("login")} />
             ) : (
               <form onSubmit={handleForgotSubmit(onForgot)} noValidate className="flex flex-col gap-4">
                 {forgotError && (

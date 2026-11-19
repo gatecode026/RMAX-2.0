@@ -8,6 +8,8 @@ import {
   LayoutDashboard,
   Target,
   CalendarCheck,
+  Users,
+  Package,
   FileText,
   User,
   LogOut,
@@ -21,6 +23,8 @@ import {
 } from "lucide-react";
 import { useDesktopNotifications } from "@/hooks/useDesktopNotifications";
 import { managerLogoutAction } from "@/lib/actions/auth";
+import { allowedManagerPages } from "@/lib/permissions";
+import { useManagerPermissions } from "@/components/manager/ManagerPermissionsContext";
 
 interface ManagerLayoutClientProps {
   children: React.ReactNode;
@@ -34,17 +38,22 @@ interface ManagerLayoutClientProps {
   };
 }
 
-const MANAGER_NAV = [
-  { label: "Dashboard", href: "/manager/dashboard", icon: LayoutDashboard },
-  { label: "My Leads", href: "/manager/leads", icon: Target },
-  { label: "Quotations", href: "/manager/quotations", icon: FileText },
-  { label: "Follow-Ups", href: "/manager/follow-ups", icon: CalendarCheck },
-  { label: "My Profile", href: "/manager/profile", icon: User },
-];
+const NAV_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "/manager/dashboard": LayoutDashboard,
+  "/manager/leads": Target,
+  "/manager/quotations": FileText,
+  "/manager/follow-ups": CalendarCheck,
+  "/manager/customers": Users,
+  "/manager/products": Package,
+  "/manager/profile": User,
+};
 
 export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps) {
   const pathname = usePathname();
   const router = useRouter();
+  // Sidebar shows only pages this manager may open; the provider keeps it current live.
+  const permissions = useManagerPermissions();
+  const navItems = allowedManagerPages(permissions);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -151,12 +160,12 @@ export function ManagerLayoutClient({ children, user }: ManagerLayoutClientProps
 
           {/* Navigation */}
           <nav className="space-y-1 px-3 py-2">
-            {MANAGER_NAV.map((item) => {
+            {navItems.map((item) => {
               const active =
                 item.href === "/manager/dashboard"
                   ? pathname === "/manager/dashboard" || pathname === "/manager"
                   : pathname.startsWith(item.href);
-              const Icon = item.icon;
+              const Icon = NAV_ICONS[item.href] ?? LayoutDashboard;
 
               return (
                 <Link

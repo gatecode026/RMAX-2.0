@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Lead } from "@/models/Lead";
-import { checkApiRole } from "@/lib/session";
+import { checkApiPermission } from "@/lib/permissions-server";
 
 export async function GET(req: NextRequest) {
   try {
-    const authResult = await checkApiRole(["manager", "super_admin", "admin"]);
+    const authResult = await checkApiPermission("leadsView");
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }

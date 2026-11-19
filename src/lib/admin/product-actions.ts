@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Product, type ProductStatus } from "@/models/Product";
 import { checkApiRole, type SessionUser } from "@/lib/session";
 import { logAuditEvent } from "@/lib/audit";
+import { resolveFamilyLink } from "@/lib/admin/family";
 
 function findByIdOrSlug(id: string) {
   return Product.findOne({ $or: [{ slug: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] });
@@ -28,6 +29,11 @@ export async function changeProductStatus(id: string, nextStatus: ProductStatus,
       if (!existing.image?.src) missing.push("a main product image");
       if (!existing.name) missing.push("a product name");
       if (existing.price === undefined || existing.price === null) missing.push("a price");
+      if (existing.familyId) {
+        // A family member needs a value for every option of its family, and a combination no other product uses.
+        const link = await resolveFamilyLink({ familyId: String(existing.familyId), variantOptions: existing.variantOptions as Record<string, string> | undefined }, existing._id);
+        if ("error" in link) missing.push(`valid family options (${link.error})`);
+      }
       if (missing.length > 0) {
         return NextResponse.json(
           { error: `Cannot publish — missing ${missing.join(", ")}.` },
@@ -104,6 +110,10 @@ export async function duplicateProduct(id: string) {
       title: `${source.title} (Copy)`,
       slug,
       sku,
+      // the copy is a new product: it must be linked to a family (with its own option values) explicitly
+      familyId: undefined,
+      variantOptions: undefined,
+      variantKey: undefined,
       status: "draft",
       publishedAt: undefined,
       priceHistory: [],

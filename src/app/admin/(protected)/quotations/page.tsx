@@ -1,5 +1,6 @@
 "use client";
 
+import { Pagination } from "@/components/ui/Pagination";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
 import { useToast } from "@/components/ui/Toast";
@@ -33,6 +34,7 @@ interface QuoteItem {
   email: string;
   phone?: string;
   preferredModel: string;
+  variantLabel?: string;
   quantity: number;
   expectedDailyUsage?: string;
   deliveryCityPostal?: string;
@@ -61,6 +63,9 @@ export default function AdminQuotationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Multi-selection state
@@ -109,11 +114,15 @@ export default function AdminQuotationsPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (activeTab !== "all") params.set("status", activeTab);
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
 
       const res = await fetch(`/api/admin/quotations?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setQuotes(data.quotes || []);
+        setTotal(data.total ?? 0);
+        if (data.page && data.page !== page) setPage(data.page); // server clamped (e.g. last page emptied)
       } else {
         const errData = await res.json().catch(() => ({}));
         setErrorMessage(
@@ -125,7 +134,7 @@ export default function AdminQuotationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, activeTab]);
+  }, [search, activeTab, page, pageSize]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -502,7 +511,7 @@ export default function AdminQuotationsPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search by quote #, organization, contact person, model..."
               className="w-full rounded-xl border border-slate-200 bg-[#F4F7FC]/60 pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:border-[#10469B] focus:bg-white focus:outline-hidden"
             />
@@ -510,7 +519,7 @@ export default function AdminQuotationsPage() {
 
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-slate-500">
-              {quotes.length} quotations found
+              {total} quotations found
             </span>
             <button
               onClick={fetchQuotes}
@@ -527,7 +536,7 @@ export default function AdminQuotationsPage() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => { setActiveTab(tab.key); setPage(1); }}
               className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                 activeTab === tab.key
                   ? "bg-[#10469B] text-white shadow-xs"
@@ -691,7 +700,7 @@ export default function AdminQuotationsPage() {
                       {/* Product Model */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className="rounded-md bg-blue-50 px-2 py-0.5 font-bold uppercase text-[11px] text-[#10469B]">
-                          {quote.preferredModel}
+                          {quote.variantLabel || quote.preferredModel}
                         </span>
                       </td>
 
@@ -753,6 +762,7 @@ export default function AdminQuotationsPage() {
             </tbody>
           </table>
         </div>
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }} />
       </div>
 
       {/* SweetAlert Custom Modal */}
@@ -866,7 +876,7 @@ export default function AdminQuotationsPage() {
               <div>
                 <span className="text-slate-400">Selected Product Model:</span>
                 <p className="font-bold text-slate-800 capitalize">
-                  {selectedQuote.preferredModel} ({selectedQuote.quantity} Units)
+                  {selectedQuote.variantLabel || selectedQuote.preferredModel} ({selectedQuote.quantity} Units)
                 </p>
               </div>
               <div>

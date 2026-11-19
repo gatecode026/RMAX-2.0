@@ -23,6 +23,10 @@ export interface IQuoteRequest {
   user?: Types.ObjectId | null;
   assignedManager?: Types.ObjectId | null;
   assignedManagerName?: string;
+  /** True for quotations an admin/manager created by hand (not a customer submission). */
+  createdByStaff?: boolean;
+  /** Exact option the customer chose, derived on the server from the product, e.g. "Manual Vending Machine · 50 Pads". */
+  variantLabel?: string;
   validUntil?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -55,12 +59,18 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     user: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     assignedManager: { type: Schema.Types.ObjectId, ref: "User", default: null },
     assignedManagerName: { type: String, trim: true },
+    createdByStaff: { type: Boolean, default: false },
+    variantLabel: { type: String, trim: true },
     validUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
 quoteRequestSchema.index({ createdAt: -1 });
+// product deletion checks `preferredModel`; the customers list and manager scoping filter on email / assignee
+quoteRequestSchema.index({ preferredModel: 1 });
+quoteRequestSchema.index({ email: 1 });
+quoteRequestSchema.index({ assignedManager: 1, createdAt: -1 });
 
 if ((models as Record<string, any>).QuoteRequest) {
   delete (models as Record<string, any>).QuoteRequest;

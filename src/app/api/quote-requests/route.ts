@@ -2,9 +2,11 @@ import { connectDB, isDatabaseUnavailable } from "@/lib/mongodb";
 import { QuoteRequest } from "@/models/QuoteRequest";
 import { fail, limited, ok, readJson, zodFail, route } from "@/lib/api";
 import { quoteRequestSchema } from "@/lib/validations/schemas";
+import { notifyQuotationCreated } from "@/lib/mail/notify";
+import { getVariantLabel } from "@/lib/variant-label";
 
 export const POST = route(async (req: Request) => {
-  const rl = limited(req, "quote", 5, 60 * 60_000);
+  const rl = await limited(req, "quote", 5, 60 * 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
   if ("response" in parsedBody) return parsedBody.response;
@@ -51,6 +53,7 @@ export const POST = route(async (req: Request) => {
       userObjectId = new mongoose.Types.ObjectId(userId);
     }
 
+    const variantLabel = await getVariantLabel(parsed.data.preferredModel);
     const payload = {
       organizationName: parsed.data.organizationName,
       institutionType: parsed.data.institutionType,
@@ -66,6 +69,7 @@ export const POST = route(async (req: Request) => {
       installationRequirements: (parsed.data.installationRequirements && parsed.data.installationRequirements.trim()) || "Standard site installation",
       consent: parsed.data.consent,
       quoteNumber,
+      variantLabel: variantLabel ?? undefined, // from the server, never trusted from the client
       status: "new" as const,
       user: userObjectId,
     };
@@ -73,16 +77,13 @@ export const POST = route(async (req: Request) => {
     const doc: any = await QuoteRequest.create(payload);
 
     // Auto-create Lead in pipeline so it appears in both Admin and Manager lead dashboards
+    let createdLeadNumber: string | undefined;
     try {
       const { Lead } = await import("@/models/Lead");
-      const { Counter } = await import("@/models/Counter");
-      const counter = await Counter.findByIdAndUpdate(
-        "leadNumber",
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      const seq = (counter?.seq || 1) + 1000;
+      const { nextSequence } = await import("@/models/Counter");
+      const seq = (await nextSequence("leadNumber")) + 1000;
       const leadNumber = `LD-${seq}`;
+      createdLeadNumber = leadNumber;
 
       await Lead.create({
         leadNumber,
@@ -101,7 +102,7 @@ export const POST = route(async (req: Request) => {
         activities: [
           {
             type: "note",
-            description: `Quote request #${quoteNumber} submitted via website for ${parsed.data.quantity} unit(s) of ${parsed.data.preferredModel}.`,
+            description: `Quote request #${quoteNumber} submitted via website for ${parsed.data.quantity} unit(s) of ${variantLabel ?? parsed.data.preferredModel}.`,
             performedByName: parsed.data.contactPerson,
             createdAt: new Date(),
           },
@@ -110,6 +111,9 @@ export const POST = route(async (req: Request) => {
     } catch (leadErr) {
       console.warn("Lead auto-creation skipped:", leadErr);
     }
+
+    // Email: one internal alert per recipient for this submission (the lead above is covered by it).
+    await notifyQuotationCreated(doc, { leadNumber: createdLeadNumber, customerAck: true });
 
     // Broadcast alert to both Super Admin and Managers
     try {

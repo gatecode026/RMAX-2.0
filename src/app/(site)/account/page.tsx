@@ -266,7 +266,7 @@ async function Overview() {
                     <div className="text-left sm:text-right">
                       <span className="block text-muted text-xs">Quoted Proposal</span>
                       <span className="font-heading font-extrabold text-navy text-base">
-                        {q.quotedAmount && q.quotedAmount > 0 ? formatINR(q.quotedAmount) : "Pending Review"}
+                        {proposalLabel(q)}
                       </span>
                     </div>
                   </div>
@@ -285,6 +285,22 @@ async function Overview() {
       </AccountShell>
     </>
   );
+}
+
+/** What to show under "Quoted Proposal": the amount once there is one, otherwise a label that matches the status. */
+function proposalLabel(q: { status?: string; quotedAmount?: number }) {
+  if (q.quotedAmount && q.quotedAmount > 0) return formatINR(q.quotedAmount);
+  switch (q.status) {
+    case "quote_sent":
+    case "approved":
+      return "Amount will be shared shortly";
+    case "declined":
+      return "Not proceeding";
+    case "closed":
+      return "Closed";
+    default:
+      return "Pending Review";
+  }
 }
 
 export default function AccountPage() {

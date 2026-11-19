@@ -22,7 +22,7 @@ interface FollowUpItem {
   id?: string;
   leadNumber: string;
   name: string;
-  phone: string;
+  phone?: string; // omitted for managers without Lead Management view
   institutionName?: string;
   institution?: string;
   nextFollowUpAt?: string;
@@ -56,53 +56,14 @@ export default function ManagerDashboard() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch follow-ups
-      const fuRes = await fetch("/api/manager/follow-ups");
-      if (fuRes.ok) {
-        const fuData = await fuRes.json();
-        setDueTodayList(fuData.dueToday || []);
-        setOverdueList(fuData.overdue || []);
-        setUpcomingList(fuData.upcoming || []);
-      }
-
-      // Fetch manager leads to calculate metrics
-      const leadsRes = await fetch("/api/admin/leads?limit=100");
-      if (leadsRes.ok) {
-        const leadsData = await leadsRes.json();
-        const leads = leadsData.leads || [];
-
-        const totalAssigned = leads.length;
-        const newLeads = leads.filter((l: any) => l.status === "new").length;
-        const contacted = leads.filter((l: any) => l.status === "contacted").length;
-        const qualified = leads.filter((l: any) => l.status === "qualified").length;
-        const converted = leads.filter((l: any) => l.status === "converted").length;
-        const lost = leads.filter((l: any) => l.status === "lost").length;
-
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
-        const overdue = leads.filter((l: any) => {
-          if (!l.nextFollowUpAt || l.status === "converted" || l.status === "lost") return false;
-          return new Date(l.nextFollowUpAt) < startOfToday;
-        }).length;
-
-        const dueToday = leads.filter((l: any) => {
-          if (!l.nextFollowUpAt || l.status === "converted" || l.status === "lost") return false;
-          const d = new Date(l.nextFollowUpAt);
-          return d >= startOfToday && d <= endOfToday;
-        }).length;
-
-        setStats({
-          totalAssigned,
-          newLeads,
-          contacted,
-          qualified,
-          converted,
-          lost,
-          dueToday,
-          overdue,
-        });
+      // One scoped call: counts + short follow-up lists (needs only the Dashboard permission)
+      const res = await fetch("/api/manager/dashboard-summary");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.stats);
+        setDueTodayList(data.dueToday || []);
+        setOverdueList(data.overdue || []);
+        setUpcomingList(data.upcoming || []);
       }
     } catch {
       // Error
@@ -223,7 +184,7 @@ export default function ManagerDashboard() {
                           <span className="text-xs font-bold text-slate-800">{item.name}</span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5">
-                          {item.institutionName || item.institution || "Individual"} • {item.phone}
+                          {item.institutionName || item.institution || "Individual"}{item.phone ? ` • ${item.phone}` : ""}
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">

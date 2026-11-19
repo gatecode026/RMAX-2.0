@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
+import { FamilyPicker } from "./FamilyPicker";
 import ProductImageUploader, { type UploadedProductImage, primaryImage } from "./ProductImageUploader";
 
 // ---------------------------------------------------------------------------------------------
@@ -80,6 +81,8 @@ export interface ProductFormInitial {
   image?: { src: string; alt?: string };
   images?: UploadedProductImage[];
   variants?: VariantRow[];
+  familyId?: string;
+  variantOptions?: Record<string, string>;
   techSpecs?: SpecRow[];
   features?: PointRow[];
   applications?: PointRow[];
@@ -230,6 +233,9 @@ export function ProductForm({ mode, initial }: { mode: "create" | "edit"; initia
   const [taxType, setTaxType] = useState<"inclusive" | "exclusive">(initial?.taxType || "exclusive");
 
   const [variants, setVariants] = useState<VariantRow[]>(initial?.variants || []);
+  const [familyId, setFamilyId] = useState(initial?.familyId ? String(initial.familyId) : "");
+  const [variantOptions, setVariantOptions] = useState<Record<string, string>>(initial?.variantOptions || {});
+  const [makeDefault, setMakeDefault] = useState(false);
   const [techSpecs, setTechSpecs] = useState<SpecRow[]>(initial?.techSpecs || []);
   const [features, setFeatures] = useState<PointRow[]>(initial?.features || []);
   const [applications, setApplications] = useState<PointRow[]>(initial?.applications || []);
@@ -329,6 +335,9 @@ export function ProductForm({ mode, initial }: { mode: "create" | "edit"; initia
         .filter((i) => i.type === "gallery" || i.type !== "main")
         .map((i) => ({ src: i.url, thumb: i.url, alt: i.alt || name, kind: "image" as const })),
       variants: variants.map((v) => ({ ...v, variantCode: v.sku })),
+      familyId: familyId || null,
+      variantOptions: familyId ? variantOptions : undefined,
+      makeDefault: familyId ? makeDefault : undefined,
       techSpecs: techSpecs.map((s, idx) => ({ ...s, order: idx, visible: true })),
       features: features.map((f, idx) => ({ icon: f.icon || "cog", title: f.title, body: f.body, order: idx, active: true })),
       applications: applications.map((a, idx) => ({ icon: a.icon || "institution", title: a.title, body: a.body, order: idx, active: true })),
@@ -565,24 +574,15 @@ export function ProductForm({ mode, initial }: { mode: "create" | "edit"; initia
             )}
           </Section>
 
-          <Section title="Variants" subtitle="Optional — leave empty for a standalone product with no variants.">
-            <RepeatingList
-              rows={variants}
-              onChange={setVariants}
-              empty={{ name: "", sku: "", price: 0, active: true }}
-              addLabel="Add Variant"
-              renderRow={(row, update) => (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <TextInput placeholder="Variant name (e.g. Basic)" value={row.name} onChange={(e) => update({ ...row, name: e.target.value })} />
-                  <TextInput placeholder="Variant SKU" value={row.sku} onChange={(e) => update({ ...row, sku: e.target.value.toUpperCase() })} />
-                  <TextInput type="number" placeholder="Price" value={row.price} onChange={(e) => update({ ...row, price: Number(e.target.value) })} />
-                  <TextInput placeholder="Colour" value={row.colour || ""} onChange={(e) => update({ ...row, colour: e.target.value })} />
-                  <TextInput placeholder="Daily capacity" value={row.dailyCapacity || ""} onChange={(e) => update({ ...row, dailyCapacity: e.target.value })} />
-                  <TextInput placeholder="Weight" value={row.weight || ""} onChange={(e) => update({ ...row, weight: e.target.value })} />
-                  <TextInput placeholder="Power" value={row.power || ""} onChange={(e) => update({ ...row, power: e.target.value })} />
-                  <TextInput type="number" placeholder="Stock" value={row.stock || 0} onChange={(e) => update({ ...row, stock: Number(e.target.value) })} />
-                </div>
-              )}
+          <Section title="Family & options" subtitle="Optional — group this product with its sizes, colours or other options.">
+            <FamilyPicker
+              productId={initial?._id}
+              familyId={familyId}
+              onFamily={setFamilyId}
+              variantOptions={variantOptions}
+              onOptions={setVariantOptions}
+              makeDefault={makeDefault}
+              onMakeDefault={setMakeDefault}
             />
           </Section>
 

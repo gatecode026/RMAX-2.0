@@ -52,7 +52,7 @@ function contentFields(it: CatalogueItem, order: number, categoryId: unknown, br
     },
     // Quotation-only: no price is published anywhere in the source documents.
     price: 0, originalPrice: 0, discountPercent: 0, stockStatus: "enquiry-only", enableStockManagement: false,
-    sortOrder: order, tags: [it.name], status: "published",
+    sortOrder: order, tags: [it.name], ...(it.draft ? {} : { status: "published" }),
     ...(it.warranty ? { warranty: { available: true, ...it.warranty } } : {}),
     seo: { title: `${it.name} | RMAX Solutions`, metaDescription: it.summary, focusKeyword: it.name },
   };
@@ -111,6 +111,7 @@ async function main() {
       const insertOnly = {
         slug: it.slug, image: { src: "", alt: "", width: 0, height: 0 }, images: [], gallery: [], colours: [],
         sku: `RMAX-${String(i + 1).padStart(3, "0")}`,
+        ...(it.draft ? { status: "draft" } : {}),
       };
       const res = await Product.updateOne({ slug: it.slug }, { $set: fields, $setOnInsert: insertOnly }, { upsert: true, runValidators: true });
       if (res.upsertedCount) tally.created++; else if (res.modifiedCount) tally.updated++; else tally.unchanged++;

@@ -9,6 +9,8 @@ import { checkApiRole } from "@/lib/session";
 import { buildSpecLine } from "@/lib/specs";
 import { LAST_ORDER_COOKIE } from "@/lib/constants";
 import { toOrderDTO } from "@/lib/data/orders";
+import { notifyOrderConfirmed } from "@/lib/mail/notify";
+import { getVariantLabel } from "@/lib/variant-label";
 
 /** List the signed-in user's orders (newest first). */
 export const GET = route(async () => {
@@ -31,7 +33,7 @@ export const POST = route(async (req: Request) => {
     return fail("Please log in to your RMAX customer account to complete your purchase.", 401);
   }
 
-  const rl = limited(req, "orders", 10, 60 * 60_000);
+  const rl = await limited(req, "orders", 10, 60 * 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
   if ("response" in parsedBody) return parsedBody.response;
@@ -52,16 +54,18 @@ export const POST = route(async (req: Request) => {
   const seq = await nextSequence("order");
   const reference = `RMAX-DEMO-${String(seq).padStart(3, "0")}`;
   const now = new Date();
+  const optionLabels = await Promise.all(cart.lines.map((l) => getVariantLabel(l.product.slug)));
 
-  await Order.create({
+  const order = await Order.create({
     reference,
     user: userId,
     contact: { fullName: d.fullName, email: d.email, phone: d.phone },
-    items: cart.lines.map((l) => ({
+    items: cart.lines.map((l, i) => ({
       product: l.product._id,
       slug: l.product.slug,
       title: l.product.title,
       shortName: l.product.shortName,
+      variantLabel: optionLabels[i] ?? undefined,
       specLine: buildSpecLine(l.product.specs),
       unitPrice: l.product.price,
       originalPrice: l.product.originalPrice,
@@ -98,6 +102,9 @@ export const POST = route(async (req: Request) => {
     termsAcceptedAt: now,
     isIllustrative: true,
   });
+
+  // The order is saved in its confirmed state; its jobs are keyed by order id, so replays cannot duplicate emails.
+  await notifyOrderConfirmed(order.toObject() as never);
 
   await clearCart(userId);
   const jar = await cookies();

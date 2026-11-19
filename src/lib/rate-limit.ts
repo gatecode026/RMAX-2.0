@@ -1,7 +1,9 @@
 /**
- * Minimal in-memory fixed-window rate limiter for public POST routes.
- * NOTE: state is per server instance. On multi-instance / serverless deployments
- * swap this for a shared store (Redis, Upstash, …) behind the same signature.
+ * Fixed-window rate limiting.
+ *  - rateLimitShared: counters live in MongoDB, so every serverless instance sees the same count. Used for
+ *    login, forgot-password, OTP verification and public enquiries.
+ *  - rateLimit: per-instance memory. It is the fallback if the database cannot be reached (fail-open to a
+ *    local limit rather than blocking customers).
  */
 type Entry = { count: number; resetAt: number };
 
@@ -20,4 +22,34 @@ export function rateLimit(key: string, max: number, windowMs: number) {
   }
   entry.count += 1;
   return { allowed: entry.count <= max, retryAfterMs: entry.resetAt - now };
+}
+
+type Shared = { allowed: boolean; retryAfterMs: number };
+declare global {
+  var __rateLimitIndex: Promise<unknown> | undefined;
+}
+
+/** Shared fixed-window counter: one upserted document per key and window, expired by a TTL index. */
+export async function rateLimitShared(key: string, max: number, windowMs: number): Promise<Shared> {
+  try {
+    const { connectDB } = await import("@/lib/mongodb");
+    const mongoose = (await connectDB()) as typeof import("mongoose");
+    const col = mongoose.connection.collection("ratelimits");
+    globalThis.__rateLimitIndex ??= col.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }).catch(() => undefined);
+    const now = Date.now();
+    const windowStart = Math.floor(now / windowMs) * windowMs;
+    const filter = { _id: `${key}:${windowStart}` as unknown as import("mongodb").ObjectId };
+    const update = { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(windowStart + windowMs + 60_000) } };
+    let doc;
+    try {
+      doc = await col.findOneAndUpdate(filter, update, { upsert: true, returnDocument: "after" });
+    } catch (e) {
+      if ((e as { code?: number }).code !== 11000) throw e; // two first requests raced to create the window: retry once
+      doc = await col.findOneAndUpdate(filter, update, { upsert: true, returnDocument: "after" });
+    }
+    const count = (doc as unknown as { count?: number } | null)?.count ?? 1;
+    return { allowed: count <= max, retryAfterMs: windowStart + windowMs - now };
+  } catch {
+    return rateLimit(key, max, windowMs);
+  }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Pagination } from "@/components/ui/Pagination";
 import React, { useState, useEffect, useCallback } from "react";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
@@ -27,6 +28,7 @@ interface QuotationItem {
   email: string;
   phone: string;
   preferredModel?: string;
+  variantLabel?: string;
   quantity?: number;
   expectedDailyUsage?: string;
   deliveryCityPostal?: string;
@@ -40,6 +42,9 @@ export default function ManagerQuotationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [total, setTotal] = useState(0);
 
   const [callModal, setCallModal] = useState<{
     open: boolean;
@@ -52,18 +57,22 @@ export default function ManagerQuotationsPage() {
       const params = new URLSearchParams();
       if (search.trim()) params.set("search", search.trim());
       if (statusFilter !== "all") params.set("status", statusFilter);
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
 
       const res = await fetch(`/api/admin/quotations?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setQuotes(data.quotes || []);
+        setTotal(data.total ?? 0);
+        if (data.page && data.page !== page) setPage(data.page);
       }
     } catch {
       // Ignore
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter]);
+  }, [search, statusFilter, page, pageSize]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -147,7 +156,7 @@ export default function ManagerQuotationsPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search organization, contact person, phone..."
             className="w-full h-10 rounded-xl border border-slate-200 pl-9 pr-4 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#10469B] focus:outline-none"
           />
@@ -158,7 +167,7 @@ export default function ManagerQuotationsPage() {
           <div className="w-40">
             <CustomSelect
               value={statusFilter}
-              onChange={(val) => setStatusFilter(val)}
+              onChange={(val) => { setStatusFilter(val); setPage(1); }}
               options={[
                 { value: "all", label: "All Statuses" },
                 { value: "new", label: "New", colorDot: "bg-blue-600" },
@@ -232,7 +241,7 @@ export default function ManagerQuotationsPage() {
                     <td className="py-3.5 px-3">
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-800">
-                          {quote.preferredModel || "Standard Incinerator"} ({quote.quantity || 1} units)
+                          {quote.variantLabel || quote.preferredModel || "Standard Incinerator"} ({quote.quantity || 1} units)
                         </span>
                         <span className="text-[11px] text-slate-500 mt-0.5">
                           Daily Usage: {quote.expectedDailyUsage || "Standard"}
@@ -279,6 +288,7 @@ export default function ManagerQuotationsPage() {
             </tbody>
           </table>
         </div>
+        <Pagination page={page} pageSize={pageSize} total={total} onPage={setPage} onPageSize={(n) => { setPageSize(n); setPage(1); }} />
       </div>
 
       {/* Call & Client Detail Modal */}
@@ -328,7 +338,7 @@ export default function ManagerQuotationsPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Preferred Model:</span>
                   <span className="font-bold text-slate-900">
-                    {callModal.quote.preferredModel || "Pro-Max Incinerator"} ({callModal.quote.quantity || 1} units)
+                    {callModal.quote.variantLabel || callModal.quote.preferredModel || "Pro-Max Incinerator"} ({callModal.quote.quantity || 1} units)
                   </span>
                 </div>
                 <div className="flex justify-between">

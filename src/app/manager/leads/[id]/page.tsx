@@ -21,7 +21,10 @@ import {
   ChevronRight,
   TrendingUp,
   Trash2,
+  UserCheck,
 } from "lucide-react";
+import { useManagerPermissions } from "@/components/manager/ManagerPermissionsContext";
+import { AssignLeadModal } from "@/components/manager/AssignLeadModal";
 
 interface ActivityItem {
   _id?: string;
@@ -49,6 +52,7 @@ interface LeadDetail {
   lastContactedAt?: string;
   nextFollowUpAt?: string;
   notes?: string;
+  assignedManager?: { _id: string; name: string; email?: string };
   activities?: ActivityItem[];
   createdAt: string;
 }
@@ -58,6 +62,8 @@ export default function ManagerLeadDetailPage() {
   const router = useRouter();
   const leadId = params?.id as string;
   const { success: toastSuccess, error: toastError } = useToast();
+  const { leadsEdit: canEdit, leadsAssign: canAssign } = useManagerPermissions();
+  const [showAssign, setShowAssign] = useState(false);
 
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -260,13 +266,15 @@ export default function ManagerLeadDetailPage() {
           <ArrowLeft className="size-4" /> Back to My Leads
         </Link>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/70 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
-          >
-            <Trash2 className="size-3.5" /> Delete Lead
-          </button>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/70 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
+            >
+              <Trash2 className="size-3.5" /> Delete Lead
+            </button>
+          )}
           <span className="font-mono text-xs font-bold text-[#10469B] bg-blue-50 px-2.5 py-1 rounded-md">
             {lead.leadNumber}
           </span>
@@ -292,15 +300,29 @@ export default function ManagerLeadDetailPage() {
               </span>
             )}
           </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Assigned to: <span className="font-semibold text-slate-700">{lead.assignedManager?.name ?? "Unassigned"}</span>
+          </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setShowCallModal(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-green-700 transition"
-          >
-            <PhoneCall className="size-3.5" /> Record Call Log
-          </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {canAssign && (
+            <button
+              type="button"
+              onClick={() => setShowAssign(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#10469B]/30 bg-blue-50 px-4 py-2 text-xs font-semibold text-[#10469B] hover:bg-blue-100 transition"
+            >
+              <UserCheck className="size-3.5" /> {lead.assignedManager ? "Reassign" : "Assign"}
+            </button>
+          )}
+          {canEdit && (
+            <button
+              onClick={() => setShowCallModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-green-700 transition"
+            >
+              <PhoneCall className="size-3.5" /> Record Call Log
+            </button>
+          )}
           <a
             href={`tel:${lead.phone}`}
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
@@ -314,7 +336,9 @@ export default function ManagerLeadDetailPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column: Client Data + Pipeline Controls (2 cols) */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Status & Priority Control Box */}
+          {/* Status & Priority Control Box — read-only without "Edit lead" */}
+          <fieldset disabled={!canEdit} className={`m-0 min-w-0 border-0 p-0 ${canEdit ? "" : "opacity-70"}`}>
+          {!canEdit && <p className="mb-2 text-[11px] font-semibold text-amber-700">You have view-only access to this lead.</p>}
           <div className="rounded-2xl border border-[#E5EBF4] bg-white p-5 shadow-xs">
             <h3 className="font-jakarta text-sm font-bold text-slate-900 mb-3">
               Lead Progression & Pipeline Stage
@@ -387,6 +411,7 @@ export default function ManagerLeadDetailPage() {
               </button>
             </div>
           </div>
+          </fieldset>
 
           {/* Activity Timeline */}
           <div className="rounded-2xl border border-[#E5EBF4] bg-white p-5 shadow-xs">
@@ -433,7 +458,7 @@ export default function ManagerLeadDetailPage() {
             </div>
 
             {/* Quick Add Note Form */}
-            <form onSubmit={handleAddNote} className="mt-4 pt-3 border-t border-slate-100">
+            <form onSubmit={handleAddNote} className={`mt-4 pt-3 border-t border-slate-100 ${canEdit ? "" : "hidden"}`}>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Add Follow-Up Note
               </label>
@@ -584,6 +609,21 @@ export default function ManagerLeadDetailPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {showAssign && lead && (
+        <AssignLeadModal
+          leadId={lead._id}
+          leadLabel={`${lead.leadNumber} · ${lead.name}`}
+          currentManagerId={lead.assignedManager?._id}
+          onClose={() => setShowAssign(false)}
+          onAssigned={(saved) => {
+            // Update the open detail view in place; nothing else on the page resets.
+            setLead((prev) => (prev ? { ...prev, assignedManager: saved.assignedManager, status: saved.status } : prev));
+            setStatus(saved.status);
+            setShowAssign(false);
+          }}
+        />
       )}
 
       {/* Delete Lead Modal */}

@@ -38,11 +38,11 @@ export async function getAdminDashboardOverview() {
       dbServiceRequests,
       dbInstitutions,
     ] = await Promise.all([
-      Order.find().sort({ createdAt: -1 }).lean(),
-      QuoteRequest.find().sort({ createdAt: -1 }).lean(),
-      User.find().lean(),
-      ContactMessage.find().sort({ createdAt: -1 }).lean(),
-      Product.find().sort({ sortOrder: 1 }).lean(),
+      Order.find().select("total createdAt status contact.fullName shippingAddress.organization items.slug items.title items.shortName").lean(),
+      QuoteRequest.find().select("quoteNumber contactPerson organizationName preferredModel quotedAmount status createdAt").lean(),
+      User.find().select("name email role department status organization lastLoginAt createdAt updatedAt").lean(),
+      ContactMessage.find().sort({ createdAt: -1 }).limit(5).lean(), // only the 5 newest are shown
+      Product.find().select("name title slug price specs.power specs.weight specs.dailyCapacity image.src stock category sortOrder createdAt updatedAt").sort({ sortOrder: 1 }).lean(),
       ServiceRequest.find().sort({ createdAt: -1 }).lean(),
       Institution.find().sort({ createdAt: -1 }).lean(),
     ]);
@@ -81,11 +81,15 @@ export async function getAdminDashboardOverview() {
       institutionsGrowth: 0,
     };
 
-    // 2. Genuine Recent Orders & Quotations
+    // 2. Genuine Recent Orders & Quotations (newest 50 only; the dashboard table shows 5)
+    const RECENT_LIMIT = 50;
+    const byNewest = <T extends { createdAt?: Date | string }>(a: T, b: T) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    const recentQuotes = [...dbQuotes].sort(byNewest).slice(0, RECENT_LIMIT);
+    const recentOrdersRaw = [...dbOrders].sort(byNewest).slice(0, RECENT_LIMIT);
     const combinedRecent: AdminOrder[] = [];
 
     // Map quotations
-    for (const q of dbQuotes) {
+    for (const q of recentQuotes) {
       combinedRecent.push({
         id: String(q._id),
         orderNumber: q.quoteNumber || `#QT-${String(q._id).slice(-4).toUpperCase()}`,
@@ -112,7 +116,7 @@ export async function getAdminDashboardOverview() {
     }
 
     // Map traditional orders
-    for (const o of dbOrders) {
+    for (const o of recentOrdersRaw) {
       combinedRecent.push({
         id: String(o._id),
         orderNumber: `#${String(o._id).slice(-5).toUpperCase()}`,
@@ -139,6 +143,7 @@ export async function getAdminDashboardOverview() {
     combinedRecent.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+    combinedRecent.length = Math.min(combinedRecent.length, RECENT_LIMIT);
 
     // 3. Genuine Sales Overview (6 calendar months)
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -176,11 +181,13 @@ export async function getAdminDashboardOverview() {
     }
 
     // 4. Genuine Best Selling Products from MongoDB Product collection (Top 5)
+    const demandBySlug = new Map<string, number>();
+    for (const q of dbQuotes) if (q.preferredModel) demandBySlug.set(q.preferredModel, (demandBySlug.get(q.preferredModel) ?? 0) + 1);
+    for (const o of dbOrders) for (const slug of new Set((o.items ?? []).map((i) => i.slug))) demandBySlug.set(slug, (demandBySlug.get(slug) ?? 0) + 1);
+
     const bestSellers: BestSellerProduct[] = dbProducts
       .map((p) => {
-        const pQuotes = dbQuotes.filter((q) => q.preferredModel === p.slug);
-        const pOrders = dbOrders.filter((o) => o.items?.some((item) => item.slug === p.slug));
-        const ordersCount = pQuotes.length + pOrders.length;
+        const ordersCount = demandBySlug.get(p.slug) ?? 0;
 
         return {
           id: String(p._id),
@@ -245,7 +252,7 @@ export async function getAdminDashboardOverview() {
       pending: pendingCount,
     };
 
-    const serviceRequests: ServiceRequestItem[] = dbServiceRequests.map((r) => ({
+    const serviceRequests: ServiceRequestItem[] = dbServiceRequests.slice(0, 50).map((r) => ({
       id: String(r._id),
       ticketId: r.ticketId,
       institution: r.institution,
@@ -259,7 +266,7 @@ export async function getAdminDashboardOverview() {
     }));
 
     // 7. Genuine Institutions
-    const institutions: InstitutionItem[] = dbInstitutions.map((i) => ({
+    const institutions: InstitutionItem[] = dbInstitutions.slice(0, 50).map((i) => ({
       id: String(i._id),
       name: i.name,
       type: i.type,
@@ -273,7 +280,7 @@ export async function getAdminDashboardOverview() {
     }));
 
     // 8. Genuine Inventory from Products
-    const inventory: InventoryItem[] = dbProducts.map((p) => {
+    const inventory: InventoryItem[] = dbProducts.slice(0, 50).map((p) => {
       const stock = typeof p.stock === "number" ? p.stock : 25;
       const reorderPoint = 10;
       return {
@@ -295,7 +302,7 @@ export async function getAdminDashboardOverview() {
     });
 
     // 9. Genuine Users
-    const users: AdminUserItem[] = dbUsers.map((u) => ({
+    const users: AdminUserItem[] = dbUsers.slice(0, 50).map((u) => ({
       id: String(u._id),
       name: u.name,
       email: u.email,

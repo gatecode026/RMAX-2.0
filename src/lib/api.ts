@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimitShared } from "@/lib/rate-limit";
 import { isDatabaseUnavailable } from "@/lib/mongodb";
 
 export type ApiResult<T> = { success: true; data: T; error: null } | { success: false; data: null; error: ApiError };
@@ -53,8 +53,8 @@ export function clientIp(req: Request): string {
 }
 
 /** Returns a 429 response when the caller is over the limit, otherwise null. */
-export function limited(req: Request, bucket: string, max: number, windowMs: number) {
-  const res = rateLimit(`${bucket}:${clientIp(req)}`, max, windowMs);
+export async function limited(req: Request, bucket: string, max: number, windowMs: number) {
+  const res = await rateLimitShared(`${bucket}:${clientIp(req)}`, max, windowMs);
   if (res.allowed) return null;
   const r = fail("Too many requests. Please try again shortly.", 429);
   r.headers.set("Retry-After", String(Math.ceil(res.retryAfterMs / 1000)));
@@ -63,6 +63,8 @@ export function limited(req: Request, bucket: string, max: number, windowMs: num
 
 /** Parse + validate a JSON body. Returns either the parsed data or an error response. */
 export async function readJson(req: Request): Promise<{ body: unknown } | { response: NextResponse }> {
+  // Public forms are a few KB; refuse anything absurd before it is parsed.
+  if (Number(req.headers.get("content-length") ?? 0) > 256 * 1024) return { response: fail("Request body is too large.", 413) };
   try {
     return { body: await req.json() };
   } catch {

@@ -59,7 +59,21 @@ export async function GET(req: NextRequest) {
         }
       };
 
+      // Permission changes for this manager: tell the open tab to re-read them.
+      const onPermissions = (evt: { managerId: string }) => {
+        if (evt.managerId !== userId) return;
+        try {
+          controller.enqueue(encoder.encode(`event: permissions
+data: ${JSON.stringify({ type: "permissions_updated" })}
+
+`));
+        } catch {
+          // Stream might be closed
+        }
+      };
+
       notificationEmitter.on("notification", onNotification);
+      notificationEmitter.on("permissions", onPermissions);
 
       // Periodic heartbeat to prevent timeout on proxies
       const heartbeatInterval = setInterval(() => {
@@ -72,6 +86,7 @@ export async function GET(req: NextRequest) {
 
       req.signal.addEventListener("abort", () => {
         notificationEmitter.off("notification", onNotification);
+        notificationEmitter.off("permissions", onPermissions);
         clearInterval(heartbeatInterval);
         try {
           controller.close();

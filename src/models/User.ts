@@ -30,6 +30,8 @@ export interface IUser {
   tokenVersion: number;
   failedLoginAttempts: number;
   lockedUntil?: Date | null;
+  /** Manager page/action permissions. Absent on managers created before permissions existed → legacy defaults (see lib/permissions). */
+  permissions?: Record<string, boolean>;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -66,6 +68,7 @@ const userSchema = new Schema<IUser>(
     tokenVersion: { type: Number, default: 0 },
     failedLoginAttempts: { type: Number, default: 0 },
     lockedUntil: { type: Date, default: null },
+    permissions: { type: Schema.Types.Mixed, select: false },
   },
   { timestamps: true },
 );

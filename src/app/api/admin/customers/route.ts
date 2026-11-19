@@ -4,13 +4,14 @@ import { User } from "@/models/User";
 import { QuoteRequest } from "@/models/QuoteRequest";
 import { Order } from "@/models/Order";
 import { getSessionUser } from "@/lib/session";
+import { checkApiPermission } from "@/lib/permissions-server";
 import { logAction } from "@/lib/audit";
 
 export async function GET() {
   try {
-    const user = await getSessionUser("staff");
-    if (!user || (user.role !== "super_admin" && user.role !== "admin" && user.role !== "manager")) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+    const auth = await checkApiPermission("customersView");
+    if ("error" in auth) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
     }
 
     await connectDB();
@@ -20,13 +21,25 @@ export async function GET() {
       email: { $nin: ["mukesh@rmaxelectro.com", "rmaxadmin@gmail.com", "rmaxmanager@gmail.com"] },
       role: { $nin: ["super_admin", "admin", "manager"] },
     })
+      .select("name email phone organization department createdAt updatedAt")
       .sort({ createdAt: -1 })
       .lean();
 
+    // Only the fields the list needs, grouped once by email (was: whole documents, re-scanned per customer).
     const [allQuotes, allOrders] = await Promise.all([
-      QuoteRequest.find().lean(),
-      Order.find().lean(),
+      QuoteRequest.find().select("email contactPerson organizationName institutionType phone quotedAmount createdAt updatedAt").lean(),
+      Order.find().select("contact.email total").lean(),
     ]);
+    const quotesByEmail = new Map<string, typeof allQuotes>();
+    for (const q of allQuotes) {
+      const k = q.email?.toLowerCase();
+      if (k) (quotesByEmail.get(k) ?? quotesByEmail.set(k, []).get(k)!).push(q);
+    }
+    const ordersByEmail = new Map<string, typeof allOrders>();
+    for (const o of allOrders) {
+      const k = o.contact?.email?.toLowerCase();
+      if (k) (ordersByEmail.get(k) ?? ordersByEmail.set(k, []).get(k)!).push(o);
+    }
 
     // Build unique customer list
     const customerMap = new Map<string, any>();
@@ -34,8 +47,8 @@ export async function GET() {
     // Add registered users
     for (const u of dbUsers) {
       const email = u.email.toLowerCase();
-      const userQuotes = allQuotes.filter((q) => q.email?.toLowerCase() === email);
-      const userOrders = allOrders.filter((o) => o.contact?.email?.toLowerCase() === email);
+      const userQuotes = quotesByEmail.get(email) ?? [];
+      const userOrders = ordersByEmail.get(email) ?? [];
       const ordersCount = userQuotes.length + userOrders.length;
       const totalSpent =
         userQuotes.reduce((acc, q) => acc + (q.quotedAmount || 0), 0) +
@@ -58,6 +71,8 @@ export async function GET() {
         phone: u.phone || "—",
         ordersCount,
         totalSpent,
+        lastActiveAt: new Date(u.updatedAt || u.createdAt || Date.now()).toISOString(),
+        registered: true,
         lastActive: new Date(u.updatedAt || u.createdAt || Date.now()).toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "short",
@@ -71,7 +86,7 @@ export async function GET() {
       const email = q.email?.toLowerCase();
       if (!email || customerMap.has(email)) continue;
 
-      const sameEmailQuotes = allQuotes.filter((item) => item.email?.toLowerCase() === email);
+      const sameEmailQuotes = quotesByEmail.get(email) ?? [];
       const ordersCount = sameEmailQuotes.length;
       const totalSpent = sameEmailQuotes.reduce((acc, item) => acc + (item.quotedAmount || 0), 0);
       const initials = (q.contactPerson || q.organizationName || "Client")
@@ -91,6 +106,8 @@ export async function GET() {
         phone: q.phone || "—",
         ordersCount,
         totalSpent,
+        lastActiveAt: new Date(q.updatedAt || q.createdAt || Date.now()).toISOString(),
+        registered: false,
         lastActive: new Date(q.updatedAt || q.createdAt || Date.now()).toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "short",

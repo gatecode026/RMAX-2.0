@@ -1,5 +1,8 @@
 "use client";
 
+import { TypeDropdown, VariantPicker } from "@/components/catalog/VariantPicker";
+import { GPS_BANKS, GPS_SLUG, defaultVariantType, describeVariant } from "@/lib/variants";
+import { familyOf, pickerGroups, type FamilyDTO } from "@/lib/catalog";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -35,11 +38,17 @@ export function QuoteForm({
   products,
   initialModel,
   initialQuantity,
+  initialType,
   currentUser,
+  families = [],
 }: {
   products: ProductDTO[];
+  /** Product families, for the option dropdowns of the selected model. */
+  families?: FamilyDTO[];
   initialModel?: string;
   initialQuantity?: number;
+  /** Variant picked on the product page (e.g. "Manual" / "Push Button"); recorded in the use-case note. */
+  initialType?: string;
   currentUser?: UserProfileProp | null;
 }) {
   const [done, setDone] = useState(false);
@@ -56,6 +65,8 @@ export function QuoteForm({
 
   // Fast quote state for logged-in users with all details
   const [fastModel, setFastModel] = useState<string>(initialModel || products[0]?.slug || "pro");
+  // Capacity/type/bank option chosen for the selected model (see lib/variants).
+  const [variantChoice, setVariantChoice] = useState<{ slug: string; type: string } | null>(null);
   const [fastQuantity, setFastQuantity] = useState<number>(initialQuantity || 1);
   const [fastInstitutionType, setFastInstitutionType] = useState<string>(INSTITUTION_TYPES[0]);
   const [fastDailyUsage, setFastDailyUsage] = useState<string>("100–250 napkins/day");
@@ -114,6 +125,34 @@ export function QuoteForm({
   const activeModelSlug = (hasAllDetails && !showManualForm) ? fastModel : (selectedInForm || initialModel || products[0]?.slug);
   const preview = products.find((p) => p.slug === activeModelSlug) ?? products.find((p) => p.slug === initialModel) ?? products[0];
 
+  // The chosen option applies to one model only; any other model starts from its own default.
+  const variantType =
+    variantChoice?.slug === activeModelSlug
+      ? variantChoice.type
+      : activeModelSlug === initialModel && initialType
+      ? initialType
+      : defaultVariantType(activeModelSlug ?? "");
+  const variantNote = describeVariant(activeModelSlug ?? "", variantType);
+  /** Family options (Size, Operation, Capacity, Colour…) from the database; GPS keeps its bank selector. */
+  const optionsFor = (slug: string, className?: string) => {
+    const p = products.find((x) => x.slug === slug);
+    const fam = p ? familyOf(p, families) : undefined;
+    if (p && fam) return <VariantPicker className={className} groups={pickerGroups(p, fam, products)} onModel={pickModel} />;
+    if (slug === GPS_SLUG) {
+      const group = { title: "Bank Type", options: GPS_BANKS.map((b) => ({ label: b, value: b, active: variantType === b })) };
+      return (
+        <div className={className}>
+          <TypeDropdown group={group} label="Bank Type:" onPick={(o) => setVariantChoice({ slug, type: o.value ?? "" })} />
+        </div>
+      );
+    }
+    return null;
+  };
+  const pickModel = (slug: string) => {
+    setFastModel(slug);
+    setValue("preferredModel", slug as QuoteRequestInput["preferredModel"]);
+  };
+
   const { success, error: toastError } = useToast();
 
   // Fast quote submission for logged in users with complete details
@@ -138,7 +177,7 @@ export function QuoteForm({
       quantity: Math.max(1, Number(fastQuantity) || 1),
       expectedDailyUsage: fastDailyUsage || "100–250 napkins/day",
       deliveryCityPostal: deliveryLoc,
-      useCase: "Institutional Sanitary Hygiene requirement",
+      useCase: ["Institutional Sanitary Hygiene requirement", variantNote].filter(Boolean).join(". "),
       installationRequirements: "Standard site installation",
       consent: true,
     };
@@ -166,7 +205,8 @@ export function QuoteForm({
   // Standard form submission
   async function onSubmit(values: QuoteRequestData) {
     setFormError(null);
-    const res = await requestJson<{ id: string; quoteNumber: string }>("/api/quote-requests", "POST", values);
+    const payload: QuoteRequestData = { ...values, useCase: [variantNote, values.useCase].filter(Boolean).join(". ") };
+    const res = await requestJson<{ id: string; quoteNumber: string }>("/api/quote-requests", "POST", payload);
     if (res.ok) {
       setSubmittedQuoteNumber(res.data?.quoteNumber || null);
       setDone(true);
@@ -332,6 +372,8 @@ export function QuoteForm({
                 </button>
               </div>
             </div>
+
+            {optionsFor(fastModel)}
 
             {/* Quantity & Usage */}
             <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
@@ -519,6 +561,7 @@ export function QuoteForm({
                 ))}
                 <option value="help-me-choose">Help me choose</option>
               </SelectInput>
+              {optionsFor(selectedInForm || "", "md:col-span-2")}
               <TextInput label="Quantity *" type="number" min={1} inputMode="numeric" error={errors.quantity?.message} {...register("quantity")} />
               <TextInput label="Expected daily usage *" placeholder="Approximate number of napkins" error={errors.expectedDailyUsage?.message} {...register("expectedDailyUsage")} />
               <TextInput label="Delivery city & postal code *" autoComplete="postal-code" error={errors.deliveryCityPostal?.message} {...register("deliveryCityPostal")} />

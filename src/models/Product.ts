@@ -130,6 +130,12 @@ export interface IProduct {
   category: "incinerator" | "pad-vending" | "automatic-vending" | "manual-vending" | "push-button-vending" | "plastic-waste-machinery" | "plastic-waste-management" | "vending-machine" | "disposal-machine" | "waste-sanitation" | "iot-smart-tech";
   /** Optional link to a ProductCategory document, for the admin-managed category list (PRD §2/§6). Independent of the `category` enum above. */
   categoryId?: Types.ObjectId;
+  /** Optional ProductFamily this product is a variant of; absent = standalone product. */
+  familyId?: Types.ObjectId;
+  /** This product's value for each family option: { [option.key]: value }. */
+  variantOptions?: Record<string, string>;
+  /** Canonical "key=value|key=value" form of variantOptions; unique within a family. Set by the admin API. */
+  variantKey?: string;
   subcategory?: string;
   productType?: string;
   brandId?: Types.ObjectId;
@@ -294,6 +300,9 @@ const productSchema = new Schema<IProduct>(
       index: true,
     },
     categoryId: { type: Schema.Types.ObjectId, ref: "ProductCategory" },
+    familyId: { type: Schema.Types.ObjectId, ref: "ProductFamily", index: true },
+    variantOptions: { type: Schema.Types.Mixed },
+    variantKey: { type: String },
     subcategory: String,
     productType: String,
     brandId: { type: Schema.Types.ObjectId, ref: "ProductBrand" },
@@ -382,5 +391,8 @@ const productSchema = new Schema<IProduct>(
   },
   { timestamps: true },
 );
+
+// No two live (draft/published) products of a family may share the same option combination.
+productSchema.index({ familyId: 1, variantKey: 1 }, { unique: true, partialFilterExpression: { familyId: { $exists: true }, variantKey: { $exists: true }, status: { $in: ["draft", "published"] } } });
 
 export const Product: Model<IProduct> = models.Product || model<IProduct>("Product", productSchema);

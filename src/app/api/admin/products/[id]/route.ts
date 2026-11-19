@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
+import { ProductFamily } from "@/models/ProductFamily";
+import { resolveFamilyLink } from "@/lib/admin/family";
 import { Order } from "@/models/Order";
 import { checkApiRole } from "@/lib/session";
+import { checkApiPermission } from "@/lib/permissions-server";
+import { deleteProductWithPolicy } from "@/lib/product-delete";
 import { logAuditEvent } from "@/lib/audit";
 import { deleteProductImage } from "@/lib/imagekit";
 import { revalidateTag } from "next/cache";
@@ -89,6 +93,21 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // Family link: option values are validated against the family and must not duplicate another variant.
+    let unlink = false;
+    if (body.familyId !== undefined || body.variantOptions !== undefined) {
+      const link = await resolveFamilyLink(
+        {
+          familyId: body.familyId !== undefined ? body.familyId : existing.familyId?.toString(),
+          variantOptions: body.variantOptions ?? (existing.variantOptions as Record<string, string> | undefined),
+        },
+        existing._id,
+      );
+      if ("error" in link) return NextResponse.json({ error: link.error }, { status: link.status });
+      if (link.clear) unlink = true;
+      else Object.assign(updateFields, { familyId: link.familyId, variantOptions: link.variantOptions, variantKey: link.variantKey });
+    }
+
     const prevPrice = existing.price;
     const prevStock = existing.stock;
 
@@ -131,6 +150,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const { $push, ...setFields } = updateFields;
     const updateDoc: Record<string, unknown> = { $set: { ...setFields, updatedBy: user.id } };
     if ($push) updateDoc.$push = $push;
+    if (unlink) updateDoc.$unset = { familyId: "", variantOptions: "", variantKey: "" };
 
     // Synchronize ImageKit deletions: If an admin removed images from the product, delete them from ImageKit
     if (Array.isArray(body.images) && Array.isArray(existing.images)) {
@@ -151,6 +171,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     const updated = await Product.findByIdAndUpdate(existing._id, updateDoc, { new: true, runValidators: true });
+    if (body.makeDefault === true && updated?.familyId) {
+      await ProductFamily.updateOne({ _id: updated.familyId }, { $set: { defaultProduct: updated._id } });
+    }
 
     const productName = updated?.name || existing.name;
     const changeDetails: string[] = [];
@@ -188,7 +211,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
 /** DELETE /api/admin/products/:id — refuses to hard-delete a product referenced by any order (PRD §6); archive it instead. */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
-  const authResult = await checkApiRole(["super_admin", "admin"]);
+  const authResult = await checkApiPermission("productsDelete");
   if ("error" in authResult) {
     return NextResponse.json({ error: authResult.error }, { status: authResult.status });
   }
@@ -200,40 +223,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     const existing = await findByIdOrSlug(id);
     if (!existing) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-    const referencedByOrder = await Order.exists({ "items.product": existing._id });
-    if (referencedByOrder) {
-      return NextResponse.json(
-        { error: "This product is referenced by at least one order and cannot be permanently deleted. Archive it instead." },
-        { status: 409 },
-      );
-    }
-
-    // Delete all associated ImageKit assets when the product is deleted
-    if (Array.isArray(existing.images)) {
-      for (const img of existing.images) {
-        if (img?.fileId) {
-          try {
-            await deleteProductImage(img.fileId);
-          } catch (err) {
-            console.warn(`[admin/products/delete] Failed to delete ImageKit asset ${img.fileId}:`, err);
-          }
-        }
-      }
-    }
-
-    await Product.findByIdAndDelete(existing._id);
-
-    await logAuditEvent({
-      actor: user,
-      action: "PRODUCT_DELETED",
-      entityType: "product",
-      entityId: String(existing._id),
-      metadata: {
-        productName: existing.name,
-        slug: existing.slug,
-        details: `${user.name} (${user.role}) permanently deleted product "${existing.name}" (SKU: ${existing.sku || "—"})`,
-      },
-    });
+    const outcome = await deleteProductWithPolicy(existing, user);
+    if (!outcome.ok) return NextResponse.json({ error: outcome.error }, { status: outcome.status });
 
     try {
       revalidateTag("products", { expire: 0 });

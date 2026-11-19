@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { Lead } from "@/models/Lead";
 import { User } from "@/models/User";
-import { Counter } from "@/models/Counter";
-import { checkApiRole } from "@/lib/session";
+import { nextSequence } from "@/models/Counter";
+import { checkApiPermission } from "@/lib/permissions-server";
 import { logAuditEvent } from "@/lib/audit";
 import { createNotification } from "@/lib/notifications";
+import { notifyLeadCreated } from "@/lib/mail/notify";
 
 export async function GET(req: NextRequest) {
   try {
-    const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+    const authResult = await checkApiPermission("leadsView");
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
@@ -77,10 +79,11 @@ export async function GET(req: NextRequest) {
     }
 
     const query = andConditions.length > 1 ? { $and: andConditions } : andConditions[0] || {};
+    // aggregate() does not cast strings to ObjectId (find/count do), so the id must be cast here
     const managerMatch = {
       isArchived: false,
       $or: [
-        { assignedManager: user.id },
+        { assignedManager: new Types.ObjectId(user.id) },
         { assignedManager: null },
         { assignedManager: { $exists: false } },
       ],
@@ -164,7 +167,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+    const authResult = await checkApiPermission("leadsEdit");
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
@@ -203,12 +206,7 @@ export async function POST(req: NextRequest) {
     }).lean();
 
     // Generate consecutive leadNumber (e.g., LD-1001)
-    const counter = await Counter.findByIdAndUpdate(
-      "leadNumber",
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true },
-    );
-    const seq = (counter?.seq || 1) + 1000;
+    const seq = (await nextSequence("leadNumber")) + 1000;
     const leadNumber = `LD-${seq}`;
 
     let assignedManager = null;
@@ -273,6 +271,8 @@ export async function POST(req: NextRequest) {
           : []),
       ],
     });
+
+    await notifyLeadCreated(lead as never);
 
     // Notify both managers and super admins
     await createNotification({

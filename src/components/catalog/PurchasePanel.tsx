@@ -7,6 +7,8 @@ import { ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { BulkOrderModal } from "@/components/sections/BulkOrderModal";
 import { cn } from "@/lib/cn";
 import { formatINR } from "@/lib/format";
+import type { PickerGroup } from "@/lib/catalog";
+import { TypeDropdown, VariantPicker } from "@/components/catalog/VariantPicker";
 
 const COLOUR_DOTS: Record<string, { label: string; dot: string }> = {
   blue: { label: "Blue", dot: "#2F5596" },
@@ -24,25 +26,22 @@ type Props = {
   quoteModel: string | null;
   showOptions: boolean;
   stockStatus?: string;
-  models?: {
-    slug: string;
-    name: string;
-    price: number;
-    dailyCapacity?: string;
-    category?: string;
-  }[];
+  /** Option dropdowns of the product's family (empty for standalone products). */
+  groups?: PickerGroup[];
+  /** Exact option text, e.g. "Vending Machine · Manual · 50 Pads" (empty for standalone products). */
+  optionLabel?: string;
 };
 
 /** Bank variants printed on the GEOSAT GPS device label (the GPS tracker is customised per bank). */
 const GPS_BANKS = ["SBI", "BOB", "BOI", "BOM", "CBI", "PNB", "Others"].map((b) => ({ value: b, label: b }));
 
 /** Price card: M.R.P., price, model switcher, quantity, type, colour, CTAs, and bulk policy. */
-export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptions, stockStatus, models }: Props) {
+export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptions, stockStatus, groups = [], optionLabel }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(1);
   const [colour, setColour] = useState(colours[0] ?? "");
   const isGps = slug === "gps-trackers";
-  const [selectedTypeRaw, setSelectedType] = useState(isGps ? GPS_BANKS[0].value : "Automatic");
+  const [selectedTypeRaw, setSelectedType] = useState(isGps ? GPS_BANKS[0].value : "");
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -66,30 +65,19 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
   const [buyError, setBuyError] = useState<string | null>(null);
   const typeId = useId();
 
-  const isVending = slug.includes("vending");
-  const typeOptions = isGps
-    ? GPS_BANKS
-    : isVending
-    ? [
-        { value: "Automatic", label: "Automatic" },
-        { value: "Manual", label: "Manual" },
-        { value: "Push Button", label: "Push Button (No Money / Free)" },
-      ]
-    : [
-        { value: "Automatic", label: "Automatic" },
-        { value: "Manual", label: "Manual" },
-      ];
-
-  // Fall back to the first option if the product changed under a mounted panel (e.g. model switch).
-  const selectedType = typeOptions.some((o) => o.value === selectedTypeRaw) ? selectedTypeRaw : typeOptions[0].value;
-  const currentModelName = models?.find((m) => m.slug === slug)?.name ?? slug;
+  // Only the GPS tracker has a free-standing type (bank); every other option comes from the product family.
+  const typeOptions = isGps ? GPS_BANKS : [];
+  const selectedType = typeOptions.some((o) => o.value === selectedTypeRaw) ? selectedTypeRaw : typeOptions[0]?.value ?? "";
+  const currentModelName = optionLabel || slug;
   const onRequest = price <= 0 || stockStatus === "enquiry-only"; // quotation-only product: no published price
   const displayPrice = price * qty;
   const displayMrp = mrp && mrp > price ? mrp * qty : undefined;
   const stepper = "grid size-7 place-items-center rounded-full bg-soft text-navy transition hover:bg-line disabled:opacity-40 cursor-pointer";
+  const family = groups.length > 0;
+  const typeParam = selectedType ? `&type=${encodeURIComponent(selectedType)}` : "";
   const quoteHref = showOptions
-    ? `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`
-    : `/request-quotation?model=${encodeURIComponent(slug)}`;
+    ? `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}${typeParam}`
+    : `/request-quotation?model=${encodeURIComponent(slug)}${typeParam}`;
 
   async function handleBuyNow() {
     setIsAdding(true);
@@ -161,58 +149,12 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Inclusive of all taxes</span>}
       </div>
 
-      {models && models.length > 0 && (
-        <div className="mt-4 pt-3.5 border-t border-line/70">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] font-bold text-charcoal">Select Model:</span>
-            <span className="text-[11px] font-bold text-navy bg-[#EFF6FF] px-2.5 py-0.5 rounded-full">
-              {models.find((m) => m.slug === slug)?.name ?? "Selected"}
-            </span>
-          </div>
-          <div
-            className={cn(
-              "grid gap-2",
-              models.length === 3
-                ? "grid-cols-3"
-                : models.length === 2
-                ? "grid-cols-2"
-                : "grid-cols-2 sm:grid-cols-4"
-            )}
-          >
-            {models.map((m) => {
-              const active = m.slug === slug;
-
-              return (
-                <button
-                  key={m.slug}
-                  type="button"
-                  title={m.name}
-                  onClick={() => {
-                    if (m.slug !== slug) {
-                      router.push(`/products/${m.slug}`);
-                    }
-                  }}
-                  className={cn(
-                    "flex flex-col items-center justify-center py-2 px-1.5 rounded-[12px] border text-center transition-all cursor-pointer min-h-[56px]",
-                    active
-                      ? "border-navy bg-[#EFF6FF] ring-2 ring-navy text-navy font-bold shadow-xs"
-                      : "border-line bg-card hover:border-navy/40 hover:bg-soft text-charcoal"
-                  )}
-                >
-                  <span className="text-[13px] font-bold leading-tight">{m.name}</span>
-                  <span
-                    className={cn(
-                      "mt-1 text-[11.5px] font-extrabold whitespace-nowrap leading-tight",
-                      active ? "text-navy" : "text-charcoal"
-                    )}
-                  >
-                    {m.price > 0 && stockStatus !== "enquiry-only" ? formatINR(m.price) : "Quote"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      {family && (
+        <VariantPicker
+          className="mt-4 border-t border-line/70 pt-3.5"
+          groups={groups}
+          onModel={(target) => router.push(`/products/${target}`, { scroll: false })}
+        />
       )}
 
       {showOptions && (
@@ -268,9 +210,10 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             </dd>
           </div>
 
+          {isGps && (
           <div className="flex items-center justify-between gap-3">
             <dt className="font-medium text-charcoal">
-              <label id={typeId}>{isGps ? "Bank Type:" : "Type:"}</label>
+              <label id={typeId}>Bank Type:</label>
             </dt>
             <dd className="relative" ref={dropdownRef}>
               <button
@@ -321,6 +264,8 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             </dd>
           </div>
 
+          )}
+
           {colours.length > 0 && (
             <div className="flex items-center justify-between gap-3">
               <dt id={`${typeId}-colour`} className="font-medium text-charcoal">Colour:</dt>
@@ -350,13 +295,6 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             </div>
           )}
         </dl>
-      )}
-
-      {/* Description caption for selected type */}
-      {isVending && selectedType === "Push Button" && (
-        <p className="mt-2.5 text-[12px] text-[#0B62FF] bg-[#EFF6FF] px-3 py-1.5 rounded-lg font-medium">
-          Push Button type: Dispenses automatically with a single push — no coins or money required.
-        </p>
       )}
 
       <div className="mt-5 flex flex-col gap-2.5 w-full">
@@ -392,10 +330,10 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         initialQuantity={bulkQuantity}
         details={[
           ...(colour ? [{ label: "Selected Colour", value: colour }] : []),
-          ...(isGps ? [{ label: "Bank Type", value: selectedType }] : isVending ? [{ label: "Operating Mode", value: selectedType }] : []),
+          ...(isGps ? [{ label: "Bank Type", value: selectedType }] : optionLabel ? [{ label: "Option", value: optionLabel }] : []),
         ]}
         quoteHref={(qty) =>
-          `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}&type=${encodeURIComponent(selectedType)}`
+          `/request-quotation?model=${encodeURIComponent(slug)}&qty=${qty}&colour=${encodeURIComponent(colour)}${typeParam}`
         }
         onKeepMax={handleKeepFive}
       />

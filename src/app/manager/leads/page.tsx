@@ -16,7 +16,10 @@ import {
   Clock,
   ArrowUpDown,
   Trash2,
+  UserCheck,
 } from "lucide-react";
+import { useManagerPermissions } from "@/components/manager/ManagerPermissionsContext";
+import { AssignLeadModal } from "@/components/manager/AssignLeadModal";
 
 interface LeadItem {
   _id: string;
@@ -31,11 +34,15 @@ interface LeadItem {
   priority: string;
   lastContactedAt?: string;
   nextFollowUpAt?: string;
+  assignedManager?: string | null;
+  assignedManagerName?: string | null;
   createdAt: string;
 }
 
 export default function ManagerLeadsPage() {
   const { success: toastSuccess, error: toastError } = useToast();
+  const { leadsEdit: canEdit, leadsAssign: canAssign } = useManagerPermissions();
+  const [assignLead, setAssignLead] = useState<LeadItem | null>(null);
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -228,6 +235,9 @@ export default function ManagerLeadsPage() {
                           <span className="font-semibold text-slate-900 text-[13px] mt-0.5">
                             {lead.name}
                           </span>
+                          <span className="text-[11px] text-slate-400">
+                            {lead.assignedManagerName ? `Assigned to ${lead.assignedManagerName}` : "Unassigned"}
+                          </span>
                           <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
                             <span className="flex items-center gap-1">
                               <Phone className="size-3 text-slate-400" />
@@ -358,13 +368,24 @@ export default function ManagerLeadsPage() {
                             Manage
                             <ChevronRight className="size-3" />
                           </Link>
-                          <button
-                            onClick={() => setDeleteLeadItem(lead)}
-                            title="Delete Lead"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
+                          {canAssign && (
+                            <button
+                              onClick={() => setAssignLead(lead)}
+                              title={lead.assignedManagerName ? "Reassign Lead" : "Assign Lead"}
+                              className="rounded-lg p-1.5 text-slate-400 hover:bg-blue-50 hover:text-[#10469B] transition"
+                            >
+                              <UserCheck className="size-4" />
+                            </button>
+                          )}
+                          {canEdit && (
+                            <button
+                              onClick={() => setDeleteLeadItem(lead)}
+                              title="Delete Lead"
+                              className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -375,6 +396,26 @@ export default function ManagerLeadsPage() {
           </table>
         </div>
       </div>
+
+      {assignLead && (
+        <AssignLeadModal
+          leadId={assignLead._id}
+          leadLabel={`${assignLead.leadNumber} · ${assignLead.name}`}
+          currentManagerId={assignLead.assignedManager ? String(assignLead.assignedManager) : undefined}
+          onClose={() => setAssignLead(null)}
+          onAssigned={(saved) => {
+            // Patch just this row; search, filters and the rest of the list stay as they are.
+            setLeads((prev) =>
+              prev.map((l) =>
+                l._id === assignLead._id
+                  ? { ...l, status: saved.status, assignedManager: saved.assignedManager?._id ?? null, assignedManagerName: saved.assignedManager?.name ?? null }
+                  : l,
+              ),
+            );
+            setAssignLead(null);
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteLeadItem && (

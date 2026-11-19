@@ -1,5 +1,6 @@
 "use client";
 
+import { ResetCodeForm } from "@/components/auth/ResetCodeForm";
 import { useState, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -505,30 +506,11 @@ function AdminLoginForm() {
             </div>
 
             <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
-              Enter your registered administrative email address. A password recovery link will be sent to reset your credentials.
+              Enter your registered email address. We will email you a 6-digit code to set a new password.
             </p>
 
             {forgotSuccess ? (
-              <div>
-                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-[13px] font-medium p-3.5 rounded-xl mb-4 leading-snug">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="size-5 shrink-0 text-emerald-600 mt-0.5" />
-                    <div>
-                      <strong>Recovery Request Received</strong>
-                      <p className="mt-1 text-xs text-emerald-700">
-                        If an administrative account matches <strong>{forgotEmail}</strong>, instructions to reset your password have been sent.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setForgotModalOpen(false)}
-                  className="w-full h-11 rounded-xl bg-[#104BA8] hover:bg-[#092B60] text-white text-[14px] font-bold transition-colors cursor-pointer"
-                >
-                  Return to Login
-                </button>
-              </div>
+              <ResetCodeForm email={forgotEmail.trim().toLowerCase()} onDone={() => setForgotModalOpen(false)} />
             ) : (
               <form onSubmit={handleForgotSubmit} className="flex flex-col gap-4">
                 {forgotError && (

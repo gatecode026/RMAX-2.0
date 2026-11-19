@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ProductListing } from "@/components/catalog/ProductListing";
-import { getAllProducts, getProductTestimonial } from "@/lib/data/content";
+import { getAllProducts, getFamilies, getProductTestimonial } from "@/lib/data/content";
 import { FeaturedTestimonial } from "@/components/home/Testimonials";
 
 export const metadata: Metadata = {
@@ -11,8 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function OurProductPage() {
-  const [products, testimonial] = await Promise.all([
+  const [products, families, testimonial] = await Promise.all([
     getAllProducts(),
+    getFamilies(),
     getProductTestimonial(),
   ]);
 
@@ -40,7 +41,7 @@ export default async function OurProductPage() {
       </section>
 
       <div className="mt-6 md:mt-8">
-        <ProductListing products={products} />
+        <ProductListing products={products} families={families} />
       </div>
 
       {testimonial && (

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const auth = await checkApiRole(["super_admin", "admin"]);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const rl = limited(req, "product-image-upload", 60, 60_000);
+  const rl = await limited(req, "product-image-upload", 60, 60_000);
   if (rl) return rl;
 
   try {

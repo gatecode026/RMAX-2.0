@@ -1,7 +1,10 @@
 import "server-only";
-import { cacheLife, cacheTag } from "next/cache";
+import { after } from "next/server";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import { connectDB } from "@/lib/mongodb";
 import { Product, type IProduct } from "@/models/Product";
+import { ProductFamily } from "@/models/ProductFamily";
+import type { FamilyDTO } from "@/lib/catalog";
 import { FaqItem, type IFaqItem } from "@/models/FaqItem";
 import { PolicyPage, type IPolicyPage } from "@/models/PolicyPage";
 import { Testimonial, type ITestimonial } from "@/models/Testimonial";
@@ -20,7 +23,7 @@ function plain<T>(doc: unknown): T {
   return JSON.parse(JSON.stringify(doc)) as T;
 }
 
-export type ProductDTO = IProduct & { _id: string };
+export type ProductDTO = Omit<IProduct, "familyId"> & { _id: string; familyId?: string };
 export type FaqDTO = IFaqItem & { _id: string };
 export type PolicyDTO = IPolicyPage & { _id: string };
 
@@ -35,6 +38,13 @@ export type PolicyDTO = IPolicyPage & { _id: string };
  * fixed set of built-in products — pages that list or search products are expected to render a
  * graceful "no products available" state for an empty result, not treat it as an error.
  */
+/**
+ * Cached read (hours; edits invalidate it by tag). Pages await this outside a Suspense boundary, so the
+ * result must stay cacheable: throwing, or declaring a very short lifetime, makes Next render the page
+ * as dynamic and the page 500s. A failed read therefore returns an empty list, and
+ * `getAllProducts` below heals it: the first request that sees an empty catalogue checks, after the
+ * response, whether the database now has published products and if so drops the cache.
+ */
 async function readAllProducts(): Promise<ProductDTO[]> {
   "use cache";
   cacheLife("hours");
@@ -46,14 +56,47 @@ async function readAllProducts(): Promise<ProductDTO[]> {
     const rows = await Product.find({ status: "published" }).sort({ sortOrder: 1 }).lean();
     return plain<ProductDTO[]>(rows);
   } catch {
-    console.warn("[content] Could not read products from MongoDB — returning an empty catalogue.");
+    console.warn("[content] Could not read products from MongoDB — showing an empty catalogue.");
     return [];
   }
 }
 
 /** Every published catalogue item (listing page, product detail, related products, cart lookups). */
-export function getAllProducts(): Promise<ProductDTO[]> {
-  return readAllProducts();
+export async function getAllProducts(): Promise<ProductDTO[]> {
+  const rows = await readAllProducts();
+  if (rows.length === 0) {
+    // Outside the cache: an empty list is either a real empty catalogue (cheap check, nothing to do) or
+    // a failed read that was cached. Heal it once the database has products again.
+    try {
+      after(async () => {
+        try {
+          await connectDB();
+          if (await Product.exists({ status: "published" })) revalidateTag("products", { expire: 0 });
+        } catch {
+          /* still down: the next request checks again */
+        }
+      });
+    } catch {
+      /* no request scope (build / prerender): nothing to schedule */
+    }
+  }
+  return rows;
+}
+
+/**
+ * Product families (option definitions). Same lifetime and tag as the products, so any product or family write
+ * refreshes both together. Failure returns [] (every product then simply shows as standalone).
+ */
+export async function getFamilies(): Promise<FamilyDTO[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("products");
+  try {
+    await connectDB();
+    return plain<FamilyDTO[]>(await ProductFamily.find().sort({ sortOrder: 1, name: 1 }).lean());
+  } catch {
+    return [];
+  }
 }
 
 export const INCINERATOR_ALIASES: Record<string, string> = {

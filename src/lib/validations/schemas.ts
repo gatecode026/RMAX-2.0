@@ -104,6 +104,16 @@ export type RegisterInput = z.input<typeof registerSchema>;
 export const forgotPasswordSchema = z.object({ email });
 export type ForgotPasswordInput = z.input<typeof forgotPasswordSchema>;
 
+export const resetPasswordSchema = z
+  .object({
+    email,
+    otp: z.string({ error: "Enter the 6-digit code" }).trim().regex(/^\d{6}$/, "Enter the 6-digit code from your email"),
+    password,
+    confirmPassword: z.string().min(1, "Confirm your password"),
+  })
+  .refine((v) => v.password === v.confirmPassword, { path: ["confirmPassword"], message: "Passwords do not match" });
+export type ResetPasswordInput = z.input<typeof resetPasswordSchema>;
+
 /* ---------- Account ---------- */
 export const profileSchema = z.object({
   name: text("Full name"),

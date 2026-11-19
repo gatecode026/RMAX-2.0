@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
+import { ProductFamily } from "@/models/ProductFamily";
+import { resolveFamilyLink } from "@/lib/admin/family";
 import { checkApiRole } from "@/lib/session";
+import { checkApiPermission } from "@/lib/permissions-server";
 import { logAuditEvent } from "@/lib/audit";
 import { revalidateTag } from "next/cache";
 import type { IProduct } from "@/models/Product";
@@ -12,7 +15,7 @@ import type { IProduct } from "@/models/Product";
  * Admin only: unlike the public /api/products, this can return draft and archived products.
  */
 export async function GET(req: NextRequest) {
-  const authResult = await checkApiRole(["super_admin", "admin"]);
+  const authResult = await checkApiPermission("productsView");
   if ("error" in authResult) {
     return NextResponse.json({ error: authResult.error }, { status: authResult.status });
   }
@@ -158,6 +161,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `SKU "${sku}" is already in use.` }, { status: 409 });
     }
 
+    const link = await resolveFamilyLink({ familyId: body.familyId, variantOptions: body.variantOptions });
+    if ("error" in link) return NextResponse.json({ error: link.error }, { status: link.status });
+
     const originalPrice = Number(body.originalPrice) || price;
     const discountPercent = originalPrice > 0 ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
     const status: IProduct["status"] = body.status === "published" ? "published" : "draft";
@@ -174,6 +180,7 @@ export async function POST(req: NextRequest) {
       countryOfOrigin: body.countryOfOrigin?.trim() || "India",
       brandId: body.brandId || undefined,
       categoryId: body.categoryId || undefined,
+      ...(link.clear ? {} : { familyId: link.familyId, variantOptions: link.variantOptions, variantKey: link.variantKey }),
       category: body.category || "incinerator",
       subcategory: body.subcategory?.trim(),
       productType: body.productType?.trim(),
@@ -215,6 +222,8 @@ export async function POST(req: NextRequest) {
       createdBy: user.id,
       updatedBy: user.id,
     });
+
+    if (body.makeDefault === true && created.familyId) await ProductFamily.updateOne({ _id: created.familyId }, { $set: { defaultProduct: created._id } });
 
     await logAuditEvent({
       actor: user,

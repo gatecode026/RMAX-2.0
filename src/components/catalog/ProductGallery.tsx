@@ -14,20 +14,32 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
 
   const [viewerSize, setViewerSize] = useState({ width: 365, height: 420 });
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
-  const [lensSize, setLensSize] = useState({ width: 146, height: 168 });
+  const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [zoomRatio, setZoomRatio] = useState({ x: 0.5, y: 0.5 });
+
+  const readNatural = (el: HTMLImageElement) => {
+    const { naturalWidth: w, naturalHeight: h } = el;
+    if (w && h) setNatural((p) => (p.w === w && p.h === h ? p : { w, h }));
+  };
 
   const updateSize = useCallback(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const w = rect.width || 365;
-      const h = rect.height || 420;
-      setViewerSize({ width: w, height: h });
-      const lw = Math.round(w * 0.4);
-      const lh = Math.round(h * 0.4);
-      setLensSize({ width: lw, height: lh });
+      setViewerSize({ width: rect.width || 365, height: rect.height || 420 });
     }
   }, []);
+
+  /** Rect the object-contain image actually occupies inside the viewer, so lens and zoom track the photo, not the letterbox. */
+  const fit = (cw: number, ch: number) => {
+    if (!natural.w || !natural.h) return { x: 0, y: 0, w: cw, h: ch };
+    const s = Math.min(cw / natural.w, ch / natural.h);
+    const w = natural.w * s;
+    const h = natural.h * s;
+    return { x: (cw - w) / 2, y: (ch - h) / 2, w, h };
+  };
+  const box = fit(viewerSize.width, viewerSize.height);
+  const lensSize = { width: Math.round(box.w * 0.4), height: Math.round(box.h * 0.4) };
+  const zoomW = Math.min(520, viewerSize.width * 1.1);
 
   useEffect(() => {
     updateSize();
@@ -51,24 +63,17 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    const b = fit(rect.width, rect.height);
     const lw = lensSize.width;
     const lh = lensSize.height;
-    const cw = rect.width;
-    const ch = rect.height;
 
-    let lx = mouseX - lw / 2;
-    let ly = mouseY - lh / 2;
-
-    lx = Math.max(0, Math.min(cw - lw, lx));
-    ly = Math.max(0, Math.min(ch - lh, ly));
+    const lx = Math.max(b.x, Math.min(b.x + b.w - lw, mouseX - lw / 2));
+    const ly = Math.max(b.y, Math.min(b.y + b.h - lh, mouseY - lh / 2));
 
     setLensPos({ x: lx, y: ly });
-
-    const maxLx = cw - lw || 1;
-    const maxLy = ch - lh || 1;
     setZoomRatio({
-      x: Math.max(0, Math.min(1, lx / maxLx)),
-      y: Math.max(0, Math.min(1, ly / maxLy)),
+      x: Math.max(0, Math.min(1, (lx - b.x) / (b.w - lw || 1))),
+      y: Math.max(0, Math.min(1, (ly - b.y) / (b.h - lh || 1))),
     });
   };
 
@@ -133,8 +138,9 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        style={{ aspectRatio: natural.w && natural.h ? `${natural.w} / ${natural.h}` : "461 / 530" }}
         className={cn(
-          "group relative aspect-[461/530] w-full max-h-[430px] overflow-hidden rounded-[24px] bg-soft sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
+          "group relative w-full self-start overflow-hidden rounded-[24px] bg-soft sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
           !isVideo && "cursor-crosshair",
         )}
       >
@@ -146,7 +152,12 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           height={1086}
           unoptimized={current.src.startsWith("http")}
           priority={active === 0}
-          className="size-full object-contain p-1 sm:p-1.5 pointer-events-none drop-shadow-sm transition-transform duration-200"
+          onLoad={(e) => readNatural(e.currentTarget)}
+          // Cached/SSR images can finish loading before hydration, so onLoad never fires — read it on mount too.
+          ref={(el) => {
+            if (el?.complete) readNatural(el);
+          }}
+          className="size-full object-contain pointer-events-none"
         />
 
         {/* Amazon Lens Box: highlights exactly which part is being magnified */}
@@ -204,7 +215,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           aria-label="Zoomed image detail"
           className="pointer-events-none absolute left-[calc(100%+16px)] top-0 z-50 hidden lg:block overflow-hidden rounded-[24px] border border-line bg-card shadow-2xl"
           style={{
-            width: `${Math.min(520, viewerSize.width * 1.1)}px`,
+            width: `${zoomW}px`,
             height: `${viewerSize.height}px`,
           }}
         >
@@ -213,8 +224,8 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
             style={{
               backgroundImage: `url(${current.src})`,
               backgroundRepeat: "no-repeat",
-              backgroundSize: `${viewerSize.width * 2.5}px ${viewerSize.height * 2.5}px`,
-              backgroundPosition: `${zoomRatio.x * 100}% ${zoomRatio.y * 100}%`,
+              backgroundSize: `${box.w * 2.5}px ${box.h * 2.5}px`,
+              backgroundPosition: `${-zoomRatio.x * Math.max(0, box.w * 2.5 - zoomW)}px ${-zoomRatio.y * Math.max(0, box.h * 2.5 - viewerSize.height)}px`,
             }}
           >
             <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 rounded-full bg-navy/90 backdrop-blur-xs px-3 py-1 text-[11px] font-bold tracking-wide text-white shadow-sm">

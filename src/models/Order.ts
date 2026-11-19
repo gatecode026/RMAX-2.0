@@ -9,6 +9,8 @@ export interface IOrderItem {
   slug: string;
   title: string;
   shortName: string;
+  /** Exact option bought, e.g. "Manual Vending Machine · 50 Pads" (set from the product's slug on the server). */
+  variantLabel?: string;
   specLine: string;
   unitPrice: number;
   originalPrice: number;
@@ -61,6 +63,7 @@ const orderSchema = new Schema<IOrder>(
           slug: { type: String, required: true },
           title: { type: String, required: true },
           shortName: { type: String, required: true },
+          variantLabel: { type: String },
           specLine: { type: String, required: true },
           unitPrice: { type: Number, required: true, min: 0 },
           originalPrice: { type: Number, required: true, min: 0 },

@@ -11,7 +11,7 @@ import { createSession, roleToTier } from "@/lib/session";
  * each with its own independent password.
  */
 export const POST = route(async (req: Request) => {
-  const rl = limited(req, "login-staff", 10, 15 * 60_000);
+  const rl = await limited(req, "login-staff", 10, 15 * 60_000);
   if (rl) return rl;
 
   const parsedBody = await readJson(req);

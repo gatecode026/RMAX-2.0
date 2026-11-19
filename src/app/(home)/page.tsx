@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BestSellers } from "@/components/home/BestSellers";
 import { HomeHero } from "@/components/home/HomeHero";
 import { Testimonials } from "@/components/home/Testimonials";
-import { getHomeStats, getProducts, getReviewSummary, getTestimonials } from "@/lib/data/content";
+import { getAllProducts, getFamilies, getHomeStats, getReviewSummary, getTestimonials } from "@/lib/data/content";
 
 export const metadata: Metadata = {
   title: "Smart hygiene. Built for your institutions.",
@@ -11,8 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [products, stats, reviews, testimonials] = await Promise.all([
-    getProducts(),
+  const [products, families, stats, reviews, testimonials] = await Promise.all([
+    getAllProducts(),
+    getFamilies(),
     getHomeStats(),
     getReviewSummary(),
     getTestimonials(),
@@ -23,7 +24,7 @@ export default async function HomePage() {
   return (
     <>
       <HomeHero featured={featured} stats={stats} />
-      <BestSellers products={products} />
+      <BestSellers products={products} families={families} />
       <Testimonials items={testimonials} reviews={reviews} />
     </>
   );

@@ -18,7 +18,7 @@ type Props = {
   /** Initial cart data for dropdown popover and count badge */
   cart?: CartView;
   cartCount?: number;
-  products: { slug: string; name: string; summary?: string }[];
+  products: { slug: string; name: string; summary?: string; familyId?: string; familyName?: string; isDefault?: boolean }[];
 };
 
 const LINKS = [

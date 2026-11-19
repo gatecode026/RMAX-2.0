@@ -15,6 +15,7 @@ import {
   Layers,
   BarChart3,
   UserCog,
+  ShieldCheck,
   Settings,
   Headphones,
   ChevronDown,
@@ -73,6 +74,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   { label: "Users & Managers", href: "/admin/users", icon: UserCog },
+  { label: "Manager Permissions", href: "/admin/manager-permissions", icon: ShieldCheck },
   { label: "Audit Logs", href: "/admin/audit-logs", icon: ClipboardList },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
+import { buildCards, defaultMember, familyOf, membersOf, pickerGroups, variantLabel } from "@/lib/catalog";
 import { PurchasePanel } from "@/components/catalog/PurchasePanel";
 import { ProductTabs, type TabItem } from "@/components/catalog/ProductTabs";
 import { RelatedCard } from "@/components/catalog/cards";
@@ -19,6 +20,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { FeaturedTestimonial } from "@/components/home/Testimonials";
 import {
   getAllProducts,
+  getFamilies,
   getProductBySlug,
   getProductBySlugAnyStatus,
   getProductTestimonial,
@@ -34,9 +36,10 @@ type Params = { params: Promise<{ slug: string }> };
 export const instant = false;
 
 export async function generateStaticParams() {
-  const all = await getAllProducts();
+  const [all, fams] = await Promise.all([getAllProducts(), getFamilies()]);
   const slugs = new Set([
     ...all.map((p) => p.slug),
+    ...fams.map((f) => f.slug),
     "pad-vending",
     "small-automatic-sanitary-pad-incinerator",
     "medium-automatic-sanitary-pad-incinerator",
@@ -48,7 +51,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const p = await getProductBySlug(slug);
-  if (!p) return { title: "Product not found" };
+  if (!p) {
+    const fam = (await getFamilies()).find((f) => f.slug === slug);
+    return { title: fam ? fam.name : "Product not found" };
+  }
   const description = p.intro ?? p.summary ?? `${p.title} from RMAX Solutions.`;
   return {
     title: p.title,
@@ -66,6 +72,11 @@ export default async function ProductPage({ params }: Params) {
   // still be previewing a draft/archived product via its real slug (PRD §4N/§5). Ordinary
   // visitors never reach this branch's result: without a staff session it still 404s.
   if (!product) {
+    // A family URL (e.g. /products/incinerator) opens the family's default published option.
+    const [fams, published] = await Promise.all([getFamilies(), getAllProducts()]);
+    const fam = fams.find((f) => f.slug === slug);
+    const first = fam ? defaultMember(fam, membersOf(fam, published)) : undefined;
+    if (first) redirect(`/products/${first.slug}`);
     const staff = await getSessionUser("staff");
     if (staff) {
       const draft = await getProductBySlugAnyStatus(slug);
@@ -77,96 +88,30 @@ export default async function ProductPage({ params }: Params) {
   }
   if (!product) notFound();
 
-  const [all, trust, reviews, testimonial] = await Promise.all([
+  const [all, families, trust, reviews, testimonial] = await Promise.all([
     getAllProducts(),
+    getFamilies(),
     getTrustPoints(),
     getReviewSummary(),
     getProductTestimonial(slug),
   ]);
-  const others = all.filter((p) => p.slug !== slug);
-  const related = [...others.filter((p) => p.category === product.category), ...others.filter((p) => p.category !== product.category)].slice(0, 3);
-  const incineratorSlugs = [
-    "sanitary-pad-disposal-machine-100-pad",
-    "sanitary-pad-disposal-machine",
-    "sanitary-pad-disposal-machine-500-pad",
-  ];
-  const isIncinerator = product.category === "incinerator" || incineratorSlugs.includes(product.slug);
-  const isSmallIncinerator = product.slug === "sanitary-pad-disposal-machine-100-pad" || product.slug.includes("small");
-  const isMediumIncinerator = (product.slug === "sanitary-pad-disposal-machine" && !isSmallIncinerator && !product.slug.includes("500-pad")) || product.slug.includes("medium");
-  const isLargeIncinerator = product.slug === "sanitary-pad-disposal-machine-500-pad" || product.slug.includes("large");
-  const isDustRemover = product.slug === "dust-remover-machine";
-  const isShredder = product.slug === "plastic-waste-shredder-machine";
-  const isBailing = product.slug === "plastic-bailing-machine";
+  // Option dropdowns and the exact option text come from the product's family record.
+  const family = familyOf(product, families);
+  const groups = family ? pickerGroups(product, family, all) : [];
+  // Related = other cards (one per family / standalone product); never the sibling options of this product's own family.
+  const others = all.filter((p) => p.slug !== slug && (!family || p.familyId !== family._id));
+  const related = buildCards(others, all, families).slice(0, 3);
+  const isIncinerator = product.category === "incinerator";
   // Hygiene models keep the settings-based trust points; every other catalogue item gets neutral, documented ones.
   const useNeutralTrust = !isIncinerator && product.category !== "pad-vending";
-  const s = product.specs;
-  const batchKnown = s.batchCapacity !== "Not specified";
 
-  const tiles = isBailing
-    ? [
-        { value: "Hydraulic", label: "Vertical Clamping" },
-        { value: "7.5 HP", label: "Motor Power" },
-        { value: "50–60 kg", label: "Bale Weight" },
-        { value: "1 Year", label: "Manufacturer Warranty" },
-      ]
-    : isShredder
-    ? [
-        { value: "1 Tonne/day", label: "Processing Capacity" },
-        { value: "10 HP", label: "Motor Power" },
-        { value: "4 + 2", label: "Rotary and Stationary Blades" },
-        { value: "300 kg", label: "Weighing Pan Capacity" },
-      ]
-    : isDustRemover
-    ? [
-        { value: "120–200 kg/hr", label: "Machine Output" },
-        { value: "915 mm", label: "Drum Diameter" },
-        { value: "10–15 HP", label: "Main Motor" },
-        { value: "2100 mm", label: "Drum Length" },
-      ]
-    : isSmallIncinerator
-    ? [
-        { value: "800W", label: "Heater Rating" },
-        { value: "25–100", label: "Pads per Batch" },
-        { value: "10–12 kg", label: "Weight" },
-        { value: "25 × 25 × 43 cm", label: "Dimensions (L×B×H)" },
-      ]
-    : isMediumIncinerator
-    ? [
-        { value: "250 Pads", label: "Batch Capacity" },
-        { value: "12–15 kg", label: "Weight" },
-        { value: "25 × 25 × 46 cm", label: "Dimensions (L×B×H)" },
-        { value: "Wall-Mount", label: "Installation" },
-      ]
-    : isLargeIncinerator
-    ? [
-        { value: "1200W", label: "Heater Rating" },
-        { value: "500 Pads", label: "Batch Capacity" },
-        { value: "18–20 kg", label: "Weight" },
-        { value: "30 × 30 × 60 cm", label: "Dimensions (L×B×H)" },
-      ]
-    : isIncinerator && s.power !== "Not specified"
-    ? [
-        { value: s.power.replace(" W", "W"), label: "Power" },
-        { value: s.weight, label: "Weight" },
-        { value: s.dailyCapacity, label: "Capacity" },
-        { value: batchKnown ? s.batchCapacity : s.colours, label: batchKnown ? "Burning at once" : "Colours" },
-      ]
-    : product.category === "pad-vending"
-    ? [
-        { value: "Automatic / Manual", label: "Operation" },
-        { value: "Push Button", label: "Free Dispense" },
-        { value: "Wall Mount", label: "Installation" },
-        { value: "1 Year", label: "Warranty" },
-      ]
-    : [];
+  // Highlight tiles: the first visible specification rows of the selected product — no per-product tables.
+  const specTiles = (product.techSpecs ?? [])
+    .filter((r) => r.visible !== false && r.label && r.value)
+    .slice(0, 4)
+    .map((r) => ({ value: [r.value, r.unit].filter(Boolean).join(" "), label: r.label }));
 
-  const displayTrust = isBailing
-    ? [
-        { icon: "shield" as const, title: "1-Year Warranty", body: "Manufacturer warranty as stated in the catalogue" },
-        { icon: "truck" as const, title: "100% Made in India", body: "PAN India delivery & in-house industrial manufacturing" },
-        { icon: "cog" as const, title: "Post-warranty support", body: "Spare parts & servicing available from manufacturer" },
-      ]
-    : useNeutralTrust
+  const displayTrust = useNeutralTrust
     ? [
         { icon: "shield" as const, title: "In-house manufacturing", body: "Designed and built at the RMAX facility in Jaipur" },
         { icon: "truck" as const, title: "Installation support", body: "On-site installation, demonstration and user training" },
@@ -229,7 +174,7 @@ export default async function ProductPage({ params }: Params) {
                   {product.title}.
                 </h1>
                 {product.intro && <p className="mt-2.5 text-body-sm sm:text-body leading-relaxed text-muted">{product.intro}</p>}
-                {tiles.length > 0 && <SpecTiles tiles={tiles} />}
+                {specTiles.length > 0 && <SpecTiles tiles={specTiles} />}
               </div>
 
               {/* Price card — sits beside the title/description/spec-tiles column on wide screens */}
@@ -240,34 +185,9 @@ export default async function ProductPage({ params }: Params) {
                 colours={product.colours}
                 quoteModel={product.slug}
                 showOptions={product.price > 0 && product.stockStatus !== "enquiry-only"}
-                models={
-                  isIncinerator
-                    ? [
-                        {
-                          slug: "sanitary-pad-disposal-machine-100-pad",
-                          name: "Small",
-                          price: all.find((p) => p.slug === "sanitary-pad-disposal-machine-100-pad")?.price ?? 3000,
-                          dailyCapacity: "25–100 pads",
-                          category: "incinerator",
-                        },
-                        {
-                          slug: "sanitary-pad-disposal-machine",
-                          name: "Medium",
-                          price: all.find((p) => p.slug === "sanitary-pad-disposal-machine")?.price ?? 4500,
-                          dailyCapacity: "250 pads",
-                          category: "incinerator",
-                        },
-                        {
-                          slug: "sanitary-pad-disposal-machine-500-pad",
-                          name: "Large",
-                          price: all.find((p) => p.slug === "sanitary-pad-disposal-machine-500-pad")?.price ?? 6500,
-                          dailyCapacity: "500 pads",
-                          category: "incinerator",
-                        },
-                      ]
-                    : undefined
-                }
                 stockStatus={product.stockStatus}
+                groups={groups}
+                optionLabel={variantLabel(product, family) ?? undefined}
               />
             </div>
 
@@ -284,8 +204,8 @@ export default async function ProductPage({ params }: Params) {
         <OverviewSection text={product.overview ?? product.summary ?? product.intro ?? ""} image={product.overviewImage} />
 
         {Boolean(product.features?.length || product.applications?.length) && product.techSpecs?.length ? (
-          <div className="grid items-stretch gap-6 lg:grid-cols-[1.24fr_1fr]">
-            <div className="flex flex-col gap-6 [&>section:first-child]:flex-[1.5]">
+          <div className="grid items-start gap-6 lg:grid-cols-[1.24fr_1fr]">
+            <div className="flex flex-col gap-6">
               {product.features?.length ? <FeaturesCard items={product.features} /> : null}
               {product.applications?.length ? <ApplicationsCard items={product.applications} /> : null}
             </div>

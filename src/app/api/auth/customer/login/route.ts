@@ -6,7 +6,7 @@ import { createSession } from "@/lib/session";
 
 /** POST /api/auth/customer/login — Customer portal only; never matches an Admin/Manager account. */
 export const POST = route(async (req: Request) => {
-  const rl = limited(req, "login-customer", 10, 15 * 60_000);
+  const rl = await limited(req, "login-customer", 10, 15 * 60_000);
   if (rl) return rl;
 
   const parsedBody = await readJson(req);

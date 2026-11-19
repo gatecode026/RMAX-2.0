@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Lead } from "@/models/Lead";
 import { User } from "@/models/User";
-import { checkApiRole } from "@/lib/session";
+import { checkApiPermission } from "@/lib/permissions-server";
 import { logAuditEvent } from "@/lib/audit";
 import { createNotification } from "@/lib/notifications";
+import { notifyLeadAssigned } from "@/lib/mail/notify";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+    const authResult = await checkApiPermission("leadsView");
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { user } = authResult;
+    const { user, permissions } = authResult;
     const { id } = await params;
 
     await connectDB();
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Role sandbox: Manager can only inspect their own assigned leads
     const isSuperAdmin = user.role === "super_admin" || user.role === "admin";
-    if (!isSuperAdmin && String(lead.assignedManager) !== user.id) {
+    if (!isSuperAdmin && String(lead.assignedManager) !== user.id && !(permissions.leadsAssign && !lead.assignedManager)) {
       return NextResponse.json({ error: "Forbidden: You are not authorized to view this lead" }, { status: 403 });
     }
 
@@ -53,12 +54,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+    const authResult = await checkApiPermission(["leadsEdit", "leadsAssign"]);
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { user } = authResult;
+    const { user, permissions } = authResult;
     const isSuperAdmin = user.role === "super_admin" || user.role === "admin";
+    const canAssign = isSuperAdmin || permissions.leadsAssign;
+    const canEdit = isSuperAdmin || permissions.leadsEdit;
     const { id } = await params;
 
     await connectDB();
@@ -68,12 +71,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
-    // Strict manager check: Manager can only update their own assigned leads
-    if (!isSuperAdmin && String(lead.assignedManager) !== user.id) {
+    // Manager sandbox: only their own assigned leads — plus unassigned ones, which a manager
+    // with the assign permission may pick up.
+    if (!isSuperAdmin && String(lead.assignedManager) !== user.id && !(canAssign && !lead.assignedManager)) {
       return NextResponse.json({ error: "Forbidden: You are not authorized to modify this lead" }, { status: 403 });
     }
 
     const body = await req.json();
+    // Editing fields and assigning are separate permissions.
+    const editsFields = ["status", "priority", "action", "notes", "nextFollowUpAt"].some((k) => body[k] !== undefined);
+    if (editsFields && !canEdit) {
+      return NextResponse.json({ error: "Forbidden: you do not have permission to edit leads" }, { status: 403 });
+    }
     const {
       status,
       priority,
@@ -88,12 +97,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const previousStatus = lead.status;
     const previousManagerId = lead.assignedManager ? String(lead.assignedManager) : null;
     const previousManagerName = lead.assignedManagerName;
+    let assigneeChanged = false;
 
-    // 1. Reassignment: SUPER ADMIN ONLY
+    // 1. Assignment / reassignment: Super Admin, or a manager granted "Assign / reassign lead"
     if (assignedManagerId !== undefined) {
-      if (!isSuperAdmin) {
+      if (!canAssign) {
         return NextResponse.json(
-          { error: "Forbidden: Only Super Admins can reassign leads to another manager" },
+          { error: "Forbidden: you do not have permission to assign or reassign leads" },
           { status: 403 },
         );
       }
@@ -115,6 +125,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           return NextResponse.json({ error: "Invalid manager selected" }, { status: 400 });
         }
 
+        assigneeChanged = String(newManager._id) !== previousManagerId;
         lead.assignedManager = newManager._id;
         lead.assignedManagerName = newManager.name;
         lead.assignedAt = new Date();
@@ -243,6 +254,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await lead.save();
 
+    // Email only when the assignee actually changed (ordinary edits and re-saves send nothing).
+    if (assigneeChanged) await notifyLeadAssigned(lead.toObject() as never, user.name ?? undefined);
+
     const changeParts: string[] = [];
     if (status && status !== previousStatus) changeParts.push(`status changed from ${previousStatus} to ${status}`);
     if (assignedManagerId !== undefined && lead.assignedManagerName !== previousManagerName) {
@@ -295,7 +309,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+    const authResult = await checkApiPermission("leadsEdit");
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }

@@ -93,10 +93,11 @@ export function HeaderCart({ initialCart, className }: HeaderCartProps) {
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         aria-label={`Shopping cart with ${count} ${count === 1 ? "item" : "items"}`}
-        className="group relative flex items-center justify-center p-2 text-charcoal transition-colors hover:text-navy cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 rounded-lg"
+        className="group relative flex items-center justify-center p-2 text-muted transition-colors hover:text-navy cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 rounded-lg"
       >
         <ShoppingCart
-          className="size-6 transition-transform duration-200 group-hover:scale-105"
+          strokeWidth={1.75}
+          className="size-5 transition-transform duration-200 group-hover:scale-105"
           aria-hidden="true"
         />
         {count > 0 && (

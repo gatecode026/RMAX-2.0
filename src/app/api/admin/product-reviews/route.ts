@@ -4,7 +4,7 @@ import { ProductReview } from "@/models/ProductReview";
 import { checkApiRole } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
-  const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+  const authResult = await checkApiRole(["super_admin", "admin"]);
   if ("error" in authResult) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
   try {
     await connectDB();

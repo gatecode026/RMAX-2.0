@@ -5,6 +5,7 @@ import { Check, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { DetailCard, ShowcaseCard } from "@/components/catalog/cards";
 import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { buildCards, type FamilyDTO } from "@/lib/catalog";
 import { formatINR } from "@/lib/format";
 import type { ProductDTO } from "@/lib/data/content";
 
@@ -33,7 +34,7 @@ const COLOURS = [
 ];
 
 const PRICE_MAX = 15000;
-const PRICE_DEFAULT = 8550; // the design's slider rests at ~57 %
+const PRICE_DEFAULT = PRICE_MAX; // the slider starts at the far end (all prices) until the visitor moves it
 
 /** Accordion section — styled according to Figma reference */
 function Section({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children?: React.ReactNode }) {
@@ -69,7 +70,7 @@ function Section({ title, open, onToggle, children }: { title: string; open: boo
   );
 }
 
-export function ProductListing({ products }: { products: ProductDTO[] }) {
+export function ProductListing({ products, families = [] }: { products: ProductDTO[]; families?: FamilyDTO[] }) {
   const [category, setCategory] = useState<CategoryKey>("all");
   const [sort, setSort] = useState<SortKey>("featured");
   const [tiers, setTiers] = useState<string[]>([]);
@@ -114,14 +115,16 @@ export function ProductListing({ products }: { products: ProductDTO[] }) {
         });
       });
     }
-    list = list.filter((p) => p.price <= maxPrice);
+    // At the far end the label reads "₹15,000+", so nothing is cut off there; below it, filter by the chosen maximum.
+    if (maxPrice < PRICE_MAX) list = list.filter((p) => p.price <= maxPrice);
     if (colours.length) list = list.filter((p) => p.colours.some((c) => colours.includes(c)));
     const sorted = [...list];
     if (sort === "price-asc") sorted.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
     if (sort === "name") sorted.sort((a, b) => a.title.localeCompare(b.title));
-    return sorted;
-  }, [products, category, tiers, maxPrice, colours, sort]);
+    // One card per family with a published member; standalone products stay as they are.
+    return buildCards(sorted, products, families);
+  }, [products, families, category, tiers, maxPrice, colours, sort]);
 
   const cards = useMemo(() => {
     const list: { key: string; product: ProductDTO; type: "showcase" | "detail" }[] = [];

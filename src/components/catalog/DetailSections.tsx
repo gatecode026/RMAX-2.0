@@ -116,7 +116,7 @@ export function OverviewSection({ text, image }: { text: string; image?: { src: 
         hasImage ? "lg:grid-cols-[1fr_540px] xl:grid-cols-[1fr_641px]" : "grid-cols-1"
       )}
     >
-      <div className={cn(card, "p-7 md:p-8 lg:min-h-[220px]")}>
+      <div className={cn(card, "p-7 md:p-8")}>
         <h2 id="overview-h" className={h2}>
           Product overview.
         </h2>
@@ -147,11 +147,11 @@ function IconTile({ icon, title }: { icon: DetailIcon; title?: string }) {
 
 export function FeaturesCard({ items }: { items: IDetailPoint[] }) {
   return (
-    <section id="features" aria-labelledby="features-h" className={cn(card, "flex flex-1 scroll-mt-20 flex-col p-7 md:p-8")}>
+    <section id="features" aria-labelledby="features-h" className={cn(card, "flex scroll-mt-20 flex-col p-7 md:p-8")}>
       <h2 id="features-h" className={h2}>
         Key features.
       </h2>
-      <ul className="mt-6 grid flex-1 grid-rows-[repeat(4,1fr)] gap-x-6 sm:grid-cols-2 sm:grid-rows-2">
+      <ul className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">
         {items.map((f, i) => (
           <li key={f.title} className={cn("flex items-start gap-4 py-5", i >= 1 && "border-t border-line sm:border-t-0", i >= 2 && "sm:border-t sm:border-line")}>
             <IconTile icon={f.icon} title={f.title} />
@@ -168,11 +168,11 @@ export function FeaturesCard({ items }: { items: IDetailPoint[] }) {
 
 export function ApplicationsCard({ items }: { items: IDetailPoint[] }) {
   return (
-    <section id="applications" aria-labelledby="applications-h" className={cn(card, "flex flex-1 scroll-mt-20 flex-col p-7 md:p-8")}>
+    <section id="applications" aria-labelledby="applications-h" className={cn(card, "flex scroll-mt-20 flex-col p-7 md:p-8")}>
       <h2 id="applications-h" className={h2}>
         Applications.
       </h2>
-      <ul className="mt-6 grid flex-1 gap-x-6 sm:grid-cols-2">
+      <ul className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">
         {items.map((a, i) => (
           <li
             key={a.title}

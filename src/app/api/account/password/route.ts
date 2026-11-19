@@ -8,7 +8,7 @@ import { getSessionUserId, createSession } from "@/lib/session";
 export const POST = route(async (req: Request) => {
   const userId = await getSessionUserId();
   if (!userId) return fail("Please log in.", 401);
-  const rl = limited(req, "password", 10, 60 * 60_000);
+  const rl = await limited(req, "password", 10, 60 * 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
   if ("response" in parsedBody) return parsedBody.response;

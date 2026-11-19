@@ -5,7 +5,7 @@ import { fail, isDuplicateKey, limited, ok, readJson, zodFail, route } from "@/l
 import { registerSchema } from "@/lib/validations/schemas";
 
 export const POST = route(async (req: Request) => {
-  const rl = limited(req, "register", 5, 60 * 60_000);
+  const rl = await limited(req, "register", 5, 60 * 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
   if ("response" in parsedBody) return parsedBody.response;

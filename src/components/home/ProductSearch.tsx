@@ -6,7 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-type Item = { slug: string; name: string; summary?: string };
+type Item = { slug: string; name: string; summary?: string; familyId?: string; familyName?: string; isDefault?: boolean };
 
 /** "Search products" field from the Home header: type to see matching models, click or Enter opens the product page. */
 export function ProductSearch({ items, className }: { items: Item[]; className?: string }) {
@@ -19,9 +19,15 @@ export function ProductSearch({ items, className }: { items: Item[]; className?:
   const listId = useId();
 
   const q = query.trim().toLowerCase();
-  const matches = q
-    ? items.filter((i) => `${i.name} ${i.summary ?? ""} napkin incinerator vending pad`.toLowerCase().includes(q))
-    : [];
+  const hits = q ? items.filter((i) => `${i.name} ${i.summary ?? ""} ${i.familyName ?? ""}`.toLowerCase().includes(q)) : [];
+  // A family is listed once. If the text singles out one variant ("manual 50") that variant opens;
+  // if it matches several ("vending") the family opens at its default variant.
+  const matches = hits.flatMap((h, idx) => {
+    if (!h.familyId) return [h];
+    if (hits.findIndex((x) => x.familyId === h.familyId) !== idx) return [];
+    const sib = hits.filter((x) => x.familyId === h.familyId);
+    return sib.length === 1 ? [h] : [{ ...(sib.find((x) => x.isDefault) ?? h), name: h.familyName ?? h.name }];
+  });
   const open = focused && q.length > 0;
 
   // Reset selected index when matches change
@@ -154,7 +160,7 @@ export function ProductSearch({ items, className }: { items: Item[]; className?:
                     )}
                   >
                     <span className="font-bold block text-charcoal">
-                      {m.name.includes("Machine") || m.name.includes("Vending")
+                      {m.familyId || m.name.includes("Machine") || m.name.includes("Vending")
                         ? m.name
                         : `Napkin Incinerator Machine (${m.name})`}
                     </span>

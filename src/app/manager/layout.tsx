@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 import { requireRole } from "@/lib/session";
 import { ManagerLayoutClient } from "./ManagerLayoutClient";
+import { ManagerPermissionsProvider } from "@/components/manager/ManagerPermissionsContext";
+import { getManagerPermissions } from "@/lib/permissions-server";
 
 export const instant = false;
 
@@ -12,6 +14,7 @@ export default async function ManagerLayout({
   // Manager Dashboard requires its own Manager session — an Admin session never substitutes
   // for it, even for the same person; they must separately authenticate as Manager.
   const user = await requireRole(["manager"]);
+  const permissions = await getManagerPermissions(user.id);
 
   return (
     <Suspense
@@ -21,7 +24,9 @@ export default async function ManagerLayout({
         </div>
       }
     >
-      <ManagerLayoutClient user={user}>{children}</ManagerLayoutClient>
+      <ManagerPermissionsProvider initial={permissions}>
+        <ManagerLayoutClient user={user}>{children}</ManagerLayoutClient>
+      </ManagerPermissionsProvider>
     </Suspense>
   );
 }

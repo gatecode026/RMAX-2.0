@@ -17,7 +17,7 @@ export const POST = route(async (req: Request) => {
   const auth = await checkApiRole(["customer"]);
   if ("error" in auth) return fail(GUEST_CART_MESSAGE, auth.status === 401 ? 401 : 403);
 
-  const rl = limited(req, "cart", 60, 60_000);
+  const rl = await limited(req, "cart", 60, 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
   if ("response" in parsedBody) return parsedBody.response;
@@ -59,7 +59,7 @@ export const PATCH = route(async (req: Request) => {
   const auth = await checkApiRole(["customer"]);
   if ("error" in auth) return fail(GUEST_CART_MESSAGE, auth.status === 401 ? 401 : 403);
 
-  const rl = limited(req, "cart", 60, 60_000);
+  const rl = await limited(req, "cart", 60, 60_000);
   if (rl) return rl;
   const parsedBody = await readJson(req);
   if ("response" in parsedBody) return parsedBody.response;

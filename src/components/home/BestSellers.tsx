@@ -1,8 +1,9 @@
 import { ShowcaseCard } from "@/components/catalog/cards";
+import { buildCards, type FamilyDTO } from "@/lib/catalog";
 import { ButtonLink } from "@/components/ui/Button";
 import type { ProductDTO } from "@/lib/data/content";
 
-export function BestSellers({ products }: { products: ProductDTO[] }) {
+export function BestSellers({ products, families = [] }: { products: ProductDTO[]; families?: FamilyDTO[] }) {
   return (
     <section id="best-sellers" className="mx-auto mt-16 w-full max-w-(--container-page) scroll-mt-24 px-5 sm:px-8 md:mt-[80px] lg:px-8 xl:px-16 xl:mt-[104px]">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -17,10 +18,12 @@ export function BestSellers({ products }: { products: ProductDTO[] }) {
         </ButtonLink>
       </div>
       <div className="mt-6 md:mt-[34px] grid gap-6 sm:gap-6 md:grid-cols-3 xl:gap-8">
-        {/* Three products with photos first; the rest live on the full catalogue page. */}
-        {[...products].sort((a, b) => Number(Boolean(b.image?.src)) - Number(Boolean(a.image?.src))).slice(0, 3).map((p) => (
-          <ShowcaseCard key={p.slug} product={p} />
-        ))}
+        {/* One card per family / standalone product, in catalogue order */}
+        {buildCards(products, products, families)
+          .slice(0, 3)
+          .map((p) => (
+            <ShowcaseCard key={p.slug} product={p} />
+          ))}
       </div>
       <div className="mt-8 flex justify-center">
         <ButtonLink href="/our-product" className="h-[48px] px-8">

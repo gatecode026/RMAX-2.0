@@ -12,7 +12,7 @@ const ALLOWED_STATUSES = new Set(["pending", "approved", "rejected", "hidden"]);
 
 /** PATCH { status } — approve / reject / hide. Never auto-approved; always an explicit admin action. */
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  const authResult = await checkApiRole(["super_admin", "admin", "manager"]);
+  const authResult = await checkApiRole(["super_admin", "admin"]);
   if ("error" in authResult) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
   const { user } = authResult;
   try {

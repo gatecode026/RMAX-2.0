@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Container } from "@/components/layout/Container";
 import { PageHero } from "@/components/layout/PageHero";
 import { QuoteForm } from "@/components/sections/QuoteForm";
-import { getProducts } from "@/lib/data/content";
+import { getFamilies, getProducts } from "@/lib/data/content";
 
 import { getCurrentUserProfile } from "@/lib/data/users";
 
@@ -12,11 +12,12 @@ export const metadata: Metadata = {
   description: "Share the scale of your requirement and we’ll help you discuss capacity, model choice and installation for your institution.",
 };
 
-type QuoteSearch = Promise<{ model?: string; qty?: string }>;
+type QuoteSearch = Promise<{ model?: string; qty?: string; type?: string }>;
 
 async function QuoteContent({ searchParams }: { searchParams: QuoteSearch }) {
-  const [products, user, { model, qty }] = await Promise.all([
+  const [products, families, user, { model, qty, type }] = await Promise.all([
     getProducts(),
+    getFamilies(),
     getCurrentUserProfile(),
     searchParams,
   ]);
@@ -25,10 +26,12 @@ async function QuoteContent({ searchParams }: { searchParams: QuoteSearch }) {
   const fallbackModel = products.find((p) => p.slug === "pro")?.slug ?? "help-me-choose";
   return (
     <QuoteForm
-      key={`${valid ? model! : fallbackModel}-${quantity}`}
+      key={`${valid ? model! : fallbackModel}-${quantity}-${type ?? ""}`}
       products={products}
+      families={families}
       initialModel={valid ? model! : fallbackModel}
       initialQuantity={quantity}
+      initialType={valid ? type?.slice(0, 40) : undefined}
       currentUser={user ? {
         id: user._id,
         name: user.name,

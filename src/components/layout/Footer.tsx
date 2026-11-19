@@ -7,7 +7,8 @@ import {
   HOME_FOOTER_STRIP,
   HOME_FOOTER_TAGLINE,
 } from "@/lib/constants";
-import { getProducts } from "@/lib/data/content";
+import { getFamilies, getProducts } from "@/lib/data/content";
+import { buildCards } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 
 /**
@@ -59,7 +60,8 @@ function Column({ title, headingClass, listClass, children }: { title: string; h
 }
 
 export async function Footer({ variant = "default" }: { variant?: FooterVariant } = {}) {
-  const products = await getProducts();
+  const [allProducts, families] = await Promise.all([getProducts(), getFamilies()]);
+  const products = buildCards(allProducts, allProducts, families); // one entry per family, not per option
   const c = CONFIG[variant];
   const newCopy = variant !== "default";
   const tagline = newCopy ? HOME_FOOTER_TAGLINE : FOOTER_TAGLINE;
@@ -80,7 +82,7 @@ export async function Footer({ variant = "default" }: { variant?: FooterVariant 
             {products.slice(0, 3).map((p) => (
               <li key={p.slug}>
                 <Link href={newCopy ? `/products/${p.slug}` : "/compare-models"} className={link}>
-                  {p.name}
+                  {p.group?.title ?? p.name}
                 </Link>
               </li>
             ))}

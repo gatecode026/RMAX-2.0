@@ -24,13 +24,15 @@ function AuthModalSearchParamsListener({
 
   useEffect(() => {
     const authParam = searchParams.get("auth");
-    if (authParam === "login") {
-      openModal("login");
-    } else if (authParam === "register" || authParam === "create-account") {
-      openModal("register");
-    } else if (authParam === "forgot") {
-      openModal("forgot");
-    }
+    if (!authParam) return;
+    if (authParam === "login") openModal("login");
+    else if (authParam === "register" || authParam === "create-account") openModal("register");
+    else if (authParam === "forgot") openModal("forgot");
+    else return;
+    // One-shot: drop `auth` from the address bar (keeps `next`), otherwise every later refresh re-opens the modal.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("auth");
+    window.history.replaceState(window.history.state, "", url.pathname + (url.search ? url.search : "") + url.hash);
   }, [searchParams, openModal]);
 
   return null;

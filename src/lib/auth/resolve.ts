@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/mongodb";
 import { User, type IUser } from "@/models/User";
 import type { UserRole } from "@/lib/enums";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimitShared } from "@/lib/rate-limit";
 
 export type ResolvedAccount = {
   id: string;
@@ -66,7 +66,7 @@ async function resolveLogin(
 ): Promise<LoginResult> {
   const normalizedEmail = email.toLowerCase().trim();
 
-  if (!rateLimit(`login:${normalizedEmail}`, 10, 15 * 60 * 1000).allowed) {
+  if (!(await rateLimitShared(`login:${normalizedEmail}`, 10, 15 * 60 * 1000)).allowed) {
     return { ok: false, message: "Too many login attempts. Please try again in 15 minutes." };
   }
 
