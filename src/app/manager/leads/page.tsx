@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { startPolling } from "@/lib/client/polling";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -102,12 +103,13 @@ export default function ManagerLeadsPage() {
       fetchLeads();
     };
     window.addEventListener("rmax:lead_updated", handleLiveSync);
-    const interval = setInterval(fetchLeads, 10000);
+    // Fallback only: live changes already arrive through the rmax:lead_updated event. Visible tab, never overlapping.
+    const stopPolling = startPolling(() => fetchLeads(), 30000);
 
     return () => {
       clearTimeout(timeout);
       window.removeEventListener("rmax:lead_updated", handleLiveSync);
-      clearInterval(interval);
+      stopPolling();
     };
   }, [fetchLeads]);
 

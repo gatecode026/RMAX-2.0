@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { subscribeStaffStream } from "@/lib/client/staff-stream";
+import { startPolling } from "@/lib/client/polling";
 
 export interface AppNotification {
   _id: string;
@@ -25,8 +27,6 @@ export function useDesktopNotifications() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Play subtle notification chime using Web Audio API
   const playChime = useCallback(() => {
@@ -182,110 +182,88 @@ export function useDesktopNotifications() {
   useEffect(() => {
     fetchNotifications();
 
-    // SSE connection function
-    function connectSSE() {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
+    // One shared stream per tab (see lib/client/staff-stream); the poll below is the fallback for
+    // serverless deployments where a push from another instance never reaches this stream.
+    function handleNotificationPayload(raw: unknown) {
+      if (!raw || typeof raw !== "object") return;
+      const record = raw as Record<string, unknown>;
+      const n = (record.notification && typeof record.notification === "object"
+        ? record.notification
+        : record) as Record<string, unknown>;
+      const idVal = n._id ? String(n._id) : n.id ? String(n.id) : String(Date.now());
+      const titleVal = String(n.title);
+      const messageVal = n.message ? String(n.message) : "";
+      const typeVal = typeof n.type === "string" ? n.type : "system";
+      const linkVal = typeof n.link === "string" ? n.link : undefined;
+      const metaVal = n.metadata && typeof n.metadata === "object" ? (n.metadata as Record<string, unknown>) : undefined;
 
-      const es = new EventSource("/api/notifications/stream");
-      eventSourceRef.current = es;
-
-      es.onopen = () => {
-        setIsConnected(true);
+      const newNotif: AppNotification = {
+        _id: idVal,
+        title: titleVal,
+        message: messageVal,
+        type: typeVal,
+        link: linkVal,
+        read: false,
+        createdAt: n.createdAt ? String(n.createdAt) : new Date().toISOString(),
+        metadata: metaVal,
       };
 
-      function handleNotificationPayload(raw: unknown) {
-        if (!raw || typeof raw !== "object") return;
-        const record = raw as Record<string, unknown>;
-        const n = (record.notification && typeof record.notification === "object"
-          ? record.notification
-          : record) as Record<string, unknown>;
-        const idVal = n._id ? String(n._id) : n.id ? String(n.id) : String(Date.now());
-        const titleVal = String(n.title);
-        const messageVal = n.message ? String(n.message) : "";
-        const typeVal = typeof n.type === "string" ? n.type : "system";
-        const linkVal = typeof n.link === "string" ? n.link : undefined;
-        const metaVal = n.metadata && typeof n.metadata === "object" ? (n.metadata as Record<string, unknown>) : undefined;
+      setNotifications((prev) => {
+        if (prev.some((existing) => existing._id === newNotif._id)) return prev;
+        return [newNotif, ...prev];
+      });
+      setUnreadCount((c) => c + 1);
 
-        const newNotif: AppNotification = {
-          _id: idVal,
-          title: titleVal,
-          message: messageVal,
-          type: typeVal,
-          link: linkVal,
-          read: false,
-          createdAt: n.createdAt ? String(n.createdAt) : new Date().toISOString(),
-          metadata: metaVal,
-        };
-
-        setNotifications((prev) => {
-          if (prev.some((existing) => existing._id === newNotif._id)) return prev;
-          return [newNotif, ...prev];
-        });
-        setUnreadCount((c) => c + 1);
-
-        playChime();
-        triggerDesktopNotification({
-          title: newNotif.title,
-          message: newNotif.message,
-          link: newNotif.link,
-        });
-
-        // Broadcast to application window so lead tables and statistics update LIVE without refreshing
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("rmax:notification", { detail: newNotif }));
-          window.dispatchEvent(new CustomEvent("rmax:lead_updated", { detail: newNotif }));
-        }
-      }
-
-      es.onmessage = (event) => {
-        try {
-          if (!event.data || event.data === "keep-alive") return;
-          const data = JSON.parse(event.data);
-          if (data.type === "connected" || data === "connected") {
-            setIsConnected(true);
-            return;
-          }
-          handleNotificationPayload(data);
-        } catch {
-          // Parse error or non-json message
-        }
-      };
-
-      es.addEventListener("notification", (event: MessageEvent) => {
-        try {
-          if (!event.data) return;
-          const data = JSON.parse(event.data);
-          handleNotificationPayload(data);
-        } catch {
-          // Parse error
-        }
+      playChime();
+      triggerDesktopNotification({
+        title: newNotif.title,
+        message: newNotif.message,
+        link: newNotif.link,
       });
 
-      es.onerror = () => {
-        setIsConnected(false);
-        es.close();
-        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = setTimeout(connectSSE, 6000);
-      };
+      // Broadcast to application window so lead tables and statistics update LIVE without refreshing
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("rmax:notification", { detail: newNotif }));
+        window.dispatchEvent(new CustomEvent("rmax:lead_updated", { detail: newNotif }));
+      }
     }
 
-    connectSSE();
 
-    // Continuous background synchronization (every 10 seconds)
-    const pollInterval = setInterval(() => {
-      fetchNotifications();
-    }, 10000);
+    const onMessage = (event: Event) => {
+      try {
+        const raw = (event as MessageEvent).data;
+        if (!raw || raw === "keep-alive") return;
+        const data = JSON.parse(raw);
+        if (data.type === "connected" || data === "connected") {
+          setIsConnected(true);
+          return;
+        }
+        handleNotificationPayload(data);
+      } catch {
+        // Parse error or non-json message
+      }
+    };
+    const onNotification = (event: Event) => {
+      try {
+        const raw = (event as MessageEvent).data;
+        if (raw) handleNotificationPayload(JSON.parse(raw));
+      } catch {
+        // Parse error
+      }
+    };
+    const unsubscribe = subscribeStaffStream({
+      open: () => setIsConnected(true),
+      error: () => setIsConnected(false),
+      message: onMessage,
+      notification: onNotification,
+    });
+
+    // Background synchronisation: every 30 s, only while the tab is visible, never overlapping.
+    const stopPolling = startPolling(() => fetchNotifications(), 30000);
 
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      clearInterval(pollInterval);
+      unsubscribe();
+      stopPolling();
     };
   }, [fetchNotifications, playChime, triggerDesktopNotification]);
 

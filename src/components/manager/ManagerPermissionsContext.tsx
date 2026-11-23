@@ -2,6 +2,8 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { subscribeStaffStream } from "@/lib/client/staff-stream";
+import { startPolling } from "@/lib/client/polling";
 import { canAccessPath, firstAllowedHref, type ManagerPermissions } from "@/lib/permissions";
 
 const PermissionsContext = createContext<ManagerPermissions | null>(null);
@@ -47,17 +49,15 @@ export function ManagerPermissionsProvider({ initial, children }: { initial: Man
   }, [router]);
 
   useEffect(() => {
-    const es = typeof EventSource !== "undefined" ? new EventSource("/api/notifications/stream") : null;
-    es?.addEventListener("permissions", () => void refresh());
-    const interval = setInterval(refresh, POLL_MS);
+    // Shared tab-wide stream (lib/client/staff-stream); the poll only runs while the tab is visible.
+    const unsubscribe = subscribeStaffStream({ permissions: () => void refresh() });
+    const stopPolling = startPolling(() => refresh(), POLL_MS);
     const onFocus = () => void refresh();
     window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onFocus);
     return () => {
-      es?.close();
-      clearInterval(interval);
+      unsubscribe();
+      stopPolling();
       window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onFocus);
     };
   }, [refresh]);
 

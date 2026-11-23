@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useDebounced } from "@/hooks/useDebounced";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -94,12 +95,14 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
   const [bulkBusy, setBulkBusy] = useState(false);
   const [failures, setFailures] = useState<{ id: string; name: string; error: string }[]>([]);
 
+  const debouncedSearch = useDebounced(search, 300);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const qs = new URLSearchParams();
-      if (search) qs.set("search", search);
+      if (debouncedSearch) qs.set("search", debouncedSearch);
       if (status) qs.set("status", status);
       qs.set("sort", sort);
       qs.set("page", String(page));
@@ -114,7 +117,7 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
     } finally {
       setLoading(false);
     }
-  }, [search, status, sort, page]);
+  }, [debouncedSearch, status, sort, page]);
 
   useEffect(() => {
     load();

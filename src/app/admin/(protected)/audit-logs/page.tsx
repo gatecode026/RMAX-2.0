@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useDebounced } from "@/hooks/useDebounced";
+import { startPolling } from "@/lib/client/polling";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
 import {
   Search,
@@ -44,30 +46,41 @@ export default function AuditLogsPage() {
   const [entityFilter, setEntityFilter] = useState("all");
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null);
 
-  const fetchLogs = useCallback(async () => {
+  const debouncedSearch = useDebounced(search, 300);
+  const inflight = useRef<AbortController | null>(null);
+
+  const fetchLogs = useCallback(async (signal?: AbortSignal) => {
+    // a newer request supersedes an older one, so a slow earlier response can never overwrite it
+    inflight.current?.abort();
+    const own = new AbortController();
+    inflight.current = own;
+    signal?.addEventListener("abort", () => own.abort());
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (search) params.set("search", search);
+      if (debouncedSearch) params.set("search", debouncedSearch);
       if (entityFilter !== "all") params.set("entityType", entityFilter);
 
-      const res = await fetch(`/api/admin/audit-logs?${params.toString()}`);
-      if (res.ok) {
+      const res = await fetch(`/api/admin/audit-logs?${params.toString()}`, { signal: own.signal });
+      if (res.ok && !own.signal.aborted) {
         const data = await res.json();
         setLogs(data.logs || []);
       }
     } catch {
       // Ignore network error
     } finally {
-      setLoading(false);
+      if (!own.signal.aborted) setLoading(false);
     }
-  }, [search, entityFilter]);
+  }, [debouncedSearch, entityFilter]);
 
-  // Initial load and live auto-refresh every 8 seconds
+  // Initial load, then a refresh every 30 s while the tab is visible
   useEffect(() => {
-    fetchLogs();
-    const interval = setInterval(fetchLogs, 8000);
-    return () => clearInterval(interval);
+    void fetchLogs();
+    const stop = startPolling((signal) => fetchLogs(signal), 30000);
+    return () => {
+      stop();
+      inflight.current?.abort();
+    };
   }, [fetchLogs]);
 
   const getActionBadge = (action: string) => {
@@ -174,7 +187,7 @@ export default function AuditLogsPage() {
         ]}
         actions={
           <button
-            onClick={fetchLogs}
+            onClick={() => void fetchLogs()}
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition"
           >
             <RefreshCw className={`size-3.5 ${loading ? "animate-spin text-[#10469B]" : ""}`} />
