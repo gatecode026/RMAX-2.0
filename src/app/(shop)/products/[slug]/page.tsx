@@ -106,10 +106,17 @@ export default async function ProductPage({ params }: Params) {
   const useNeutralTrust = !isIncinerator && product.category !== "pad-vending";
 
   // Highlight tiles: the first visible specification rows of the selected product — no per-product tables.
-  const specTiles = (product.techSpecs ?? [])
+  const specRows = (product.techSpecs ?? [])
     .filter((r) => r.visible !== false && r.label && r.value)
     .slice(0, 4)
     .map((r) => ({ value: [r.value, r.unit].filter(Boolean).join(" "), label: r.label }));
+  // Products with no spec rows (e.g. GPS Trackers) fall back to feature/application highlights so the column is never blank.
+  const specTiles = specRows.length
+    ? specRows
+    : [...(product.features ?? []), ...(product.applications ?? [])]
+        .filter((p) => p.title && p.body)
+        .slice(0, 4)
+        .map((p) => ({ value: p.title, label: p.body }));
 
   const displayTrust = useNeutralTrust
     ? [

@@ -84,25 +84,25 @@ function UnifiedProductCard({
         <div className="mt-5 flex flex-col gap-4 px-1">
           {/* Title & Description Block */}
           <div className="flex flex-col gap-2">
-            <h3 className="font-heading text-[24px] font-bold leading-[32px] tracking-[-1.08px] text-[#232A32] line-clamp-2 min-h-[64px]">
+            <h3 className="font-heading text-[24px] font-bold leading-[32px] tracking-[-1.08px] text-[#232A32] line-clamp-2">
               <Link href={productHref(product)} className="transition-colors hover:text-navy after:absolute after:inset-0 after:z-0 after:rounded-[24px] after:content-['']">
                 {group ? group.title : product.title}
               </Link>
             </h3>
 
-            <p className="font-sans text-[16px] font-normal leading-[24px] text-[#586574] line-clamp-2 min-h-[48px]">
+            <p className="font-sans text-[16px] font-normal leading-[24px] text-[#586574] line-clamp-2">
               {group && group.count > 1 ? `${group.badge} — pick the option on the next page.` : product.intro ?? product.summary ?? "For lower-volume sanitary napkin disposal in schools, offices and shared washrooms."}
             </p>
           </div>
 
           {/* 4 Specs Bento Grid (2x2) */}
-          <div className="grid grid-cols-2 gap-2 h-[88px] w-full">
+          <div className="grid w-full grid-cols-2 gap-2">
             {specs.map((item, idx) => (
               <div
                 key={idx}
-                className="flex h-[40px] items-center rounded-[8px] bg-[#FBF9F5] px-3 font-sans text-[12px] font-bold leading-[20px] text-[#586574] truncate"
+                className="flex min-h-[40px] items-center rounded-[12px] bg-[#FBF9F5] px-3 py-1.5 font-sans text-[12px] font-bold leading-4 text-[#586574]"
               >
-                <span className="truncate">{item}</span>
+                <span className="line-clamp-2">{item}</span>
               </div>
             ))}
           </div>

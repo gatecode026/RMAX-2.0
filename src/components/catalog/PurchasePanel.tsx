@@ -308,7 +308,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             disabled={isAdding}
             className={cn(
               buttonClasses({ variant: "outline", size: "md" }),
-              "h-[48px] w-full justify-center font-bold text-navy border-line hover:border-navy hover:bg-navy/5 cursor-pointer"
+              "h-[48px] w-full justify-center font-bold cursor-pointer"
             )}
           >
             {isAdding ? "Adding…" : "Buy Now"}
