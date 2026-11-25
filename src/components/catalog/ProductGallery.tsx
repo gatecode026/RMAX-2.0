@@ -1,13 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Play, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { IGalleryItem } from "@/models/Product";
 
 /** Thumbnail rail + large viewer with Amazon-style lens indicator and zoom flyout. */
-export function ProductGallery({ items, title }: { items: IGalleryItem[]; title: string }) {
+export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; title: string }) {
+  // Images that fail to load (dead URL) are dropped from the rail and viewer instead of showing a broken icon.
+  const [broken, setBroken] = useState<Set<string>>(new Set());
+  const items = useMemo(() => all.filter((g) => !broken.has(g.src) && !broken.has(g.thumb)), [all, broken]);
+  const markBroken = (url: string) => setBroken((p) => new Set(p).add(url));
   const [active, setActive] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,7 +115,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
                     isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
                   )}
                 >
-                  <Image src={g.thumb} alt="" width={62} height={78} unoptimized={g.thumb.startsWith("http")} className="size-full object-contain p-1" />
+                  <Image src={g.thumb} alt="" width={62} height={78} unoptimized={g.thumb.startsWith("http")} onError={() => markBroken(g.thumb)} className="size-full object-contain p-1" />
                   {/* Small thumbnail active zoom indicator */}
                   {isCurrent && isHovering && !isVideo && (
                     <span
@@ -153,6 +157,7 @@ export function ProductGallery({ items, title }: { items: IGalleryItem[]; title:
           unoptimized={current.src.startsWith("http")}
           priority={active === 0}
           onLoad={(e) => readNatural(e.currentTarget)}
+          onError={() => markBroken(current.src)}
           // Cached/SSR images can finish loading before hydration, so onLoad never fires — read it on mount too.
           ref={(el) => {
             if (el?.complete) readNatural(el);

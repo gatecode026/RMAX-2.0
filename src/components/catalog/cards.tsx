@@ -3,7 +3,7 @@ import Link from "next/link";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { ProductDTO } from "@/lib/data/content";
-import type { GroupCardMeta } from "@/lib/catalog";
+import { specText, type GroupCardMeta } from "@/lib/catalog";
 
 /** Product page route for a catalogue item. */
 export const productHref = (p: Pick<ProductDTO, "slug">) => `/products/${p.slug}`;
@@ -14,7 +14,7 @@ function getCardSpecs(product: ProductDTO): string[] {
   return (product.techSpecs ?? [])
     .filter((r) => r.visible !== false && r.label && r.value)
     .slice(0, 4)
-    .map((r) => [r.value, r.unit].filter(Boolean).join(" "));
+    .map((r) => specText(r));
 }
 
 interface UnifiedProductCardProps {
@@ -97,12 +97,14 @@ function UnifiedProductCard({
 
           {/* 4 Specs Bento Grid (2x2) */}
           <div className="grid w-full grid-cols-2 gap-2">
-            {specs.map((item, idx) => (
+            {/* Always 4 slots: missing specs render as empty tiles so every card keeps the same 2x2 layout. */}
+            {Array.from({ length: 4 }, (_, idx) => specs[idx]).map((item, idx) => (
               <div
                 key={idx}
-                className="flex min-h-[40px] items-center rounded-[12px] bg-[#FBF9F5] px-3 py-1.5 font-sans text-[12px] font-bold leading-4 text-[#586574]"
+                aria-hidden={item ? undefined : true}
+                className="flex min-h-[40px] items-center rounded-[12px] bg-soft px-3 py-1.5 font-sans text-[12px] font-bold leading-4 text-[#586574]"
               >
-                <span className="line-clamp-2">{item}</span>
+                {item && <span className="line-clamp-2">{item}</span>}
               </div>
             ))}
           </div>

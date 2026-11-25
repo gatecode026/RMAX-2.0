@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
-import { buildCards, defaultMember, familyOf, membersOf, pickerGroups, variantLabel } from "@/lib/catalog";
+import { buildCards, defaultMember, specText, familyOf, membersOf, pickerGroups, variantLabel } from "@/lib/catalog";
 import { PurchasePanel } from "@/components/catalog/PurchasePanel";
 import { ProductTabs, type TabItem } from "@/components/catalog/ProductTabs";
 import { RelatedCard } from "@/components/catalog/cards";
@@ -109,7 +109,7 @@ export default async function ProductPage({ params }: Params) {
   const specRows = (product.techSpecs ?? [])
     .filter((r) => r.visible !== false && r.label && r.value)
     .slice(0, 4)
-    .map((r) => ({ value: [r.value, r.unit].filter(Boolean).join(" "), label: r.label }));
+    .map((r) => ({ value: specText(r), label: r.label }));
   // Products with no spec rows (e.g. GPS Trackers) fall back to feature/application highlights so the column is never blank.
   const specTiles = specRows.length
     ? specRows

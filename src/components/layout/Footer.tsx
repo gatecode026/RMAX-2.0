@@ -81,7 +81,7 @@ export async function Footer({ variant = "default" }: { variant?: FooterVariant 
           <Column title={t("Our Products")} headingClass={c.heading} listClass={c.list}>
             {products.slice(0, 3).map((p) => (
               <li key={p.slug}>
-                <Link href={newCopy ? `/products/${p.slug}` : "/compare-models"} className={link}>
+                <Link href={`/products/${p.slug}`} className={link}>
                   {p.group?.title ?? p.name}
                 </Link>
               </li>

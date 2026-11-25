@@ -284,3 +284,10 @@ html:has(body.modal-open) {
   }
 }
 
+
+/* ScrollToTop arrow: small repeated hop on hover. */
+@keyframes jump-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-5px); }
+  70% { transform: translateY(1px); }
+}

@@ -21,6 +21,7 @@ export interface Member {
   sortOrder?: number;
   familyId?: string;
   variantOptions?: Record<string, string>;
+  techSpecs?: { label: string; value: string; unit?: string; visible?: boolean }[];
 }
 
 export interface GroupCardMeta {
@@ -56,7 +57,22 @@ function chipsFor(family: FamilyDTO, members: Member[]): string[] {
   const out: string[] = [];
   for (const o of family.options) {
     const present = o.values.filter((v) => members.some((m) => m.variantOptions?.[o.key] === v.value));
-    if (present.length) out.push(`${o.label}: ${present.map((v) => v.label).join(" · ")}`);
+    if (!present.length) continue;
+    // Value only (no option label); a unit shared by every value is shown once: "25 Pads · 50 Pads" → "25 · 50 Pads".
+    const labels = present.map((v) => v.label);
+    const unit = labels[0].split(" ").slice(1).pop();
+    const shared = labels.length > 1 && unit && labels.every((l) => l.split(" ").length === 2 && l.endsWith(` ${unit}`));
+    out.push(shared ? `${labels.map((l) => l.split(" ")[0]).join(" · ")} ${unit}` : labels.join(" · "));
+  }
+  // Free slots: other documented specs of the members (e.g. "Wall-mounted", "1 year"); a spec that differs between members is joined, if short.
+  const taken = new Set(family.options.map((o) => o.label.toLowerCase()));
+  for (const r of members[0]?.techSpecs ?? []) {
+    if (out.length >= 4) break;
+    if (r.visible === false || !r.label || !r.value || taken.has(r.label.toLowerCase())) continue;
+    const found = members.map((m) => m.techSpecs?.find((x) => x.label === r.label && x.visible !== false && x.value));
+    if (found.some((x) => !x)) continue; // not documented on every member
+    const text = [...new Set(found.map((x) => specText(x!)))].join(" · ");
+    if (text.length <= 28 && !out.includes(text)) out.push(text);
   }
   return out.slice(0, 4);
 }
@@ -134,4 +150,9 @@ export function variantLabel(product: Member, family: FamilyDTO | undefined): st
   if (!family) return null;
   const parts = family.options.map((o) => o.values.find((v) => v.value === product.variantOptions?.[o.key])?.label).filter(Boolean);
   return parts.length ? [family.name, ...parts].join(" · ") : null;
+}
+
+/** Spec text for tiles/chips: the unit is appended only to bare numbers ("1000" → "1000 W"), never repeated when the value already carries it ("10–12 kg"). */
+export function specText(r: { value: string; unit?: string }): string {
+  return /[a-z]/i.test(r.value) ? r.value : [r.value, r.unit].filter(Boolean).join(" ");
 }

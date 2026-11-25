@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Manrope, Montserrat, Plus_Jakarta_Sans } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
@@ -39,6 +40,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import { CustomerAuthModal } from "@/components/auth/CustomerAuthModal";
 import { GlobalModalScrollLock } from "@/components/ui/GlobalModalScrollLock";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const viewport: Viewport = {
@@ -69,6 +71,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CustomerAuthModal />
           </AuthModalProvider>
         </ToastProvider>
+        <Suspense fallback={null}>
+          <ScrollToTop />
+        </Suspense>
         <SpeedInsights />
       </body>
     </html>
