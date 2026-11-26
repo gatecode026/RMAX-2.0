@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ orders, total, page, pageSize, totalPages, counts: Object.fromEntries(counts.map((c) => [c._id, c.n])) });
   } catch (err) {
+    unstable_rethrow(err); // let Next prerender signals through
     console.error("GET /api/admin/orders error:", err);
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }

@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
@@ -48,6 +49,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     });
     return NextResponse.json({ order: order.toObject() });
   } catch (err) {
+    unstable_rethrow(err); // let Next prerender signals through
     console.error("PATCH /api/admin/orders/[id] error:", err);
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_rethrow } from "next/navigation";
 import { ZodError } from "zod";
 import { rateLimitShared } from "@/lib/rate-limit";
 import { isDatabaseUnavailable } from "@/lib/mongodb";
@@ -35,6 +36,8 @@ export function route<A extends unknown[]>(handler: (...args: A) => Promise<Resp
     try {
       return await handler(...args);
     } catch (err) {
+      // Next internals (prerender / dynamic-usage signals) must propagate, not be logged as failures.
+      unstable_rethrow(err);
       if (isDatabaseUnavailable(err)) return fail(DB_UNAVAILABLE_MESSAGE, 503);
       console.error(err);
       // Surface the cause in development only; production never leaks internals.

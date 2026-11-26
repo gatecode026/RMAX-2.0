@@ -39,7 +39,7 @@ const quoteRequestSchema = new Schema<IQuoteRequest>(
     institutionType: { type: String, enum: INSTITUTION_TYPES, required: true },
     contactPerson: { type: String, required: true, trim: true },
     role: { type: String, trim: true },
-    email: { type: String, required: true, lowercase: true, trim: true, index: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, required: true, trim: true },
     preferredModel: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1 },
