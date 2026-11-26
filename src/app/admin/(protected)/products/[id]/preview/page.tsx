@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AlertCircle, ArrowLeft, Edit3, Eye, EyeOff, Loader2, Trash2 } from "lucide-react";
+
+const DESKTOP_WIDTH = 1280;
 
 interface PreviewProduct {
   _id: string;
@@ -34,6 +36,19 @@ export default function AdminProductPreviewPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Bumped after a status change so the preview frame reloads.
   const [frameKey, setFrameKey] = useState(0);
+  const frameBox = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  // Keep the desktop-width frame fitted to the available width.
+  useEffect(() => {
+    const el = frameBox.current;
+    if (!el) return;
+    const fit = () => setScale(Math.min(1, el.clientWidth / DESKTOP_WIDTH));
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [product]);
 
   const load = useCallback(async () => {
     try {
@@ -161,8 +176,11 @@ export default function AdminProductPreviewPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#E5EBF4] bg-white shadow-sm">
-        <iframe key={frameKey} src={`/products/${product.slug}`} title={`Preview of ${product.name}`} className="h-[80vh] w-full border-0" />
+      {/* The frame always renders at a 1280px desktop width and is scaled down to fit, so the preview never shows the tablet layout. */}
+      <div ref={frameBox} className="overflow-hidden rounded-xl border border-[#E5EBF4] bg-white shadow-sm" style={{ height: "80vh" }}>
+        <div style={{ width: DESKTOP_WIDTH, height: `calc(80vh / ${scale})`, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+          <iframe key={frameKey} src={`/products/${product.slug}`} title={`Preview of ${product.name}`} className="h-full w-full border-0" />
+        </div>
       </div>
 
       <ConfirmDialog

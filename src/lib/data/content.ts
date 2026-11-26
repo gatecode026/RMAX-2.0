@@ -63,7 +63,19 @@ async function readAllProducts(): Promise<ProductDTO[]> {
     // Published only — this is the public catalogue. Draft and archived products never appear
     // here regardless of who's asking; see getProductBySlugAnyStatus for the admin preview path.
     const rows = await Product.find({ status: "published" }).sort({ sortOrder: 1 }).lean();
-    return plain<ProductDTO[]>(rows);
+    // `images[]` (the admin uploader) is the source of truth; the legacy image/cardImage/gallery fields can be stale.
+    // Derive them from it (primary first) so cards, listing and the detail page all show the same main photo.
+    return plain<ProductDTO[]>(rows).map((p) => {
+      const imgs = [...(p.images ?? [])].filter((i) => i?.url).sort((a, b) => Number(!!b.isPrimary) - Number(!!a.isPrimary) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+      if (!imgs.length) return p;
+      const main = { src: imgs[0].url, alt: imgs[0].alt || p.title, width: imgs[0].width || p.image?.width || 1024, height: imgs[0].height || p.image?.height || 1024 };
+      return {
+        ...p,
+        image: main,
+        cardImage: main,
+        gallery: imgs.map((i) => ({ src: i.url, thumb: i.url, alt: i.alt || p.title, kind: "image" as const })),
+      };
+    });
   } catch {
     console.warn("[content] Could not read products from MongoDB — showing an empty catalogue.");
     return [];
