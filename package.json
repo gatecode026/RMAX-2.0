@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
+    "apply:prices": "tsx scripts/apply-catalogue-prices.ts",
+    "apply:content": "tsx scripts/apply-catalogue-content.ts",
     "import:products": "tsx scripts/import-products.ts",
     "mail:check": "tsx scripts/mail-check.ts",
     "migrate:families": "tsx scripts/migrate-families.ts",

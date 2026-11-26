@@ -126,7 +126,7 @@ function UnifiedProductCard({
               product.price > 0 && product.stockStatus !== "enquiry-only" ? "text-[32px] leading-[36px]" : "text-[20px] sm:text-[22px] leading-[28px]"
             )}
           >
-            {product.price > 0 && product.stockStatus !== "enquiry-only" ? formatINR(product.price) : "Price on request"}
+            {product.price > 0 && product.stockStatus !== "enquiry-only" ? <>{formatINR(product.price)}<span className="ml-1 text-[14px] font-semibold text-muted">+ GST</span></> : "Price on request"}
           </span>
         </div>
 

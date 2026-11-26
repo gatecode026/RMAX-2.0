@@ -138,7 +138,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         ) : null}
         <div className="flex flex-wrap items-baseline gap-2.5">
           <span className="font-heading text-section md:text-[38px]/[44px] font-extrabold tracking-[-1px] text-charcoal">
-            {onRequest ? "Price on request" : formatINR(displayPrice)}
+            {onRequest ? "Price on request" : <>{formatINR(displayPrice)}<span className="ml-1 text-[14px] font-semibold text-muted">+ GST</span></>}
           </span>
           {qty > 1 && !onRequest && (
             <span className="text-body-sm font-semibold text-muted">
@@ -146,7 +146,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             </span>
           )}
         </div>
-        {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Inclusive of all taxes</span>}
+        {!onRequest && <span className="text-[12px] text-muted-dark font-medium">Exclusive of GST; GST charged extra</span>}
       </div>
 
       {family && (

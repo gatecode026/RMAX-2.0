@@ -283,7 +283,7 @@ export function CompareView({
                     {/* Price and Original Price */}
                     <div className="mt-2 flex flex-col">
                       <p className="font-jakarta text-[26px]/[32px] font-extrabold text-[#020618]">
-                        {p.price > 0 ? formatINR(p.price) : "Price on request"}
+                        {p.price > 0 ? <>{formatINR(p.price)}<span className="ml-1 text-[12px] font-semibold text-[#62748E]">+ GST</span></> : "Price on request"}
                       </p>
                       {p.originalPrice > p.price && p.price > 0 ? (
                         <p className="font-sans text-[13px]/[18px] text-[#62748E] line-through">

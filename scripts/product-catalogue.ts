@@ -44,7 +44,7 @@ const HYGIENE_PLACES = "Schools, colleges, hospitals, offices and public toilets
 export const CATALOGUE: CatalogueItem[] = [
   /* ---------------- 1. Sanitary hygiene ---------------- */
   {
-    slug: "automatic-sanitary-napkin-vending-machine", name: "Automatic Sanitary Napkin Vending Machine", category: "automatic-vending", group: H,
+    slug: "automatic-sanitary-napkin-vending-machine", name: "Automatic Sanitary Pad Vending Machine – Basic", category: "automatic-vending", group: H,
     summary: "An automatic sanitary pad vending machine with a 50-pad capacity.",
     overview: "This 12 kg automatic vending machine is designed to make sanitary pads available in shared washrooms. It dispenses automatically and carries clear user instructions on the front. Suggested applications include colleges, offices and other facilities that need a dedicated dispensing point.",
     features: [["Automatic dispensing", "Dispenses napkins automatically."], ["50-pad capacity", "Holds 50 pads."], ["12 kg weight", "Weighs 12 kg."], ["Clear user instructions", "Usage instructions displayed on the unit."]],
@@ -54,7 +54,7 @@ export const CATALOGUE: CatalogueItem[] = [
     chips: ["50 pads", "Automatic", "12 kg"], docSpecs: { dailyCapacity: "50 pads", weight: "12 kg" },
   },
   {
-    slug: "sanitary-pad-vending-machine-25-pad", name: "Manual Sanitary Pad Vending Machine – 25 Pad", category: "manual-vending", group: H,
+    slug: "sanitary-pad-vending-machine-25-pad", name: "Manual Sanitary Pad Vending Machine – Basic", category: "manual-vending", group: H,
     summary: "A compact manual sanitary pad vending machine with a 25-pad capacity.",
     overview: "This manual vending machine provides access to sanitary pads in shared washrooms. It measures 30 × 12 × 48 cm (L × W × H) and weighs 8–10 kg. Suggested applications include schools, colleges and workplaces.",
     features: [["Manual operation", "Manually operated dispensing."], ["25-pad capacity", "Holds 25 pads."], ["Compact dimensions", "30 × 12 × 48 cm (L × W × H)."]],
@@ -63,7 +63,7 @@ export const CATALOGUE: CatalogueItem[] = [
     chips: ["25 pads", "Manual", "8–10 kg"], docSpecs: { dailyCapacity: "25 pads", weight: "8–10 kg" },
   },
   {
-    slug: "sanitary-pad-disposal-machine-100-pad", name: "Small Automatic Sanitary Pad Incinerator", category: "incinerator", group: H, existing: true,
+    slug: "sanitary-pad-disposal-machine-100-pad", name: "Automatic Sanitary Pad Disposal Machine – Basic", category: "incinerator", group: H, existing: true,
     summary: "A compact, wall-mounted automatic incinerator with an 800 W heater and a disposal capacity of 25–100 sanitary pads per batch.",
     overview: "The Small model offers a compact, wall-mounted option for sanitary pad disposal in shared washrooms. It measures 25 × 25 × 43 cm, weighs 10–12 kg, and includes a one-year warranty.",
     features: [
@@ -91,7 +91,7 @@ export const CATALOGUE: CatalogueItem[] = [
     warranty: { duration: "1 year", type: "Manufacturer warranty", description: "One-year warranty duration as specified." },
   },
   {
-    slug: "sanitary-pad-disposal-machine", name: "Medium Automatic Sanitary Pad Incinerator", category: "incinerator", group: H, existing: true,
+    slug: "sanitary-pad-disposal-machine", name: "Automatic Sanitary Pad Disposal Machine – Pro", category: "incinerator", group: H, existing: true,
     summary: "A wall-mounted automatic incinerator with a disposal capacity of 250 sanitary pads per batch.",
     overview: "The Medium model is an option for schools, colleges, offices, and other facilities with shared washrooms. It measures 25 × 25 × 46 cm, weighs 12–15 kg, and includes a one-year warranty.",
     features: [
@@ -118,7 +118,7 @@ export const CATALOGUE: CatalogueItem[] = [
     warranty: { duration: "1 year", type: "Manufacturer warranty", description: "One-year warranty duration as specified." },
   },
   {
-    slug: "sanitary-pad-disposal-machine-500-pad", name: "Large Automatic Sanitary Pad Incinerator", category: "incinerator", group: H, existing: true,
+    slug: "sanitary-pad-disposal-machine-500-pad", name: "Automatic Sanitary Pad Disposal Machine – Pro Max", category: "incinerator", group: H, existing: true,
     summary: "A wall-mounted automatic incinerator with a 1,200 W heater and a disposal capacity of 500 sanitary pads per batch.",
     overview: "The Large model is designed for facilities with higher disposal needs, such as campuses, workplaces, and public facilities. It measures 30 × 30 × 60 cm, weighs 18–20 kg, and includes a one-year warranty.",
     features: [
