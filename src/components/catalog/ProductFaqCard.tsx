@@ -9,7 +9,7 @@ const h2 = "font-heading text-title font-extrabold tracking-[-0.6px] text-charco
 
 /** Accordion-style FAQ list, styled to match the rest of the product detail page (card shell, icon chips, navy accent). */
 export function ProductFaqCard({ faqs }: { faqs: { question: string; answer: string }[] }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section id="faqs" aria-labelledby="faqs-h" className={cn(card, "scroll-mt-20 p-7 md:p-8")}>
@@ -30,7 +30,7 @@ export function ProductFaqCard({ faqs }: { faqs: { question: string; answer: str
               key={faq.question}
               className={cn(
                 "rounded-[16px] border transition-colors",
-                open ? "border-navy/20 bg-soft" : "border-line bg-card hover:border-navy/20",
+                open ? "border-navy/20 bg-soft" : "border-line bg-card [@media(hover:hover)]:hover:border-navy/20", // no sticky hover on touch screens
               )}
             >
               <dt>
@@ -38,20 +38,22 @@ export function ProductFaqCard({ faqs }: { faqs: { question: string; answer: str
                   type="button"
                   onClick={() => setOpenIndex(open ? null : i)}
                   aria-expanded={open}
-                  className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left"
+                  aria-controls={`faq-${i}`}
+                  className="flex w-full cursor-pointer touch-manipulation items-center justify-between gap-4 px-5 py-4 text-left [-webkit-tap-highlight-color:transparent]"
                 >
-                  <span className={cn("text-body font-bold", open ? "text-navy" : "text-charcoal")}>{faq.question}</span>
+                  <span className={cn("min-w-0 text-body font-bold", open ? "text-navy" : "text-charcoal")}>{faq.question}</span>
                   <Plus
                     aria-hidden
                     className={cn("size-5 shrink-0 text-navy transition-transform duration-200", open && "rotate-45")}
                   />
                 </button>
               </dt>
-              {open && (
-                <dd className="px-5 pb-4 text-body-sm leading-relaxed text-muted">
-                  {faq.answer}
-                </dd>
-              )}
+              {/* Always in the DOM and animated by row height, so opening/closing does not jump the page on phones. */}
+              <dd id={`faq-${i}`} className={cn("grid transition-[grid-template-rows] duration-200", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                <div className="overflow-hidden">
+                  <p className="px-5 pb-4 text-body-sm leading-relaxed text-muted">{faq.answer}</p>
+                </div>
+              </dd>
             </div>
           );
         })}

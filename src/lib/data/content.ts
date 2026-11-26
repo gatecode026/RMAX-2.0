@@ -24,6 +24,15 @@ function plain<T>(doc: unknown): T {
 }
 
 export type ProductDTO = Omit<IProduct, "familyId"> & { _id: string; familyId?: string };
+/** Only what the listing page and product cards use. The full product (features, FAQs, galleries…) made the listing HTML ~270 KB. */
+const LIST_KEYS = ["_id", "slug", "title", "name", "category", "price", "mrp", "originalPrice", "discountPercent", "image", "cardImage", "portraitImage", "listImage", "intro", "summary", "specs", "techSpecs", "chips", "colours", "familyId", "variantOptions", "stockStatus", "sortOrder", "badge", "highlight", "status"] as const;
+export type ProductListDTO = Pick<ProductDTO, (typeof LIST_KEYS)[number]>;
+export function toListDTO(p: ProductDTO): ProductListDTO {
+  const out = {} as Record<string, unknown>;
+  for (const k of LIST_KEYS) if (p[k] !== undefined) out[k] = p[k];
+  return out as ProductListDTO;
+}
+
 export type FaqDTO = IFaqItem & { _id: string };
 export type PolicyDTO = IPolicyPage & { _id: string };
 

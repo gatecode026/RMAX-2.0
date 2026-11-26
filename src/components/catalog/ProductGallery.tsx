@@ -66,7 +66,14 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
   }, [items]);
 
   const current = items[active] ?? items[0];
-  if (!current) return null;
+  // Every photo is missing or failed to load: keep the image column (same size as the viewer) instead of collapsing it.
+  if (!current) {
+    return (
+      <div className="grid aspect-[461/530] w-full max-h-[430px] place-items-center rounded-[24px] bg-soft px-6 text-center font-heading text-[18px] font-extrabold text-navy/60 sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full">
+        Product photo coming soon
+      </div>
+    );
+  }
 
   const isVideo = current.kind === "video";
 
@@ -120,8 +127,8 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
                   aria-label={g.kind === "video" ? `Play video: ${g.alt}` : `Show image ${i + 1}: ${g.alt}`}
                   aria-current={isCurrent}
                   className={cn(
-                    "relative block h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] overflow-hidden rounded-[12px] border-2 bg-soft transition cursor-pointer",
-                    isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
+                    "relative block h-[74px] w-[58px] sm:h-[78px] sm:w-[62px] overflow-hidden rounded-[12px] border-2 bg-white transition cursor-pointer",
+                    isCurrent ? "border-navy shadow-xs" : "border-[#E2E8F0] hover:border-line",
                   )}
                 >
                   <Image src={g.thumb} alt="" width={62} height={78} onError={() => markBroken(g.thumb)} className="size-full object-contain p-1" />
@@ -151,9 +158,9 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{ aspectRatio: natural.w && natural.h ? `${natural.w} / ${natural.h}` : "461 / 530" }}
+        style={{ aspectRatio: natural.w && natural.h ? `${natural.w} / ${natural.h}` : "1 / 1" }}
         className={cn(
-          "group relative w-full self-start overflow-hidden rounded-[24px] bg-soft sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
+          "group relative w-full self-start overflow-hidden rounded-[24px] border border-[#E2E8F0] bg-white shadow-xs sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
           !isVideo && canZoom && "cursor-crosshair",
         )}
       >
@@ -161,8 +168,8 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
           key={current.src}
           src={current.src}
           alt={current.alt}
-          width={922}
-          height={1086}
+          width={1600}
+          height={1600}
           priority={active === 0}
           onLoad={(e) => readNatural(e.currentTarget)}
           onError={() => markBroken(current.src)}

@@ -9,6 +9,7 @@ import { checkApiRole } from "@/lib/session";
 import { buildSpecLine } from "@/lib/specs";
 import { LAST_ORDER_COOKIE } from "@/lib/constants";
 import { toOrderDTO } from "@/lib/data/orders";
+import { encodeOrderRef } from "@/lib/order-token";
 import { notifyOrderConfirmed } from "@/lib/mail/notify";
 import { getVariantLabel } from "@/lib/variant-label";
 
@@ -52,7 +53,7 @@ export const POST = route(async (req: Request) => {
   await connectDB();
   const userId = auth.user.id;
   const seq = await nextSequence("order");
-  const reference = `RMAX-DEMO-${String(seq).padStart(3, "0")}`;
+  const reference = `RMAX-${String(seq).padStart(5, "0")}`; // no "demo" word: it shows in URLs and emails
   const now = new Date();
   const optionLabels = await Promise.all(cart.lines.map((l) => getVariantLabel(l.product.slug)));
 
@@ -116,5 +117,5 @@ export const POST = route(async (req: Request) => {
     path: "/",
     maxAge: 60 * 60 * 24,
   });
-  return ok({ reference }, 201);
+  return ok({ reference, ref: encodeOrderRef(reference) }, 201);
 });

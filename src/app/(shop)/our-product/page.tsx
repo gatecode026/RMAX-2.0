@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ProductListing } from "@/components/catalog/ProductListing";
-import { getAllProducts, getFamilies, getProductTestimonial } from "@/lib/data/content";
+import { getAllProducts, getFamilies, getProductTestimonial, toListDTO } from "@/lib/data/content";
 import { FeaturedTestimonial } from "@/components/home/Testimonials";
 
 export const metadata: Metadata = {
@@ -41,7 +41,7 @@ export default async function OurProductPage() {
       </section>
 
       <div className="mt-6 md:mt-8">
-        <ProductListing products={products} families={families} />
+        <ProductListing products={products.map(toListDTO)} families={families} />
       </div>
 
       {testimonial && (

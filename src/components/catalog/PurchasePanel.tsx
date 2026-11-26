@@ -136,12 +136,17 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
             M.R.P.: <span className="font-bold line-through text-[#94A3B8]">{formatINR(displayMrp)}</span>
           </p>
         ) : null}
-        <div className="flex flex-wrap items-baseline gap-2.5">
-          <span className="font-heading text-section md:text-[38px]/[44px] font-extrabold tracking-[-1px] text-charcoal">
+        {/* One fixed-height row: the price font steps down as digits grow so the box never gets taller. */}
+        <div className="flex h-11 flex-nowrap items-baseline gap-2 whitespace-nowrap">
+          <span className={`font-heading font-extrabold tracking-[-1px] text-charcoal ${
+            onRequest || formatINR(displayPrice).length <= 6 ? "text-[36px]/[44px]"
+              : formatINR(displayPrice).length <= 7 ? "text-[32px]/[44px]"
+              : formatINR(displayPrice).length <= 9 ? "text-[28px]/[44px]" : "text-[24px]/[44px]"
+          }`}>
             {onRequest ? "Price on request" : <>{formatINR(displayPrice)}<span className="ml-1 text-[14px] font-semibold text-muted">+ GST</span></>}
           </span>
           {qty > 1 && !onRequest && (
-            <span className="text-body-sm font-semibold text-muted">
+            <span className="text-[13px] font-semibold text-muted">
               ({formatINR(price)} / piece)
             </span>
           )}

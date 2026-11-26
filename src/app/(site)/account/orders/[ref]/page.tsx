@@ -1,97 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
 import { ChevronRight } from "lucide-react";
-import { getOwnedOrder, toOrderDTO, type OrderDTO } from "@/lib/data/orders";
-import { connectDB } from "@/lib/mongodb";
-import { Order } from "@/models/Order";
+import { getOwnedOrder, type OrderDTO } from "@/lib/data/orders";
+import { decodeOrderRef, encodeOrderRef } from "@/lib/order-token";
 import { formatDate, formatINR } from "@/lib/format";
 import { modelFromTitle, statusChipText, statusHeadline, STATUS_LABEL } from "@/lib/order-ui";
 import { requireUserId } from "@/lib/session";
 import { ORDER_STATUSES } from "@/lib/enums";
-import { LAST_ORDER_COOKIE } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 import { cleanSpecLine } from "@/lib/specs";
 
 export const metadata: Metadata = { title: "Order Detail & Tracking", robots: { index: false, follow: false } };
 
-const DEMO_FALLBACK_ORDER: OrderDTO = {
-  _id: "demo-rmax-001",
-  reference: "RMAX-DEMO-001",
-  contact: {
-    fullName: "Asha Rao",
-    email: "facilities@example.org",
-    phone: "0000000000",
-  },
-  items: [
-    {
-      product: "pro",
-      slug: "pro",
-      title: "Napkin Incinerator Machine (Pro)",
-      shortName: "Pro napkin incinerator",
-      specLine: "1000 W · 9kg · 200–250/day · 4–5 at once",
-      unitPrice: 4500,
-      originalPrice: 9000,
-      quantity: 1,
-      image: "/images/home/card-pro.png",
-    },
-  ],
-  subtotal: 4500,
-  shipping: 0,
-  total: 4500,
-  shippingAddress: {
-    organization: "Sample Campus",
-    department: "Facilities team",
-    street: "Building A, Example Road",
-    city: "Pune",
-    state: "Maharashtra",
-    postalCode: "411001",
-    country: "India",
-  },
-  billing: {
-    sameAsShipping: true,
-    organization: "Sample Campus",
-  },
-  payment: {
-    method: "Online payment · example selection",
-    status: "illustrative",
-  },
-  status: "preparing",
-  timeline: [
-    { step: "confirmed", at: "2026-10-08T09:00:00.000Z" },
-    { step: "preparing" },
-    { step: "dispatched" },
-    { step: "delivered" },
-  ],
-  isIllustrative: true,
-  createdAt: "2026-10-08T09:00:00.000Z",
-  updatedAt: "2026-10-08T09:00:00.000Z",
-};
-
 async function Detail({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params;
 
-  let o: OrderDTO | null = null;
-  try {
-    o = await getOwnedOrder(ref);
-    if (!o) {
-      const cookieStore = await cookies();
-      const lastCookie = cookieStore.get(LAST_ORDER_COOKIE)?.value;
-      if (ref === "RMAX-DEMO-001" || ref.startsWith("RMAX-DEMO") || lastCookie === ref) {
-        await connectDB();
-        const doc = await Order.findOne({ reference: ref }).lean();
-        if (doc) o = toOrderDTO(doc);
-      }
-    }
-  } catch {
-    // Database or connection fallback
+  const reference = decodeOrderRef(ref);
+  if (!reference) {
+    // An old plain link (RMAX-00013) is sent on to the encrypted URL; anything else is not an order.
+    if (/^RMAX-\d+$/.test(ref)) redirect(`/account/orders/${encodeOrderRef(ref)}`);
+    notFound();
   }
 
-  if (!o && (ref === "RMAX-DEMO-001" || ref.startsWith("RMAX-DEMO"))) {
-    o = DEMO_FALLBACK_ORDER;
+  let o: OrderDTO | null = null;
+  try {
+    o = await getOwnedOrder(reference);
+  } catch {
+    // Database unavailable: fall through to the login / not-found handling below.
   }
 
   if (!o) {
@@ -161,7 +99,8 @@ async function Detail({ params }: { params: Promise<{ ref: string }> }) {
               </div>
 
               {/* Tracking steps */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full pt-1" aria-label="Delivery progress">
+              {/* Phones: the four steps slide sideways (snap to each step); sm and up: one row of four. */}
+              <div className="-mx-1 flex w-full snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-0" aria-label="Delivery progress">
                 {ORDER_STATUSES.map((step, i) => {
                   const reached = i <= currentIdx;
                   const at = o.timeline.find((t) => t.step === step)?.at;
@@ -173,7 +112,7 @@ async function Detail({ params }: { params: Promise<{ ref: string }> }) {
                       : "Pending";
 
                   return (
-                    <div key={step} className="flex flex-col items-start gap-3 flex-1 min-w-0">
+                    <div key={step} className="flex w-[150px] shrink-0 snap-start flex-col items-start gap-3 sm:w-auto sm:min-w-0 sm:flex-1">
                       {/* Step marker row with connector */}
                       <div className="flex items-center gap-2 w-full h-4" aria-hidden="true">
                         <span

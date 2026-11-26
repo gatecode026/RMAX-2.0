@@ -20,7 +20,7 @@ export function AuthShell({
 }) {
   return (
     <Container className="pt-8 md:pt-12">
-      <div className="grid items-center gap-10 lg:grid-cols-[1fr_510px] lg:gap-12">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-[minmax(0,1fr)_510px] lg:gap-12">
         <div className="order-2 lg:order-1">
           <Pill>Your RMAX account</Pill>
           <h1 className="mt-6 text-display-sm md:text-display">{title}</h1>

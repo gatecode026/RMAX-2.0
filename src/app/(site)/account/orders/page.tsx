@@ -8,6 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Pill, StatusChip } from "@/components/ui/Pill";
 import { listOwnedOrders } from "@/lib/data/orders";
+import { encodeOrderRef } from "@/lib/order-token";
 import { formatDate, formatINR, pluralItems } from "@/lib/format";
 import { statusChipText } from "@/lib/order-ui";
 import { requireUserId } from "@/lib/session";
@@ -66,7 +67,7 @@ async function Orders({ searchParams }: { searchParams: Promise<{ q?: string; st
                   <p className="text-body text-muted">
                     Free shipping · Total {formatINR(o.total)}
                   </p>
-                  <ButtonLink href={`/account/orders/${o.reference}`} size="sm">
+                  <ButtonLink href={`/account/orders/${encodeOrderRef(o.reference)}`} size="sm">
                     View order &amp; tracking
                   </ButtonLink>
                 </div>

@@ -23,7 +23,7 @@ export default async function ContactUsPage() {
         lead="Use the contact form for a sales or service enquiry. Include your model and order reference if you already own a unit."
       />
 
-      <Container className="mt-6 sm:mt-10 md:mt-16 grid items-start gap-6 lg:grid-cols-[1fr_366px]">
+      <Container className="mt-6 sm:mt-10 md:mt-16 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_366px]">
         <ContactForm models={products.map((p) => ({ slug: p.slug, name: p.name, capacity: p.specs.dailyCapacity }))} />
 
         <aside className="flex flex-col gap-6" aria-label="Other ways to get help">

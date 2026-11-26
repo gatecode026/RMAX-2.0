@@ -74,9 +74,9 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
     if (placing) return;
     setPlacing(true);
     setFormError(null);
-    const res = await requestJson<{ reference: string }>("/api/orders", "POST", values);
+    const res = await requestJson<{ reference: string; ref: string }>("/api/orders", "POST", values);
     if (res.ok) {
-      router.push(`/order-confirmation/${res.data.reference}`);
+      router.push(`/order-confirmation/${res.data.ref}`);
       router.refresh(); // the server emptied the cart; refresh the header cart
       return;
     }

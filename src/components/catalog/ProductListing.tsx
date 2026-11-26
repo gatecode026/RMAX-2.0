@@ -7,7 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { buildCards, type FamilyDTO } from "@/lib/catalog";
 import { formatINR } from "@/lib/format";
-import type { ProductDTO } from "@/lib/data/content";
+import type { ProductListDTO as ProductDTO } from "@/lib/data/content";
 
 type CategoryKey = "all" | "disposable" | "vending" | "plastic-waste" | "iot";
 type SortKey = "featured" | "price-asc" | "price-desc" | "name";

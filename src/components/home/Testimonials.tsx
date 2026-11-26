@@ -261,14 +261,14 @@ export function Testimonials({
   return (
     <section className="mx-auto mt-16 w-full max-w-(--container-page) px-5 sm:px-8 md:mt-[90px] lg:px-8 xl:px-16 xl:mt-[130px]" aria-labelledby="testimonials-heading">
       {/* Header with Title and Rating Summary Box (Single row on desktop, rating locked to top-right) */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6">
+        <div className="min-w-0">
           <p className="text-[12px] font-extrabold tracking-[0.2em] text-navy uppercase">Testimonials</p>
-          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[24px]/[32px] sm:text-[26px]/[34px] md:text-[30px]/[38px] lg:text-[36px]/[44px] xl:text-[44px]/[52px] 2xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal sm:whitespace-nowrap">
+          <h2 id="testimonials-heading" className="mt-1.5 font-heading text-[24px]/[32px] sm:text-[26px]/[34px] md:text-[30px]/[38px] lg:text-[36px]/[44px] xl:text-[44px]/[52px] 2xl:text-[48px]/[56px] font-extrabold tracking-[-0.02em] text-charcoal xl:whitespace-nowrap">
             Trusted by institutions across India.
           </h2>
         </div>
-        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[12px] sm:rounded-[14px] border border-line bg-card p-3 sm:p-3.5 lg:p-4 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 rounded-[12px] sm:rounded-[14px] border border-line bg-card p-3 sm:p-3.5 lg:p-4 shadow-[0_2px_12px_rgba(0,41,112,0.04)] shrink-0 self-start lg:self-auto">
           <p className="font-heading text-[28px] sm:text-[32px] lg:text-[38px] xl:text-[40px] font-extrabold text-charcoal leading-none">{reviews.rating}</p>
           <div className="flex flex-col items-start gap-1">
             <Stars value={reviews.stars} size={20} />

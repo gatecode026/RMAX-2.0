@@ -2,14 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import type { ProductDTO } from "@/lib/data/content";
+import type { ProductListDTO } from "@/lib/data/content";
 import { specText, type GroupCardMeta } from "@/lib/catalog";
 
 /** Product page route for a catalogue item. */
-export const productHref = (p: Pick<ProductDTO, "slug">) => `/products/${p.slug}`;
+export const productHref = (p: Pick<ProductListDTO, "slug">) => `/products/${p.slug}`;
 
 /** Card highlights come from the product record: its own chips, else its first visible spec rows. Nothing is invented. */
-function getCardSpecs(product: ProductDTO): string[] {
+function getCardSpecs(product: ProductListDTO): string[] {
   if (product.chips?.length) return product.chips.slice(0, 4);
   return (product.techSpecs ?? [])
     .filter((r) => r.visible !== false && r.label && r.value)
@@ -18,7 +18,7 @@ function getCardSpecs(product: ProductDTO): string[] {
 }
 
 interface UnifiedProductCardProps {
-  product: ProductDTO;
+  product: ProductListDTO;
   clamp?: boolean;
   imageHeight?: number;
   variant?: "home" | "listing";
@@ -147,7 +147,7 @@ export function ShowcaseCard({
   variant = "home",
   imageHeight = 320,
 }: {
-  product: ProductDTO;
+  product: ProductListDTO;
   clamp?: boolean;
   variant?: "home" | "listing";
   imageHeight?: number;
@@ -163,7 +163,7 @@ export function ShowcaseCard({
 }
 
 /** Card for row 2 — 100% identical and unified */
-export function DetailCard({ product }: { product: ProductDTO }) {
+export function DetailCard({ product }: { product: ProductListDTO }) {
   return (
     <UnifiedProductCard
       product={{
@@ -176,6 +176,6 @@ export function DetailCard({ product }: { product: ProductDTO }) {
 }
 
 /** Compact card used in "Related products" on the detail page */
-export function RelatedCard({ product }: { product: ProductDTO }) {
+export function RelatedCard({ product }: { product: ProductListDTO }) {
   return <UnifiedProductCard product={product} imageHeight={260} clamp />;
 }

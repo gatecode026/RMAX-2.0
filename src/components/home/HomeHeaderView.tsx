@@ -12,7 +12,9 @@ import { HeaderCart } from "./HeaderCart";
 import { useAuthModal } from "@/context/AuthModalContext";
 import type { CartView } from "@/lib/cart";
 
-type Props = {
+export const HEADER_CACHE_KEY = "rmax_header";
+
+export type HomeHeaderProps = {
   userName: string | null;
   userRole?: string | null;
   /** Initial cart data for dropdown popover and count badge */
@@ -28,8 +30,18 @@ const LINKS = [
 ] as const;
 
 /** Home-page header: logo · product search · Our Product / Contact Us / About Us · Login. */
-export function HomeHeaderView({ userName, userRole, products, cart, cartCount = 0 }: Props) {
+export function HomeHeaderView({ userName, userRole, products, cart, cartCount = 0 }: HomeHeaderProps) {
   const pathname = usePathname();
+
+  // Remember what this header showed, so HomeHeaderFallback can draw the same header while the next page's session
+  // lookup is pending (no Login-only flash on page switches). Per tab, cleared when the tab closes.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(HEADER_CACHE_KEY, JSON.stringify({ userName, userRole, products, cart, cartCount }));
+    } catch {
+      /* storage blocked or full: the fallback just shows the plain shell */
+    }
+  }, [userName, userRole, products, cart, cartCount]);
   const { openModal } = useAuthModal();
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const open = openedOn === pathname;

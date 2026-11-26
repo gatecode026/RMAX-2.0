@@ -137,17 +137,17 @@ export default function AdminOrdersPage() {
                     <p className="text-xs text-slate-400">{formatDate(o.createdAt)}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-800">{o.contact.fullName}</p>
-                    <p className="text-xs text-slate-500">{o.shippingAddress.organization} · {o.shippingAddress.city}</p>
+                    <p className="font-medium text-slate-800">{o.contact?.fullName || "—"}</p>
+                    <p className="text-xs text-slate-500">{[o.shippingAddress?.organization, o.shippingAddress?.city].filter(Boolean).join(" · ") || "—"}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
-                    {o.items[0]?.title}{o.items.length > 1 ? ` +${o.items.length - 1} more` : ""} <span className="text-slate-400">× {o.items.reduce((n, i) => n + i.quantity, 0)}</span>
+                    {o.items?.[0]?.title ?? "—"}{(o.items?.length ?? 0) > 1 ? ` +${o.items.length - 1} more` : ""} <span className="text-slate-400">× {(o.items ?? []).reduce((n, i) => n + i.quantity, 0)}</span>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-slate-800">{formatINR(o.total)}</td>
-                  <td className="px-4 py-3 text-xs text-slate-600">{o.payment.method}</td>
+                  <td className="px-4 py-3 font-semibold text-slate-800">{formatINR(o.total ?? 0)}</td>
+                  <td className="px-4 py-3 text-xs text-slate-600">{o.payment?.method ?? "—"}</td>
                   <td className="px-4 py-3">
                     <select
-                      value={o.status}
+                      value={o.status ?? "placed"}
                       onChange={(e) => changeStatus(o, e.target.value as OrderStatus)}
                       aria-label={`Status of ${o.reference}`}
                       className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold outline-none ${STATUS_STYLE[o.status]}`}

@@ -5,7 +5,7 @@ import { checkApiRole } from "@/lib/session";
 import { logAuditEvent } from "@/lib/audit";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/enums";
 
-/** Orders are addressed by Mongo id or by reference (RMAX-DEMO-001). */
+/** Orders are addressed by Mongo id or by reference (RMAX-00001). */
 const filterFor = (id: string) => (/^[0-9a-fA-F]{24}$/.test(id) ? { _id: id } : { reference: id });
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

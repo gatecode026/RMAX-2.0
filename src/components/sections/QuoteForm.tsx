@@ -220,7 +220,7 @@ export function QuoteForm({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_366px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_366px]">
       {done ? (
         <Card className="p-5 sm:p-7 md:p-8" role="status">
           <div className="flex items-center gap-3">

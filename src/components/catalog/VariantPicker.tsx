@@ -17,7 +17,7 @@ export interface VariantGroup {
   options: VariantOption[];
 }
 
-/** Dropdown row ("Type:" ▾), styled like the Type selector on the incinerator pages. */
+/** Dropdown row ("Model:" ▾ / "Capacity:" ▾ / "Type:" ▾), with clean model & capacity labels, no price in dropdown */
 export function TypeDropdown({ group, label, onPick }: { group: VariantGroup; label: string; onPick: (o: VariantOption) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -49,15 +49,15 @@ export function TypeDropdown({ group, label, onPick }: { group: VariantGroup; la
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-labelledby={`${group.title}-label`}
-          className="flex h-9 min-w-[160px] cursor-pointer items-center justify-between rounded-[10px] border border-line bg-card px-3 text-body-sm font-semibold text-charcoal shadow-xs transition-colors hover:border-navy focus:border-navy focus:outline-none"
+          className="flex h-9 min-w-[180px] sm:min-w-[200px] cursor-pointer items-center justify-between rounded-[10px] border border-line bg-card px-3 text-body-sm font-semibold text-charcoal shadow-xs transition-colors hover:border-navy focus:border-navy focus:outline-none"
         >
-          <span>{active?.label}</span>
-          <ChevronDown className={cn("ml-2 size-4 text-charcoal transition-transform duration-200", open && "rotate-180")} aria-hidden="true" />
+          <span className="truncate pr-1">{active?.label}</span>
+          <ChevronDown className={cn("ml-2 size-4 shrink-0 text-charcoal transition-transform duration-200", open && "rotate-180")} aria-hidden="true" />
         </button>
         {open && (
           <div
             role="listbox"
-            className="absolute right-0 top-full z-40 mt-1.5 min-w-[220px] overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.12)]"
+            className="absolute right-0 top-full z-40 mt-1.5 min-w-[230px] overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.12)]"
           >
             {group.options.map((o) => (
               <div
@@ -86,8 +86,9 @@ export function TypeDropdown({ group, label, onPick }: { group: VariantGroup; la
 }
 
 /**
- * One dropdown per family option (Size, Operation, Capacity, Colour…), built from the database. Picking a value
+ * One dropdown per family option (Size/Model, Operation/Type, Capacity…), built from the database. Picking a value
  * opens the product for that combination; values no published product has are disabled.
+ * Uses clean dropdowns showing model and capacity with NO prices.
  */
 export function VariantPicker({ groups, onModel, className }: { groups: PickerGroup[]; onModel: (slug: string) => void; className?: string }) {
   if (!groups.length) return null;
@@ -96,7 +97,15 @@ export function VariantPicker({ groups, onModel, className }: { groups: PickerGr
       {groups.map((g) => (
         <TypeDropdown
           key={g.key}
-          group={{ title: g.key, options: g.options.map((o) => ({ label: o.label, active: o.active, slug: o.slug ?? undefined, disabled: o.slug === null })) }}
+          group={{
+            title: g.key,
+            options: g.options.map((o) => ({
+              label: o.label,
+              active: o.active,
+              slug: o.slug ?? undefined,
+              disabled: o.slug === null,
+            })),
+          }}
           label={`${g.label}:`}
           onPick={(o) => o.slug && onModel(o.slug)}
         />

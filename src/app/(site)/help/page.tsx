@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { Plus, X } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { PageHero } from "@/components/layout/PageHero";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { StatusChip } from "@/components/ui/Pill";
+import { HelpFaqList } from "@/components/sections/HelpFaqList";
 import { getFaqItems } from "@/lib/data/content";
 
 export const metadata: Metadata = {
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function HelpPage() {
   const faqs = await getFaqItems();
-  const categories = faqs.map((f) => f.category);
+  const categories = [...new Set(faqs.map((f) => f.category))]; // one link per category
 
   return (
     <>
@@ -25,7 +24,7 @@ export default async function HelpPage() {
         lead="Find help with choosing, using and caring for your RMAX machine, or send your question to the sales or service team."
       />
 
-      <Container className="mt-12 grid items-start gap-8 md:mt-16 lg:grid-cols-[228px_1fr]">
+      <Container className="mt-12 grid grid-cols-[minmax(0,1fr)] items-start gap-8 md:mt-16 lg:grid-cols-[228px_minmax(0,1fr)]">
         <Card className="p-5 sm:p-7 lg:sticky lg:top-[calc(var(--header-height)+16px)]">
           <h2 className="text-title">Browse help</h2>
           <nav aria-label="Help categories" className="mt-4">
@@ -44,23 +43,7 @@ export default async function HelpPage() {
           </ButtonLink>
         </Card>
 
-        <div className="flex flex-col gap-6">
-          {faqs.map((f) => (
-            <section key={f._id} id={f.category.toLowerCase()} aria-label={`${f.category} help`}>
-              <StatusChip>{f.category}</StatusChip>
-              <details open className="group mt-3 overflow-hidden rounded-input border border-line bg-card">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-body font-semibold text-charcoal">
-                  <h3 className="font-sans text-body font-medium">{f.question}</h3>
-                  <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full border border-line text-charcoal">
-                    <X className="hidden size-4 group-open:block" />
-                    <Plus className="size-4 group-open:hidden" />
-                  </span>
-                </summary>
-                <p className="border-t border-line bg-canvas px-5 py-4 text-body text-muted">{f.answer}</p>
-              </details>
-            </section>
-          ))}
-        </div>
+        <HelpFaqList faqs={faqs} />
       </Container>
 
       <Container className="mt-12">

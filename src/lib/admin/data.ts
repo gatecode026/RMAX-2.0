@@ -29,22 +29,33 @@ export async function getAdminDashboardOverview() {
 
     await connectDB();
 
+    // Counts and distinct values are computed by MongoDB; only the 50 rows the dashboard shows are fetched
+    // (it used to load every user, service request and institution just to count and slice them).
+    const NON_CUSTOMER_EMAILS = ["mukesh@rmaxelectro.com", "rmaxadmin@gmail.com", "rmaxmanager@gmail.com"];
     const [
       dbOrders,
       dbQuotes,
       dbUsers,
+      liveCustomers,
+      userOrgs,
       dbMessages,
       dbProducts,
+      serviceCounts,
       dbServiceRequests,
       dbInstitutions,
+      institutionNames,
     ] = await Promise.all([
       Order.find().select("reference total createdAt status contact.fullName shippingAddress.organization items.slug items.title items.shortName").lean(),
-      QuoteRequest.find().select("quoteNumber contactPerson organizationName preferredModel quotedAmount status createdAt").lean(),
-      User.find().select("name email role department status organization lastLoginAt createdAt updatedAt").lean(),
+      QuoteRequest.find().select("organizationName preferredModel").lean(),
+      User.find().select("name email role department status lastLoginAt createdAt updatedAt").sort({ createdAt: -1 }).limit(50).lean(),
+      User.countDocuments({ $or: [{ role: "customer" }, { role: { $exists: false }, email: { $nin: NON_CUSTOMER_EMAILS } }] }),
+      User.distinct("organization"),
       ContactMessage.find().sort({ createdAt: -1 }).limit(5).lean(), // only the 5 newest are shown
       Product.find().select("name title slug price specs.power specs.weight specs.dailyCapacity image.src stock category sortOrder createdAt updatedAt").sort({ sortOrder: 1 }).lean(),
-      ServiceRequest.find().sort({ createdAt: -1 }).lean(),
-      Institution.find().sort({ createdAt: -1 }).lean(),
+      ServiceRequest.aggregate<{ _id: string; n: number }>([{ $group: { _id: "$status", n: { $sum: 1 } } }]),
+      ServiceRequest.find().sort({ createdAt: -1 }).limit(50).lean(),
+      Institution.find().sort({ createdAt: -1 }).limit(50).lean(),
+      Institution.distinct("name"),
     ]);
 
     // 1. Genuine KPI metrics
@@ -52,18 +63,11 @@ export async function getAdminDashboardOverview() {
     const totalOrdersCount = dbOrders.length;
     const liveRevenue = dbOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-    const customerUsers = dbUsers.filter(
-      (u) =>
-        u.role === "customer" ||
-        (!u.role && u.email !== "mukesh@rmaxelectro.com" && u.email !== "rmaxadmin@gmail.com" && u.email !== "rmaxmanager@gmail.com")
-    );
-    const liveCustomers = customerUsers.length;
-
     const uniqueInstitutions = new Set(
       [
         ...dbQuotes.map((q) => q.organizationName).filter(Boolean),
-        ...dbInstitutions.map((i) => i.name).filter(Boolean),
-        ...dbUsers.map((u) => u.organization).filter(Boolean),
+        ...institutionNames.filter(Boolean),
+        ...userOrgs.filter(Boolean),
       ].map((s) => String(s).trim().toLowerCase())
     );
 
@@ -199,13 +203,14 @@ export async function getAdminDashboardOverview() {
     });
 
     // 6. Genuine Service Summary & Requests
-    const completedCount = dbServiceRequests.filter((r) => r.status === "Completed").length;
-    const inProgressCount = dbServiceRequests.filter((r) => r.status === "In Progress").length;
-    const scheduledCount = dbServiceRequests.filter((r) => r.status === "Scheduled").length;
-    const pendingCount = dbServiceRequests.filter((r) => r.status === "Pending").length;
+    const countOf = (status: string) => serviceCounts.find((c) => c._id === status)?.n ?? 0;
+    const completedCount = countOf("Completed");
+    const inProgressCount = countOf("In Progress");
+    const scheduledCount = countOf("Scheduled");
+    const pendingCount = countOf("Pending");
 
     const serviceSummary: ServiceSummary = {
-      total: dbServiceRequests.length,
+      total: serviceCounts.reduce((n, c) => n + c.n, 0),
       completed: completedCount,
       inProgress: inProgressCount,
       scheduled: scheduledCount,

@@ -9,12 +9,14 @@ import { Card } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/Pill";
 import { getOrderForConfirmation } from "@/lib/data/orders";
 import { formatDate } from "@/lib/format";
+import { decodeOrderRef, encodeOrderRef } from "@/lib/order-token";
 
 export const metadata: Metadata = { title: "Order Confirmation", robots: { index: false, follow: false } };
 
 async function Confirmation({ params }: { params: Promise<{ ref: string }> }) {
   const { ref } = await params;
-  const order = await getOrderForConfirmation(ref);
+  const reference = decodeOrderRef(ref);
+  const order = reference ? await getOrderForConfirmation(reference) : null;
   if (!order) notFound();
 
   return (
@@ -30,7 +32,7 @@ async function Confirmation({ params }: { params: Promise<{ ref: string }> }) {
         </div>
       </Container>
 
-      <Container className="mt-12 grid items-start gap-6 md:mt-16 lg:grid-cols-[1fr_370px]">
+      <Container className="mt-12 grid grid-cols-[minmax(0,1fr)] items-start gap-6 md:mt-16 lg:grid-cols-[minmax(0,1fr)_370px]">
         <div className="flex flex-col gap-6">
           <Card className="p-7">
             <h2 className="text-title">Your order</h2>
@@ -66,7 +68,7 @@ async function Confirmation({ params }: { params: Promise<{ ref: string }> }) {
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <ButtonLink href={`/account/orders/${order.reference}`}>View order &amp; tracking</ButtonLink>
+            <ButtonLink href={`/account/orders/${encodeOrderRef(order.reference)}`}>View order &amp; tracking</ButtonLink>
             <ButtonLink href="/our-product" variant="secondary">
               Continue shopping
             </ButtonLink>

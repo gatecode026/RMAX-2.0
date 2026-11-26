@@ -74,7 +74,13 @@ export default function AdminOrderDetailPage() {
     return <div className="flex min-h-[300px] items-center justify-center text-slate-400"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading order…</div>;
   }
 
-  const a = order.shippingAddress;
+  // Older orders may lack some sub-documents; fall back to empty values.
+  const a = order.shippingAddress ?? ({} as AdminOrder["shippingAddress"]);
+  const contact = order.contact ?? { fullName: "—", email: "", phone: "" };
+  const payment = order.payment ?? { method: "—", status: "" };
+  const billing = order.billing ?? { sameAsShipping: true, organization: "" };
+  const items = order.items ?? [];
+  const timeline = order.timeline ?? [];
   return (
     <div>
       <AdminPageHeader
@@ -98,7 +104,7 @@ export default function AdminOrderDetailPage() {
           <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm">
             <h2 className="text-base font-bold text-[#0B2450]">Items</h2>
             <ul className="mt-3 divide-y divide-[#E5EBF4]">
-              {order.items.map((i) => (
+              {items.map((i) => (
                 <li key={i.slug} className="flex items-start justify-between gap-4 py-3 text-sm">
                   <div>
                     <p className="font-semibold text-slate-800">{i.title}</p>
@@ -120,7 +126,7 @@ export default function AdminOrderDetailPage() {
             <h2 className="text-base font-bold text-[#0B2450]">Order tracking</h2>
             <ol className="mt-4 space-y-4">
               {ORDER_STATUSES.map((s) => {
-                const step = order.timeline.find((t) => t.step === s);
+                const step = timeline.find((t) => t.step === s);
                 const done = Boolean(step?.at);
                 return (
                   <li key={s} className="flex items-start gap-3">
@@ -157,9 +163,9 @@ export default function AdminOrderDetailPage() {
 
           <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 text-sm shadow-sm">
             <h2 className="text-base font-bold text-[#0B2450]">Customer</h2>
-            <p className="mt-3 font-semibold text-slate-800">{order.contact.fullName}</p>
-            <p className="mt-2 flex items-center gap-2 text-slate-600"><Mail className="h-4 w-4 text-slate-400" /> {order.contact.email}</p>
-            <p className="mt-1 flex items-center gap-2 text-slate-600"><Phone className="h-4 w-4 text-slate-400" /> {order.contact.phone}</p>
+            <p className="mt-3 font-semibold text-slate-800">{contact.fullName}</p>
+            <p className="mt-2 flex items-center gap-2 text-slate-600"><Mail className="h-4 w-4 text-slate-400" /> {contact.email}</p>
+            <p className="mt-1 flex items-center gap-2 text-slate-600"><Phone className="h-4 w-4 text-slate-400" /> {contact.phone}</p>
           </section>
 
           <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 text-sm shadow-sm">
@@ -177,9 +183,9 @@ export default function AdminOrderDetailPage() {
 
           <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 text-sm shadow-sm">
             <h2 className="text-base font-bold text-[#0B2450]">Payment & billing</h2>
-            <p className="mt-3 text-slate-600">{order.payment.method}</p>
-            <p className="mt-1 text-slate-600">Billing: {order.billing.sameAsShipping ? "same as delivery" : order.billing.organization}</p>
-            {order.billing.poReference && <p className="mt-1 text-slate-600">PO: {order.billing.poReference}</p>}
+            <p className="mt-3 text-slate-600">{payment.method}</p>
+            <p className="mt-1 text-slate-600">Billing: {billing.sameAsShipping ? "same as delivery" : billing.organization}</p>
+            {billing.poReference && <p className="mt-1 text-slate-600">PO: {billing.poReference}</p>}
           </section>
         </div>
       </div>

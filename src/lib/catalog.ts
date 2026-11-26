@@ -22,6 +22,8 @@ export interface Member {
   familyId?: string;
   variantOptions?: Record<string, string>;
   techSpecs?: { label: string; value: string; unit?: string; visible?: boolean }[];
+  price?: number;
+  stockStatus?: string;
 }
 
 export interface GroupCardMeta {
@@ -112,6 +114,8 @@ export interface PickerOption {
   active: boolean;
   /** Product to open for this value (nearest available combination); null = no published product has this value. */
   slug: string | null;
+  price?: number;
+  stockStatus?: string;
 }
 export interface PickerGroup {
   key: string;
@@ -140,7 +144,15 @@ export function pickerGroups<T extends Member>(product: T, family: FamilyDTO, pu
       const score = (m: T) => family.options.filter((x) => x.key !== o.key && m.variantOptions?.[x.key] === cur[x.key]).length;
       const best = [...cands].sort((a, b) => score(b) - score(a) || Number(b._id === family.defaultProduct) - Number(a._id === family.defaultProduct))[0];
       const active = cur[o.key] === v.value;
-      return { value: v.value, label: v.label, active, slug: active ? product.slug : best?.slug ?? null };
+      const target = active ? product : best;
+      return {
+        value: v.value,
+        label: v.label,
+        active,
+        slug: active ? product.slug : best?.slug ?? null,
+        price: target?.price,
+        stockStatus: target?.stockStatus,
+      };
     }),
   }));
 }
