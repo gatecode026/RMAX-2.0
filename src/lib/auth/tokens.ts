@@ -26,11 +26,11 @@ export interface SessionPayload {
   tv: number;
   /** Absolute session creation time, ms epoch. Never changes for the life of the session. */
   iat: number;
-  /** Absolute, non-extendable expiry = iat + 7 days, ms epoch. */
+  /** Absolute, non-extendable expiry = iat + 30 days, ms epoch. */
   exp: number;
 }
 
-export const ABSOLUTE_SESSION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days, hard ceiling
+export const ABSOLUTE_SESSION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, hard ceiling (was 7: users were being logged out weekly)
 
 function secret(): string {
   const s = process.env.AUTH_SECRET || process.env.JWT_SECRET;

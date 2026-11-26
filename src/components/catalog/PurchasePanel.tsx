@@ -99,7 +99,7 @@ export function PurchasePanel({ slug, price, mrp, colours, quoteModel, showOptio
         return;
       }
       const json = await res.json();
-      if (!json.success) throw new Error(json.error?.message ?? "Could not add to cart.");
+      if (!json.success) throw new Error(res.status === 422 ? "Could not add to cart. Please try again." : json.error?.message ?? "Could not add to cart.");
       setIsAdding(false);
       router.push("/cart");
       router.refresh();

@@ -52,7 +52,10 @@ export function AddressCard({ kind, initial, sameAsShipping = true, actionLabel,
     error("Save Failed", res.message || "Failed to save address");
   }
 
-  const onSubmit = handleSubmit((values) => save(kind === "billing" && same ? null : values));
+  // "Same as shipping" has no visible fields, so skip form validation (hidden empty fields would block the save silently).
+  const onSubmit = kind === "billing" && same
+    ? (e: React.FormEvent) => { e.preventDefault(); return save(null); }
+    : handleSubmit((values) => save(values));
 
   return (
     <Card className="p-7">

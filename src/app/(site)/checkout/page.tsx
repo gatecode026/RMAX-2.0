@@ -126,7 +126,7 @@ async function CheckoutContent() {
         <Card className="rounded-[30px] border border-[#94A3B8]/20 bg-white p-7 md:p-8 shadow-xs">
           <h2 className="font-jakarta text-[24px]/[28px] font-extrabold text-[#020618]">Your cart is empty</h2>
           <p className="mt-3 font-sans text-[15px] text-[#62748E]">Add a model to your cart before checking out.</p>
-          <ButtonLink href="/compare-models" className="mt-6 rounded-full">
+          <ButtonLink href="/our-product" className="mt-6 rounded-full">
             Browse products
           </ButtonLink>
         </Card>

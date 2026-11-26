@@ -220,19 +220,21 @@ export function CompareView({
 
       {/* Comparison table card matching exact Figma layout */}
       <div className="overflow-hidden rounded-[30px] border border-[#E2E8F0] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-        <div className="overflow-x-auto">
-          <div className="min-w-[1180px]">
+        <p className="px-4 pt-4 text-[12px] font-semibold text-[#62748E] md:hidden">Swipe the table sideways to compare →</p>
+        {/* Only the table slides sideways; the rest of the page stays put. */}
+        <div className="overflow-x-auto overscroll-x-contain snap-x snap-proximity scroll-pl-4 md:snap-none md:scroll-pl-0 [-webkit-overflow-scrolling:touch]">
+          <div className="min-w-[810px] md:min-w-[1180px]">
             {/* Model headers (1180px width, padding 24px, gap 24px) */}
-            <div className="grid grid-cols-[220px_280px_280px_280px] items-end gap-6 p-6">
+            <div className="grid grid-cols-[250px_250px_250px] items-end gap-3 p-4 md:grid-cols-[220px_280px_280px_280px] md:gap-6 md:p-6">
               {/* Comparison guide (left 220px column) */}
-              <div className="flex flex-col justify-end gap-4 pb-1">
-                <span className="inline-flex items-center rounded-full bg-[#EFF6FF] px-3.5 py-1.5 font-sans text-[12px] font-extrabold leading-4 tracking-wider text-[#0B62FF] uppercase self-start">
+              <div className="hidden flex-col justify-end gap-4 pb-1 md:flex">
+                <span className="hidden items-center rounded-full bg-[#EFF6FF] px-3.5 md:inline-flex py-1.5 font-sans text-[12px] font-extrabold leading-4 tracking-wider text-[#0B62FF] uppercase self-start">
                   50% LAUNCH OFFERS
                 </span>
-                <h2 className="font-jakarta text-[24px]/[28px] font-extrabold text-[#020618]">
+                <h2 className="hidden font-jakarta text-[24px]/[28px] font-extrabold text-[#020618] md:block">
                   Find your fit.
                 </h2>
-                <p className="font-sans text-[14px]/[23px] text-[#62748E]">
+                <p className="hidden font-sans text-[14px]/[23px] text-[#62748E] md:block">
                   Select any models from our complete catalogue to compare features, pricing and specifications.
                 </p>
               </div>
@@ -241,7 +243,7 @@ export function CompareView({
               {models.map((p, colIndex) => {
                 const imgSrc = p.image?.src || p.cardImage?.src || COMPARE_IMAGES[p.slug];
                 return (
-                  <div key={`col-${colIndex}-${p.slug}`} className="flex flex-col">
+                  <div key={`col-${colIndex}-${p.slug}`} className="flex snap-start flex-col">
                     {/* Model Selector Custom Dropdown */}
                     <ModelDropdown
                       colIndex={colIndex}
@@ -262,7 +264,6 @@ export function CompareView({
                           fill
                           sizes="280px"
                           priority
-                          unoptimized={imgSrc.startsWith("http")}
                           className="size-full object-contain p-2 rounded-[20px] group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -323,11 +324,11 @@ export function CompareView({
                   <div
                     key={row.key}
                     className={cn(
-                      "grid grid-cols-[220px_280px_280px_280px] items-center gap-6 px-6 h-[57px]",
+                      "grid grid-cols-[250px_250px_250px] items-center gap-3 px-4 py-2 md:h-[57px] md:py-0 md:grid-cols-[220px_280px_280px_280px] md:gap-6 md:px-6",
                       isEven ? "bg-[#EFF6FF]" : "bg-white"
                     )}
                   >
-                    <div className="font-sans font-bold text-[14px] leading-[19px] text-[#0F172A]">
+                    <div className="hidden font-sans font-bold text-[14px] leading-[19px] text-[#0F172A] md:block">
                       {row.label}
                     </div>
                     {models.map((p, colIdx) => {
@@ -336,8 +337,9 @@ export function CompareView({
                         return (
                           <div
                             key={`${p.slug}-${colIdx}-${row.key}`}
-                            className="font-sans font-medium text-[13px] leading-[21px] text-[#94A3B8] italic truncate"
+                            className="min-w-0 font-sans font-medium text-[13px] leading-[21px] text-[#94A3B8] italic truncate"
                           >
+                            <span className="block text-[11px] font-bold not-italic uppercase tracking-wide text-[#0F172A] md:hidden">{row.label}</span>
                             Pending confirmation
                           </div>
                         );
@@ -346,8 +348,9 @@ export function CompareView({
                       return (
                         <div
                           key={`${p.slug}-${colIdx}-${row.key}`}
-                          className="font-sans font-normal text-[14px] leading-[21px] text-[#62748E] truncate"
+                          className="min-w-0 font-sans font-normal text-[14px] leading-[21px] text-[#62748E] truncate"
                         >
+                          <span className="block text-[11px] font-bold uppercase tracking-wide text-[#0F172A] md:hidden">{row.label}</span>
                           {val && val !== "Not specified" ? val : "—"}
                         </div>
                       );

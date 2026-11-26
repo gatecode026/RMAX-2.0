@@ -77,7 +77,7 @@ export const POST = route(async (req: Request) => {
     total: cart.total,
     shippingAddress: {
       organization: d.organization,
-      department: d.department,
+      department: d.department ?? "",
       street: d.street,
       line2: d.line2,
       city: d.city,

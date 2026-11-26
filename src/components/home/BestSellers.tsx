@@ -17,7 +17,7 @@ export function BestSellers({ products, families = [] }: { products: ProductDTO[
           Compare
         </ButtonLink>
       </div>
-      <div className="mt-6 md:mt-[34px] grid gap-6 sm:gap-6 md:grid-cols-3 xl:gap-8">
+      <div className="mt-6 md:mt-[34px] grid gap-6 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-8">
         {/* One card per family / standalone product, in catalogue order */}
         {buildCards(products, products, families)
           .slice(0, 3)

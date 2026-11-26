@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { User, ShoppingCart, FileText, MapPin, LogOut } from "lucide-react";
+import { User, ShoppingCart, FileText, MapPin, Package, Phone, LogOut } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Card } from "@/components/ui/Card";
 import { customerLogoutAction } from "@/lib/actions/auth";
 import { cn } from "@/lib/cn";
 
-type Active = "overview" | "quotations" | "orders" | "profile" | "cart";
+type Active = "overview" | "quotations" | "orders" | "profile" | "cart" | "addresses";
 
 interface AccountShellProps {
   active: Active;
@@ -17,8 +17,10 @@ interface AccountShellProps {
 export function AccountShell({ active, cartCount = 0, children }: AccountShellProps) {
   const item = "flex items-center justify-between rounded-input px-3 py-3 text-body text-muted transition hover:text-navy";
 
+  // Same order as the sections on the My Account page; each link scrolls to its section.
   const items = [
     { key: "overview", label: "Account Overview", href: "/account", icon: User },
+    { key: "profile", label: "Profile & Mobile", href: "/account#profile", icon: Phone },
     {
       key: "cart",
       label: "My Cart",
@@ -26,8 +28,9 @@ export function AccountShell({ active, cartCount = 0, children }: AccountShellPr
       badge: cartCount > 0 ? `${cartCount}` : undefined,
       icon: ShoppingCart,
     },
+    { key: "orders", label: "My Orders & Tracking", href: "/account/orders", icon: Package },
+    { key: "addresses", label: "Saved Addresses", href: "/account#addresses", icon: MapPin },
     { key: "quotations", label: "Quotation History", href: "/account#quotations", icon: FileText },
-    { key: "profile", label: "Address & Mobile", href: "/account#profile", icon: MapPin },
   ];
 
   return (

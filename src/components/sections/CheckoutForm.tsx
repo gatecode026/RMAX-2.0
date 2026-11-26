@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Check } from "lucide-react";
 import { INDIAN_STATES } from "@/lib/constants";
@@ -66,13 +67,20 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
   });
   const sameBilling = useWatch({ control, name: "billingSameAsShipping" });
 
+  // Stays true after a successful order until the page navigates away, so a second click cannot place a duplicate order.
+  const [placing, setPlacing] = useState(false);
+
   async function onSubmit(values: CheckoutData) {
+    if (placing) return;
+    setPlacing(true);
     setFormError(null);
     const res = await requestJson<{ reference: string }>("/api/orders", "POST", values);
     if (res.ok) {
       router.push(`/order-confirmation/${res.data.reference}`);
+      router.refresh(); // the server emptied the cart; refresh the header cart
       return;
     }
+    setPlacing(false);
     applyFieldErrors(setError, res.fields);
     setFormError(res.message);
   }
@@ -133,18 +141,14 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
               <input
                 type="tel"
                 autoComplete="tel"
-                maxLength={10}
+                maxLength={13}
                 inputMode="numeric"
                 placeholder="10-digit mobile number *"
                 className={cn(
                   "h-[56px] w-full rounded-[14px] border bg-white px-4 py-3 font-sans text-[14px] text-[#0F172A] placeholder:text-[#62748E] focus:outline-none transition-colors",
                   errors.phone ? "border-danger focus:border-danger" : "border-[#E2E8F0] focus:border-[#0B62FF]"
                 )}
-                {...register("phone", {
-                  onChange: (e) => {
-                    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  },
-                })}
+                {...register("phone")}
               />
             </FieldWrapper>
           </div>
@@ -170,10 +174,10 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
               />
             </FieldWrapper>
 
-            <FieldWrapper label="Department / recipient *" error={errors.department?.message}>
+            <FieldWrapper label="Department / recipient (optional)" error={errors.department?.message}>
               <input
                 type="text"
-                placeholder="Department / recipient *"
+                placeholder="Department / recipient (optional)"
                 className={cn(
                   "h-[56px] w-full rounded-[14px] border bg-white px-4 py-3 font-sans text-[14px] text-[#0F172A] placeholder:text-[#62748E] focus:outline-none transition-colors",
                   errors.department ? "border-danger focus:border-danger" : "border-[#E2E8F0] focus:border-[#0B62FF]"
@@ -343,27 +347,26 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
             Payment &amp; review
           </h2>
 
-          <FieldWrapper label="Payment method · illustrative" error={errors.paymentMethod?.message}>
-            <div className="relative w-full">
-              <select
-                className={cn(
-                  "h-[56px] w-full rounded-[14px] border bg-white px-4 py-3 pr-10 font-sans text-[14px] text-[#0F172A] focus:outline-none transition-colors appearance-none cursor-pointer",
-                  errors.paymentMethod ? "border-danger focus:border-danger" : "border-[#E2E8F0] focus:border-[#0B62FF]"
-                )}
-                {...register("paymentMethod")}
-              >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-[#64748B] pointer-events-none" />
-            </div>
+          <FieldWrapper label="Payment method *" error={errors.paymentMethod?.message}>
+            <Controller
+              control={control}
+              name="paymentMethod"
+              render={({ field }) => (
+                <CustomSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[...PAYMENT_METHODS]}
+                  triggerClassName={cn(
+                    "h-[56px] rounded-[14px] px-4 text-[14px] font-sans text-[#0F172A]",
+                    errors.paymentMethod && "border-danger"
+                  )}
+                />
+              )}
+            />
           </FieldWrapper>
 
           <p className="font-sans text-[14px]/[23px] text-[#62748E]">
-            Payment selection is shown for layout review only. Available methods and invoice details need confirmation before publication. No provider or payment transaction is assumed.
+            Cash on Delivery: pay when your order arrives. No online payment is collected on this page.
           </p>
 
           <label className="flex items-start gap-2.5 cursor-pointer select-none">
@@ -402,10 +405,10 @@ export function CheckoutForm({ summary, defaults, loggedIn }: Props) {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || placing}
             className="flex items-center justify-center h-[50px] px-8 rounded-full bg-gradient-to-r from-[#0B62FF] to-[#0EA5E9] font-sans font-bold text-[14px] text-white shadow-xs hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer self-start"
           >
-            {isSubmitting ? "Placing order…" : `Place order · ${formatINR(summary.total)}`}
+            {isSubmitting || placing ? "Placing order…" : `Place order · ${formatINR(summary.total)}`}
           </button>
         </div>
       </form>

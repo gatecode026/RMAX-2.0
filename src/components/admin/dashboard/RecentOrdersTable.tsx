@@ -25,10 +25,10 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
       {/* Panel Heading & Actions */}
       <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
         <div>
-          <h3 className="font-jakarta text-[16px] font-bold text-[#202A36]">Recent Quotations & Proposals</h3>
+          <h3 className="font-jakarta text-[16px] font-bold text-[#202A36]">Recent Orders</h3>
         </div>
         <Link
-          href="/admin/quotations"
+          href="/admin/orders"
           className="inline-flex items-center gap-1 text-[13px] font-bold text-[#10469B] hover:underline"
         >
           <span>View All</span>
@@ -156,17 +156,17 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
               </div>
 
               <div className="rounded-xl border border-gray-200 p-3 text-[12px] text-gray-600 space-y-1">
-                <p><strong>Quotation Reference:</strong> {selectedOrder.orderNumber}</p>
+                <p><strong>Order Reference:</strong> {selectedOrder.orderNumber}</p>
                 <p><strong>Delivery & Deployment:</strong> Institutional Freight & On-Site Installation Support</p>
               </div>
             </div>
 
             <div className="mt-5 flex items-center justify-between">
               <Link
-                href="/admin/quotations"
+                href={`/admin/orders/${selectedOrder.id}`}
                 className="text-[12px] font-bold text-[#10469B] hover:underline"
               >
-                Full Quotation View →
+                Open order & update status →
               </Link>
               <button
                 type="button"

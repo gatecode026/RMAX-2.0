@@ -38,7 +38,7 @@ export async function getAdminDashboardOverview() {
       dbServiceRequests,
       dbInstitutions,
     ] = await Promise.all([
-      Order.find().select("total createdAt status contact.fullName shippingAddress.organization items.slug items.title items.shortName").lean(),
+      Order.find().select("reference total createdAt status contact.fullName shippingAddress.organization items.slug items.title items.shortName").lean(),
       QuoteRequest.find().select("quoteNumber contactPerson organizationName preferredModel quotedAmount status createdAt").lean(),
       User.find().select("name email role department status organization lastLoginAt createdAt updatedAt").lean(),
       ContactMessage.find().sort({ createdAt: -1 }).limit(5).lean(), // only the 5 newest are shown
@@ -48,12 +48,9 @@ export async function getAdminDashboardOverview() {
     ]);
 
     // 1. Genuine KPI metrics
-    const totalOrdersCount = dbOrders.length + dbQuotes.length;
-    const liveRevenue =
-      dbOrders.reduce((sum, o) => sum + (o.total || 0), 0) +
-      dbQuotes
-        .filter((q) => q.status === "approved" || q.status === "quote_sent")
-        .reduce((sum, q) => sum + (q.quotedAmount || 0), 0);
+    // Orders and quotations are kept apart: these figures count real customer orders only.
+    const totalOrdersCount = dbOrders.length;
+    const liveRevenue = dbOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
     const customerUsers = dbUsers.filter(
       (u) =>
@@ -84,42 +81,14 @@ export async function getAdminDashboardOverview() {
     // 2. Genuine Recent Orders & Quotations (newest 50 only; the dashboard table shows 5)
     const RECENT_LIMIT = 50;
     const byNewest = <T extends { createdAt?: Date | string }>(a: T, b: T) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    const recentQuotes = [...dbQuotes].sort(byNewest).slice(0, RECENT_LIMIT);
     const recentOrdersRaw = [...dbOrders].sort(byNewest).slice(0, RECENT_LIMIT);
     const combinedRecent: AdminOrder[] = [];
-
-    // Map quotations
-    for (const q of recentQuotes) {
-      combinedRecent.push({
-        id: String(q._id),
-        orderNumber: q.quoteNumber || `#QT-${String(q._id).slice(-4).toUpperCase()}`,
-        customerName: q.contactPerson || "Institutional Client",
-        institution: q.organizationName || "Institutional Partner",
-        product: q.preferredModel ? `RMAX ${q.preferredModel.toUpperCase()}` : "Sanitary Incinerator",
-        productSlug: q.preferredModel || "pro-max",
-        amount: q.quotedAmount || 0,
-        status:
-          q.status === "approved"
-            ? "Delivered"
-            : q.status === "quote_sent"
-            ? "Shipped"
-            : q.status === "declined"
-            ? "Cancelled"
-            : "Processing",
-        date: new Date(q.createdAt || Date.now()).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
-        createdAt: new Date(q.createdAt || Date.now()).toISOString(),
-      });
-    }
 
     // Map traditional orders
     for (const o of recentOrdersRaw) {
       combinedRecent.push({
         id: String(o._id),
-        orderNumber: `#${String(o._id).slice(-5).toUpperCase()}`,
+        orderNumber: o.reference || `#${String(o._id).slice(-5).toUpperCase()}`,
         customerName: o.contact?.fullName || "Institutional Client",
         institution: o.shippingAddress?.organization || "Institutional Facility",
         product: o.items?.[0]?.shortName || o.items?.[0]?.title || "Pro-Max",
@@ -156,22 +125,13 @@ export async function getAdminDashboardOverview() {
       const mYear = d.getFullYear();
       const mLabel = monthNames[mIdx];
 
-      const matchingQuotes = dbQuotes.filter((q) => {
-        const cd = new Date(q.createdAt || Date.now());
-        return cd.getMonth() === mIdx && cd.getFullYear() === mYear;
-      });
-
       const matchingOrders = dbOrders.filter((o) => {
         const cd = new Date(o.createdAt || Date.now());
         return cd.getMonth() === mIdx && cd.getFullYear() === mYear;
       });
 
-      const mOrdersCount = matchingQuotes.length + matchingOrders.length;
-      const mRevenue =
-        matchingOrders.reduce((sum, o) => sum + (o.total || 0), 0) +
-        matchingQuotes
-          .filter((q) => q.status === "approved" || q.status === "quote_sent")
-          .reduce((sum, q) => sum + (q.quotedAmount || 0), 0);
+      const mOrdersCount = matchingOrders.length;
+      const mRevenue = matchingOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
       salesOverview.push({
         month: mLabel,

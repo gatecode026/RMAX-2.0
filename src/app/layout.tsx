@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Montserrat, Plus_Jakarta_Sans } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import "./globals.css";
+import { InputFormatter } from "@/components/ui/InputFormatter";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-dvh flex-col" suppressHydrationWarning>
         <GlobalModalScrollLock />
+        <InputFormatter />
         <ToastProvider>
           <AuthModalProvider>
             {children}

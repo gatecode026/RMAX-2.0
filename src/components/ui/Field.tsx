@@ -98,7 +98,7 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
             ref={setMergedRef}
             id={id}
             type={type}
-            maxLength={type === "tel" ? (props.maxLength ?? 10) : props.maxLength}
+            maxLength={type === "tel" ? (props.maxLength ?? 13) : props.maxLength}
             inputMode={type === "tel" ? (props.inputMode ?? "numeric") : props.inputMode}
             value={value}
             defaultValue={defaultValue}
@@ -116,24 +116,11 @@ export const TextInput = forwardRef<HTMLInputElement, BaseProps & InputHTMLAttri
               props.onBlur?.(e);
             }}
             onChange={(e) => {
-              if (type === "tel") {
-                const clean = e.target.value.replace(/\D/g, "").slice(0, 10);
-                e.target.value = clean;
-                setInternalValue(clean);
-              } else {
-                setInternalValue(e.target.value);
-              }
+              setInternalValue(e.target.value); // value already formatted by InputFormatter
               props.onChange?.(e);
             }}
             onInput={(e) => {
-              if (type === "tel") {
-                const target = e.target as HTMLInputElement;
-                const clean = target.value.replace(/\D/g, "").slice(0, 10);
-                target.value = clean;
-                setInternalValue(clean);
-              } else {
-                setInternalValue((e.target as HTMLInputElement).value);
-              }
+              setInternalValue((e.target as HTMLInputElement).value);
               props.onInput?.(e);
             }}
             className={cn(
@@ -391,10 +378,10 @@ export const TextArea = forwardRef<HTMLTextAreaElement, BaseProps & TextareaHTML
           <label
             htmlFor={id}
             className={cn(
-              "pointer-events-none absolute select-none whitespace-nowrap z-10 transition-all duration-200 ease-out",
+              "pointer-events-none absolute select-none z-10 transition-all duration-200 ease-out",
               isFloated
-                ? "top-0 -translate-y-1/2 left-3 px-2 text-xs font-bold leading-none bg-card"
-                : "top-4 translate-y-0 left-4 px-0 text-body font-normal bg-transparent",
+                ? "top-0 -translate-y-1/2 left-3 px-2 text-xs font-bold leading-none bg-card whitespace-nowrap"
+                : "top-4 translate-y-0 left-4 right-4 px-0 text-body font-normal bg-transparent",
               error
                 ? "text-danger"
                 : isFocused

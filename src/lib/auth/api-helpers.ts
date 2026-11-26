@@ -26,13 +26,13 @@ export async function logoutHandler(tier: SessionTier) {
 }
 
 /**
- * POST /api/auth/{tier}/refresh — intentionally a no-op that always rejects. The 7-day
+ * POST /api/auth/{tier}/refresh — intentionally a no-op that always rejects. The 30-day
  * absolute session lifetime is fixed at login and must never be extended by activity or by
  * calling refresh; once a session expires the only way back in is a fresh login.
  */
 export function refreshRejectedHandler(tier: SessionTier) {
   return fail(
-    `${PORTAL_LABEL[tier]} sessions are fixed at 7 days from login and cannot be refreshed or extended. Please sign in again once your session expires.`,
+    `${PORTAL_LABEL[tier]} sessions are fixed at 30 days from login and cannot be refreshed or extended. Please sign in again once your session expires.`,
     410,
   );
 }

@@ -28,7 +28,7 @@ export interface IOrder {
   total: number;
   shippingAddress: {
     organization: string;
-    department: string;
+    department?: string;
     street: string;
     line2?: string;
     city: string;
@@ -78,7 +78,7 @@ const orderSchema = new Schema<IOrder>(
     total: { type: Number, required: true, min: 0 },
     shippingAddress: {
       organization: { type: String, required: true, trim: true },
-      department: { type: String, required: true, trim: true },
+      department: { type: String, trim: true, default: "" },
       street: { type: String, required: true, trim: true },
       line2: { type: String, trim: true },
       city: { type: String, required: true, trim: true },
@@ -111,4 +111,6 @@ const orderSchema = new Schema<IOrder>(
 
 orderSchema.index({ user: 1, createdAt: -1 });
 
+// Dev only: drop the cached model so schema edits apply without restarting the server.
+if (process.env.NODE_ENV !== "production") delete models.Order;
 export const Order: Model<IOrder> = models.Order || model<IOrder>("Order", orderSchema);

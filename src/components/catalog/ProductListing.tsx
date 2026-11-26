@@ -177,7 +177,7 @@ export function ProductListing({ products, families = [] }: { products: ProductD
           </button>
 
           <div id={filtersId} className={cn("mt-3 lg:mt-0 lg:block", mobileFilters ? "block" : "hidden")}>
-            <div className="w-full lg:w-[302px] max-h-[calc(100vh-48px)] overflow-y-auto overscroll-contain rounded-[16px] border border-[#D6DCE4] bg-[#FBF9F5] flex flex-col pt-3 shadow-2xs">
+            <div className="w-full lg:w-[302px] lg:max-h-[calc(100vh-48px)] lg:overflow-y-auto lg:overscroll-contain rounded-[16px] border border-[#D6DCE4] bg-[#FBF9F5] flex flex-col pt-3 shadow-2xs">
               {/* Frame 168: Title & Clear all */}
               <div className="flex h-12 w-full items-center justify-between px-4 py-3 shrink-0">
                 <h2 className="font-heading text-[20px] font-extrabold leading-6 text-[#232A32]">
@@ -251,8 +251,8 @@ export function ProductListing({ products, families = [] }: { products: ProductD
                           />
                           <span
                             className={cn(
-                              "size-4 rounded-[4px] border flex items-center justify-center shrink-0 transition-colors bg-[#FDFDFD]",
-                              isChecked ? "border-[#002970] bg-[#002970]" : "border-[#D6DCE4] group-hover:border-slate-400",
+                              "size-4 rounded-[4px] border flex items-center justify-center shrink-0 transition-colors",
+                              isChecked ? "border-[#002970] bg-[#002970]" : "border-[#D6DCE4] bg-[#FDFDFD] group-hover:border-slate-400",
                             )}
                           >
                             {isChecked && <Check className="size-3 text-white stroke-[3]" />}
@@ -338,8 +338,22 @@ export function ProductListing({ products, families = [] }: { products: ProductD
                 </ul>
               </Section>
 
-              {/* Navy Support Concierge */}
-              <div className="mt-auto bg-[#002970] p-5 sm:p-5 flex flex-col items-center gap-5 text-center text-white shrink-0">
+              {/* Phones/tablets: close the filters and jump to the results */}
+              <div className="p-4 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileFilters(false);
+                    document.getElementById("product-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="h-12 w-full rounded-[28px] bg-linear-to-r from-navy to-navy-600 font-bold text-white cursor-pointer"
+                >
+                  Show {cards.length} {cards.length === 1 ? "product" : "products"}
+                </button>
+              </div>
+
+              {/* Navy Support Concierge (desktop sidebar only) */}
+              <div className="mt-auto hidden bg-[#002970] p-5 sm:p-5 lg:flex flex-col items-center gap-5 text-center text-white shrink-0">
                 <div className="flex flex-col items-center gap-2">
                   <p className="font-heading text-[24px] font-extrabold leading-8 tracking-[-0.6px] text-[#FDFDFD]">
                     Need help?
@@ -360,7 +374,7 @@ export function ProductListing({ products, families = [] }: { products: ProductD
         </aside>
 
         {/* Grid */}
-        <div className="min-w-0">
+        <div id="product-results" className="min-w-0 scroll-mt-4">
           {cards.length === 0 ? (
             <div className="rounded-[32px] border border-line bg-card p-8 text-center" role="status">
               <p className="font-heading text-title font-extrabold">

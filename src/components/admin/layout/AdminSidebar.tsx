@@ -25,6 +25,7 @@ import {
   Target,
   ClipboardList,
   FileText,
+  ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -40,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Leads", href: "/admin/leads", icon: Target, badge: "Live" },
   { label: "Quotations", href: "/admin/quotations", icon: FileText, badge: "Quotes" },
+  { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
   {
     label: "Products",
     href: "/admin/products",

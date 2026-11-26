@@ -79,7 +79,7 @@ async function Orders({ searchParams }: { searchParams: Promise<{ q?: string; st
           Showing {orders.length} of {total} orders. No additional purchases are shown.
         </p>
         <div>
-          <ButtonLink href="/compare-models" variant="secondary" size="sm">
+          <ButtonLink href="/our-product" variant="secondary" size="sm">
             Browse products
           </ButtonLink>
         </div>

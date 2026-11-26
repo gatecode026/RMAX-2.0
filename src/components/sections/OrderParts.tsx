@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Card } from "@/components/ui/Card";
 import { formatINR } from "@/lib/format";
+import { cleanSpecLine } from "@/lib/specs";
 
 /** Product row used in the cart, confirmation, order list/detail and account overview. */
 export function LineItem({
@@ -25,13 +26,12 @@ export function LineItem({
         alt=""
         width={thumb}
         height={thumb}
-        unoptimized={typeof image === "string" && image.startsWith("http")}
         className="rounded-[24px] object-cover"
         style={{ width: thumb, height: thumb }}
       />
       <div className="min-w-0 flex-1 basis-56">
         <h3 className="text-[20px]/7">{title}</h3>
-        <p className="mt-1 text-body-sm text-muted">{specLine}</p>
+        <p className="mt-1 text-body-sm text-muted">{cleanSpecLine(specLine)}</p>
         {children && <div className="mt-2 text-body-sm font-bold text-charcoal">{children}</div>}
       </div>
       <p className="font-heading text-title font-extrabold text-charcoal">{formatINR(price)}</p>

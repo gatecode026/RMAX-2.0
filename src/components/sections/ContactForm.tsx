@@ -88,7 +88,7 @@ export function ContactForm({ models }: { models: { slug: string; name: string; 
           </SelectInput>
           <TextInput label="Full name *" autoComplete="name" error={errors.name?.message} {...register("name")} />
           <TextInput label="Email *" type="email" autoComplete="email" error={errors.email?.message} {...register("email")} />
-          <TextInput label="Mobile Number *" type="tel" autoComplete="tel" placeholder="10-digit mobile number" maxLength={10} inputMode="numeric" error={errors.phone?.message} {...register("phone")} />
+          <TextInput label="Mobile Number *" type="tel" autoComplete="tel" placeholder="10-digit mobile number" maxLength={13} inputMode="numeric" error={errors.phone?.message} {...register("phone")} />
           <TextInput label="Order reference (optional)" error={errors.orderReference?.message} {...register("orderReference")} />
           <TextArea
             className="md:col-span-2"

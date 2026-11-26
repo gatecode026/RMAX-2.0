@@ -14,6 +14,7 @@ import { requireUserId } from "@/lib/session";
 import { ORDER_STATUSES } from "@/lib/enums";
 import { LAST_ORDER_COOKIE } from "@/lib/constants";
 import { cn } from "@/lib/cn";
+import { cleanSpecLine } from "@/lib/specs";
 
 export const metadata: Metadata = { title: "Order Detail & Tracking", robots: { index: false, follow: false } };
 
@@ -228,29 +229,28 @@ async function Detail({ params }: { params: Promise<{ ref: string }> }) {
                       : (i.image || "/images/home/card-pro.png");
 
                   return (
-                    <div key={i.slug} className="flex flex-wrap sm:flex-nowrap items-center gap-5 w-full">
+                    <div key={i.slug} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 w-full">
                       <div className="relative size-[118px] shrink-0 overflow-hidden rounded-[18px] bg-[#F1F5F9]">
                         <Image
                           src={itemImage}
                           alt={i.title}
                           fill
-                          unoptimized={typeof itemImage === "string" && itemImage.startsWith("http")}
                           className="object-cover"
                           sizes="118px"
                         />
                       </div>
                       <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
-                        <h3 className="font-jakarta font-extrabold text-[20px]/[23px] text-[#020618]">
+                        <h3 className="break-words font-jakarta font-extrabold text-[17px]/[22px] sm:text-[20px]/[23px] text-[#020618]">
                           {i.title}
                         </h3>
                         <p className="font-sans text-[14px]/[23px] text-[#62748E]">
-                          {i.specLine}
+                          {cleanSpecLine(i.specLine)}
                         </p>
                         <p className="font-sans font-bold text-[14px] leading-[19px] text-[#0F172A]">
                           Quantity: {i.quantity}
                         </p>
                       </div>
-                      <p className="font-jakarta font-extrabold text-[24px]/[30px] text-[#020618] sm:ml-auto shrink-0">
+                      <p className="font-jakarta font-extrabold text-[22px]/[28px] sm:text-[24px]/[30px] text-[#020618] sm:ml-auto shrink-0">
                         {formatINR(i.unitPrice * i.quantity)}
                       </p>
                     </div>
@@ -268,7 +268,7 @@ async function Detail({ params }: { params: Promise<{ ref: string }> }) {
                 </h2>
                 <div className="font-sans text-[14px]/[23px] text-[#62748E] flex flex-col">
                   <p>{a.organization}</p>
-                  <p>{o.contact.fullName} · {a.department}</p>
+                  <p>{[o.contact.fullName, a.department].filter(Boolean).join(" · ")}</p>
                   <p>{[a.street, a.line2].filter(Boolean).join(", ")}</p>
                   <p>{a.city}, {a.state} {a.postalCode}</p>
                   <p>{a.country}</p>

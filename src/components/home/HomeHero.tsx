@@ -19,7 +19,7 @@ export function HomeHero({ featured, stats }: { featured?: ProductDTO; stats: Ho
             <ButtonLink href="#best-sellers" className="h-[50px] px-6 text-[14px] sm:h-[54px] sm:px-7 lg:h-[52px] lg:px-6 xl:h-[58px] xl:px-8 xl:text-[15px] w-full sm:w-auto text-center">
               Shop best sellers
             </ButtonLink>
-            <ButtonLink href="/compare-models" variant="outline" className="h-[50px] px-6 text-[14px] sm:h-[54px] sm:px-7 lg:h-[52px] lg:px-6 xl:h-[58px] xl:px-8 xl:text-[15px]">
+            <ButtonLink href="/our-product" variant="outline" className="h-[50px] px-6 text-[14px] sm:h-[54px] sm:px-7 lg:h-[52px] lg:px-6 xl:h-[58px] xl:px-8 xl:text-[15px]">
               View All Products
             </ButtonLink>
           </div>

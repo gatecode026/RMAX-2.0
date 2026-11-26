@@ -40,18 +40,13 @@ export async function createSession(account: ResolvedAccount): Promise<SessionUs
 }
 
 /**
- * Clears only the named portal's session cookie AND bumps the account's tokenVersion so the
- * token itself is invalidated server-side immediately — not just removed from the browser.
- * Without this, a captured/replayed copy of the token would remain valid until its natural
- * 7-day expiry even after "logout". The other two independent portal sessions are untouched.
+ * Clears only the named portal's session cookie (this browser). tokenVersion is deliberately NOT bumped here:
+ * doing so signed the account out on every other device/tab/user sharing it. Server-side revocation still happens
+ * on password change/reset (tokenVersion) or by deactivating the account. Trade-off: a copied token stays valid
+ * until it expires (30 days) even after logout.
  */
 export async function destroySession(tier: SessionTier): Promise<void> {
-  const current = await readSession(tier);
   await clearSessionCookie(tier);
-  if (current) {
-    await connectDB();
-    await User.updateOne({ _id: current.id }, { $inc: { tokenVersion: 1 } });
-  }
 }
 
 // Per-request memoized DB lookup so multiple session checks in one render don't multiply queries.
@@ -70,8 +65,13 @@ async function readSession(tier: SessionTier): Promise<SessionUser | null> {
   try {
     account = await loadAccountById(payload.sub);
   } catch {
-    // DB unavailable: fail closed for protected content rather than trusting a stale token.
-    return null;
+    // A transient DB blip must not look like a logout: retry once with a fresh query, then fail closed.
+    try {
+      await connectDB();
+      account = await User.findById(payload.sub).select("name email role status tokenVersion").lean();
+    } catch {
+      return null;
+    }
   }
   if (!account) return null;
   if (account.status === "inactive") return null;

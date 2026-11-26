@@ -60,9 +60,11 @@ async function Overview() {
       />
       <AccountShell active="overview" cartCount={cart.count}>
         {/* 1. Mobile Number & Basic Info */}
-        <ProfileForm
-          initial={{ name: user.name, organization: user.organization ?? "", email: user.email, phone: user.phone ?? "" }}
-        />
+        <div id="profile" className="scroll-mt-28">
+          <ProfileForm
+            initial={{ name: user.name, organization: user.organization ?? "", email: user.email, phone: user.phone ?? "" }}
+          />
+        </div>
 
         {/* 2. My Cart Products & Details */}
         <Card id="cart" className="scroll-mt-28 p-7">
@@ -106,7 +108,6 @@ async function Overview() {
                           src={line.product.image.src}
                           alt={line.product.title}
                           fill
-                          unoptimized={line.product.image.src.startsWith("http")}
                           className="object-cover"
                         />
                       </div>
@@ -185,7 +186,7 @@ async function Overview() {
         </Card>
 
         {/* 3. Saved Address */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div id="addresses" className="grid scroll-mt-28 gap-6 md:grid-cols-2">
           <AddressCard kind="shipping" heading="Delivery / Institutional Address" actionLabel="Edit address" initial={ship}>
             <h2 className="mt-4 text-title">{ship?.organization ?? "No delivery address saved"}</h2>
             <p className="mt-4 text-body-sm leading-6 text-muted">

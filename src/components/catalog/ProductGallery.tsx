@@ -15,6 +15,15 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
   const [active, setActive] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Zoom is desktop-only (mouse + wide screen); phones and tablets just show the photo.
+  const [canZoom, setCanZoom] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
+    const sync = () => setCanZoom(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const [viewerSize, setViewerSize] = useState({ width: 365, height: 420 });
   const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
@@ -62,7 +71,7 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
   const isVideo = current.kind === "video";
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isVideo || !containerRef.current) return;
+    if (isVideo || !canZoom || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -82,7 +91,7 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isVideo) return;
+    if (isVideo || !canZoom) return;
     updateSize();
     handleMouseMove(e);
     setIsHovering(true);
@@ -115,7 +124,7 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
                     isCurrent ? "border-navy shadow-xs" : "border-transparent hover:border-line",
                   )}
                 >
-                  <Image src={g.thumb} alt="" width={62} height={78} unoptimized={g.thumb.startsWith("http")} onError={() => markBroken(g.thumb)} className="size-full object-contain p-1" />
+                  <Image src={g.thumb} alt="" width={62} height={78} onError={() => markBroken(g.thumb)} className="size-full object-contain p-1" />
                   {/* Small thumbnail active zoom indicator */}
                   {isCurrent && isHovering && !isVideo && (
                     <span
@@ -145,7 +154,7 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
         style={{ aspectRatio: natural.w && natural.h ? `${natural.w} / ${natural.h}` : "461 / 530" }}
         className={cn(
           "group relative w-full self-start overflow-hidden rounded-[24px] bg-soft sm:w-[350px] md:w-[365px] xl:w-[380px] sm:max-w-full select-none",
-          !isVideo && "cursor-crosshair",
+          !isVideo && canZoom && "cursor-crosshair",
         )}
       >
         <Image
@@ -154,7 +163,6 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
           alt={current.alt}
           width={922}
           height={1086}
-          unoptimized={current.src.startsWith("http")}
           priority={active === 0}
           onLoad={(e) => readNatural(e.currentTarget)}
           onError={() => markBroken(current.src)}
@@ -181,27 +189,10 @@ export function ProductGallery({ items: all, title }: { items: IGalleryItem[]; t
         )}
 
         {/* Amazon style zoom prompt */}
-        {!isVideo && !isHovering && (
+        {!isVideo && canZoom && !isHovering && (
           <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-sm px-3.5 py-1.5 text-[11px] font-semibold text-charcoal shadow-sm transition-opacity duration-200">
             <ZoomIn className="size-3.5 text-navy" />
             <span>Roll over image to zoom in</span>
-          </div>
-        )}
-
-        {/* Mobile / Tablet Picture-in-Picture Mini-Map when zoomed */}
-        {isHovering && !isVideo && (
-          <div className="lg:hidden pointer-events-none absolute top-3 right-3 h-[85px] w-[65px] overflow-hidden rounded-xl border-2 border-white/90 bg-white shadow-lg">
-            <Image src={current.src} alt="" width={65} height={85} unoptimized={current.src.startsWith("http")} className="size-full object-contain p-0.5" />
-            <span
-              aria-hidden
-              className="absolute border border-navy bg-navy/35 rounded-[2px]"
-              style={{
-                width: "40%",
-                height: "40%",
-                left: `${zoomRatio.x * 60}%`,
-                top: `${zoomRatio.y * 60}%`,
-              }}
-            />
           </div>
         )}
 

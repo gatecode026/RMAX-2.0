@@ -1,223 +1,186 @@
 "use client";
 
-import React, { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ArrowLeft, Building2, CheckCircle2, Loader2, Mail, MapPin, Phone, Printer } from "lucide-react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
 import { useToast } from "@/components/ui/Toast";
-import {
-  ArrowLeft,
-  Printer,
-  CheckCircle2,
-  Building2,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import { formatDate, formatINR } from "@/lib/format";
+import { ORDER_STATUSES, type OrderStatus } from "@/lib/enums";
+import { STATUS_LABEL, STATUS_STYLE } from "@/lib/admin/order-ui";
 
+interface AdminOrder {
+  _id: string;
+  reference: string;
+  contact: { fullName: string; email: string; phone: string };
+  items: { slug: string; title: string; variantLabel?: string; quantity: number; unitPrice: number }[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  shippingAddress: { organization: string; department?: string; street: string; line2?: string; city: string; state: string; postalCode: string; country: string; notes?: string };
+  billing: { sameAsShipping: boolean; organization: string; poReference?: string };
+  payment: { method: string; status: string };
+  status: OrderStatus;
+  timeline: { step: OrderStatus; at?: string }[];
+  createdAt: string;
+}
+
+/** Order detail: customer, address, items, payment and the tracking timeline the customer sees. */
 export default function AdminOrderDetailPage() {
-  const params = useParams();
-  const orderId = (params?.id as string) || "1523";
-  const { success: toastSuccess } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const { success, error } = useToast();
+  const [order, setOrder] = useState<AdminOrder | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const [currentStatus, setCurrentStatus] = useState<"Processing" | "Shipped" | "Delivered" | "Cancelled">("Delivered");
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Order not found");
+      setOrder(json.order);
+    } catch (e) {
+      setFailed(e instanceof Error ? e.message : "Failed to load order");
+    }
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
-  const handleStatusChange = (status: "Processing" | "Shipped" | "Delivered" | "Cancelled") => {
-    setCurrentStatus(status);
-    toastSuccess("Order status updated", `Order #${orderId} marked as ${status}. Notifications sent to customer.`);
-  };
+  async function changeStatus(next: OrderStatus) {
+    if (!order || next === order.status) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order._id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: next }) });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to update");
+      setOrder(json.order);
+      success("Order updated", `${order.reference} is now ${STATUS_LABEL[next]}. The customer sees this in order tracking.`);
+    } catch (e) {
+      error("Could not update order", e instanceof Error ? e.message : undefined);
+    } finally {
+      setSaving(false);
+    }
+  }
 
-  const steps = [
-    { label: "Order Placed", date: "24 Oct 2026, 10:30 AM", done: true },
-    { label: "Processing & QC", date: "24 Oct 2026, 02:15 PM", done: true },
-    { label: "Dispatched / Shipped", date: "25 Oct 2026, 09:00 AM", done: currentStatus === "Shipped" || currentStatus === "Delivered" },
-    { label: "Delivered & Inspected", date: "25 Oct 2026, 04:45 PM", done: currentStatus === "Delivered" },
-  ];
+  if (failed) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm font-semibold text-red-700">
+        {failed}
+        <div className="mt-3"><Link href="/admin/orders" className="text-[#10469B] hover:underline">Back to Orders</Link></div>
+      </div>
+    );
+  }
+  if (!order) {
+    return <div className="flex min-h-[300px] items-center justify-center text-slate-400"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading order…</div>;
+  }
 
+  const a = order.shippingAddress;
   return (
     <div>
       <AdminPageHeader
-        title={`Order #${orderId}`}
-        subtitle="Manage dispatch, invoice generation, status pipeline, and delivery confirmation."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin/dashboard" },
-          { label: "Orders", href: "/admin/orders" },
-          { label: `#${orderId}` },
-        ]}
+        title={`Order ${order.reference}`}
+        subtitle={`Placed ${formatDate(order.createdAt)} · manage the delivery status the customer sees in tracking.`}
+        breadcrumbs={[{ label: "Dashboard", href: "/admin/dashboard" }, { label: "Orders", href: "/admin/orders" }, { label: order.reference }]}
         actions={
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-            >
-              <Printer className="h-4 w-4" />
-              Print Invoice
+            <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <Printer className="h-4 w-4" /> Print
             </button>
-            <Link
-              href="/admin/orders"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
+            <Link href="/admin/orders" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <ArrowLeft className="h-4 w-4" /> Back
             </Link>
           </div>
         }
       />
 
-      {/* Progress Tracker */}
-      <div className="mb-6 rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-6">Fulfillment Pipeline</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          {steps.map((step, idx) => (
-            <div key={idx} className="relative flex items-start gap-3">
-              <div
-                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                  step.done
-                    ? "bg-[#10469B] text-white"
-                    : "bg-slate-100 text-slate-400 border border-slate-200"
-                }`}
-              >
-                {step.done ? <CheckCircle2 className="h-4 w-4" /> : idx + 1}
-              </div>
-              <div>
-                <div className={`text-sm font-semibold ${step.done ? "text-slate-800" : "text-slate-400"}`}>
-                  {step.label}
-                </div>
-                <div className="text-xs text-slate-400">{step.done ? step.date : "Pending"}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left 2 Cols: Order Items & Pricing */}
+      <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          {/* Order Items Table */}
-          <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-[#0B2450] mb-4">Ordered Items</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="border-b border-[#E5EBF4] bg-slate-50/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <tr>
-                    <th className="py-3 pl-3 pr-3">Item</th>
-                    <th className="px-3 py-3">Specs</th>
-                    <th className="px-3 py-3">Qty</th>
-                    <th className="py-3 pl-3 pr-3 text-right">Price</th>
-                    <th className="py-3 pl-3 pr-3 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  <tr>
-                    <td className="py-3.5 pl-3 pr-3 font-semibold text-slate-800">
-                      RMAX Napkin Incinerator (Pro-Max)
-                    </td>
-                    <td className="px-3 py-3.5 text-xs text-slate-500">
-                      1200W • 10kg • 400-500/day
-                    </td>
-                    <td className="px-3 py-3.5 font-medium text-slate-700">1</td>
-                    <td className="py-3.5 pl-3 pr-3 text-right font-medium text-slate-700">₹6,500</td>
-                    <td className="py-3.5 pl-3 pr-3 text-right font-semibold text-slate-900">₹6,500</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-[#0B2450]">Items</h2>
+            <ul className="mt-3 divide-y divide-[#E5EBF4]">
+              {order.items.map((i) => (
+                <li key={i.slug} className="flex items-start justify-between gap-4 py-3 text-sm">
+                  <div>
+                    <p className="font-semibold text-slate-800">{i.title}</p>
+                    {i.variantLabel && <p className="text-xs text-slate-500">{i.variantLabel}</p>}
+                    <p className="text-xs text-slate-500">{formatINR(i.unitPrice)} × {i.quantity}</p>
+                  </div>
+                  <p className="font-semibold text-slate-800">{formatINR(i.unitPrice * i.quantity)}</p>
+                </li>
+              ))}
+            </ul>
+            <dl className="mt-3 space-y-1 border-t border-[#E5EBF4] pt-3 text-sm">
+              <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd>{formatINR(order.subtotal)}</dd></div>
+              <div className="flex justify-between"><dt className="text-slate-500">Shipping</dt><dd>{order.shipping ? formatINR(order.shipping) : "Free"}</dd></div>
+              <div className="flex justify-between text-base font-bold text-[#0B2450]"><dt>Total (excl. GST)</dt><dd>{formatINR(order.total)}</dd></div>
+            </dl>
+          </section>
 
-            {/* Price Calculations */}
-            <div className="mt-6 border-t border-slate-100 pt-4 flex justify-end">
-              <div className="w-full max-w-xs space-y-2 text-sm">
-                <div className="flex justify-between text-slate-500">
-                  <span>Subtotal:</span>
-                  <span className="font-medium text-slate-700">₹6,500</span>
-                </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>Shipping:</span>
-                  <span className="font-medium text-emerald-600">Free PAN-India</span>
-                </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>GST (18% inclusive):</span>
-                  <span className="font-medium text-slate-700">₹991.53</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-900">
-                  <span>Total Amount:</span>
-                  <span className="text-[#10469B]">₹6,500</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Institutional Shipping Details */}
-          <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-[#0B2450] mb-4">Delivery & Institutional Address</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="space-y-2 text-sm text-slate-600">
-                <div className="flex items-center gap-2 font-semibold text-slate-800">
-                  <Building2 className="h-4 w-4 text-[#10469B]" />
-                  Singhania School Campus
-                </div>
-                <div className="flex items-start gap-2 text-slate-600">
-                  <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                  <span>Administrative Block, Sector 4, Jawahar Nagar, Jaipur, Rajasthan — 302004</span>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-sm text-slate-600">
-                <div className="font-semibold text-slate-800">Contact Person</div>
-                <div className="text-slate-700">Balbir Singhania (Principal)</div>
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Phone className="h-3.5 w-3.5" /> +91 94140 55667
-                </div>
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Mail className="h-3.5 w-3.5" /> principal@singhaniaschool.org
-                </div>
-              </div>
-            </div>
-          </div>
+          <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-[#0B2450]">Order tracking</h2>
+            <ol className="mt-4 space-y-4">
+              {ORDER_STATUSES.map((s) => {
+                const step = order.timeline.find((t) => t.step === s);
+                const done = Boolean(step?.at);
+                return (
+                  <li key={s} className="flex items-start gap-3">
+                    <CheckCircle2 className={`mt-0.5 h-5 w-5 shrink-0 ${done ? "text-emerald-600" : "text-slate-300"}`} />
+                    <div>
+                      <p className={`text-sm font-semibold ${done ? "text-slate-800" : "text-slate-400"}`}>{STATUS_LABEL[s]}</p>
+                      <p className="text-xs text-slate-500">{done ? formatDate(step!.at!) : "Pending"}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
         </div>
 
-        {/* Right Col: Status Updater & Payment Details */}
         <div className="space-y-6">
-          <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-[#0B2450]">Update Status</h2>
-            <p className="text-xs text-slate-500">
-              Change status to update inventory and alert the institutional receiving department.
-            </p>
-
-            <div className="space-y-2">
-              {(["Processing", "Shipped", "Delivered", "Cancelled"] as const).map((st) => (
+          <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-[#0B2450]">Status</h2>
+            <span className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_STYLE[order.status]}`}>{STATUS_LABEL[order.status]}</span>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {ORDER_STATUSES.map((s) => (
                 <button
-                  key={st}
-                  onClick={() => handleStatusChange(st)}
-                  className={`w-full flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors ${
-                    currentStatus === st
-                      ? "border-[#10469B] bg-blue-50/60 text-[#10469B]"
-                      : "border-slate-200 text-slate-700 hover:bg-slate-50"
-                  }`}
+                  key={s}
+                  type="button"
+                  disabled={saving || s === order.status}
+                  onClick={() => changeStatus(s)}
+                  className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                 >
-                  <span>{st}</span>
-                  {currentStatus === st && <CheckCircle2 className="h-4 w-4 text-[#10469B]" />}
+                  Mark {STATUS_LABEL[s]}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-xl border border-[#E5EBF4] bg-white p-6 shadow-sm space-y-3 text-sm">
-            <h2 className="text-base font-bold text-[#0B2450]">Payment & Verification</h2>
-            <div className="flex items-center justify-between text-slate-600">
-              <span>Payment Mode:</span>
-              <span className="font-semibold text-slate-800">Institutional Net Banking</span>
-            </div>
-            <div className="flex items-center justify-between text-slate-600">
-              <span>Payment Status:</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                <CheckCircle2 className="h-3 w-3" /> Paid
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-slate-600">
-              <span>GST Invoice:</span>
-              <span className="font-mono text-xs text-slate-700">INV-2026-RMAX-1523</span>
-            </div>
-          </div>
+          <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 text-sm shadow-sm">
+            <h2 className="text-base font-bold text-[#0B2450]">Customer</h2>
+            <p className="mt-3 font-semibold text-slate-800">{order.contact.fullName}</p>
+            <p className="mt-2 flex items-center gap-2 text-slate-600"><Mail className="h-4 w-4 text-slate-400" /> {order.contact.email}</p>
+            <p className="mt-1 flex items-center gap-2 text-slate-600"><Phone className="h-4 w-4 text-slate-400" /> {order.contact.phone}</p>
+          </section>
+
+          <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 text-sm shadow-sm">
+            <h2 className="text-base font-bold text-[#0B2450]">Delivery address</h2>
+            <p className="mt-3 flex items-start gap-2 text-slate-600">
+              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+              <span>{a.organization}{a.department ? ` · ${a.department}` : ""}</span>
+            </p>
+            <p className="mt-1 flex items-start gap-2 text-slate-600">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+              <span>{[a.street, a.line2, a.city, a.state, a.postalCode, a.country].filter(Boolean).join(", ")}</span>
+            </p>
+            {a.notes && <p className="mt-2 text-xs text-slate-500">Note: {a.notes}</p>}
+          </section>
+
+          <section className="rounded-xl border border-[#E5EBF4] bg-white p-5 text-sm shadow-sm">
+            <h2 className="text-base font-bold text-[#0B2450]">Payment & billing</h2>
+            <p className="mt-3 text-slate-600">{order.payment.method}</p>
+            <p className="mt-1 text-slate-600">Billing: {order.billing.sameAsShipping ? "same as delivery" : order.billing.organization}</p>
+            {order.billing.poReference && <p className="mt-1 text-slate-600">PO: {order.billing.poReference}</p>}
+          </section>
         </div>
       </div>
     </div>

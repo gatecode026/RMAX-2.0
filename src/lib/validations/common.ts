@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { capitalizeWords } from "@/lib/input-format";
 
 /** Strip HTML tags and control characters, collapse surrounding whitespace. */
 export function cleanText(value: string): string {
@@ -13,6 +14,21 @@ export const text = (label: string, max = 200) =>
     .string({ error: `${label} is required` })
     .transform(cleanText)
     .pipe(z.string().min(1, `${label} is required`).max(max, `${label} is too long`));
+
+/** Person / company / place name: cleaned, first letter of each word capitalised. */
+export const properName = (label: string, max = 100) =>
+  z
+    .string({ error: `${label} is required` })
+    .transform((v) => capitalizeWords(cleanText(v)))
+    .pipe(z.string().min(2, `${label} must be at least 2 characters`).max(max, `${label} is too long`));
+
+export const optionalName = (max = 100) => optionalText(max).transform((v) => (v ? capitalizeWords(v) : v));
+
+/** Indian PIN code: 6 digits, not starting with 0. */
+export const pincode = z
+  .string({ error: "Postal code is required" })
+  .transform((v) => v.replace(/\s/g, ""))
+  .pipe(z.string().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit PIN code"));
 
 export const optionalText = (max = 200) =>
   z
@@ -31,6 +47,7 @@ export const email = z
       .min(1, "Email is required")
       .max(254, "Email address is too long")
       .email("Enter a valid email address")
+      .refine((v) => !v.includes("..") && !v.split("@")[0].startsWith(".") && !v.split("@")[0].endsWith("."), "Enter a valid email address")
       .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Enter a valid email address (e.g. name@domain.com)")
   );
 

@@ -70,7 +70,6 @@ function UnifiedProductCard({
               alt={img.alt || (group ? group.title : product.title)}
               width={img.width || 400}
               height={img.height || 310}
-              unoptimized={img.src.startsWith("http")}
               className="size-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
@@ -112,7 +111,7 @@ function UnifiedProductCard({
       </div>
 
       {/* Bottom Frame: Price & View button */}
-      <div className="mt-4 flex items-end justify-between gap-3 px-1 pt-1">
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-x-3 gap-y-3 px-1 pt-1">
         <div className="flex flex-col items-start justify-end">
           {product.mrp && product.mrp > product.price && product.price > 0 && product.stockStatus !== "enquiry-only" ? (
             <div className="relative inline-block font-sans text-[16px] font-normal leading-[20px] text-[#B8C4D4] -mb-0.5">
@@ -126,7 +125,7 @@ function UnifiedProductCard({
               product.price > 0 && product.stockStatus !== "enquiry-only" ? "text-[32px] leading-[36px]" : "text-[20px] sm:text-[22px] leading-[28px]"
             )}
           >
-            {product.price > 0 && product.stockStatus !== "enquiry-only" ? <>{formatINR(product.price)}<span className="ml-1 text-[14px] font-semibold text-muted">+ GST</span></> : "Price on request"}
+            {product.price > 0 && product.stockStatus !== "enquiry-only" ? <>{formatINR(product.price)}<span className="ml-1 whitespace-nowrap text-[14px] font-semibold text-muted">+ GST</span></> : "Price on request"}
           </span>
         </div>
 

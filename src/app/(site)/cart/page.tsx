@@ -55,7 +55,7 @@ async function CartContent() {
           <Card className="p-7 md:p-8">
             <h2 className="text-title">Your cart is empty</h2>
             <p className="mt-3 text-body text-muted">Choose a model to get started.</p>
-            <ButtonLink href="/compare-models" className="mt-6">
+            <ButtonLink href="/our-product" className="mt-6">
               Browse products
             </ButtonLink>
           </Card>
@@ -110,7 +110,7 @@ async function CartContent() {
               </Card>
 
               <div className="mt-6 flex flex-wrap gap-4">
-                <ButtonLink href="/compare-models" variant="secondary">
+                <ButtonLink href="/our-product" variant="secondary">
                   Continue shopping
                 </ButtonLink>
                 <ButtonLink href="/institutional-quote" variant="secondary">

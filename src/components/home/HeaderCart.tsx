@@ -115,7 +115,7 @@ export function HeaderCart({ initialCart, className }: HeaderCartProps) {
         <div
           role="dialog"
           aria-label="Shopping Cart Quick View"
-          className="absolute right-0 top-[calc(100%+10px)] z-50 w-[340px] sm:w-[400px] overflow-hidden rounded-2xl border border-line bg-white shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+          className="fixed inset-x-4 top-[calc(var(--header-height)+4px)] z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+10px)] sm:w-[400px] overflow-hidden rounded-2xl border border-line bg-white shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-line/70 bg-soft/40 px-5 py-3.5">
@@ -164,7 +164,6 @@ export function HeaderCart({ initialCart, className }: HeaderCartProps) {
                           src={line.product.image.src}
                           alt={line.product.title}
                           fill
-                          unoptimized={line.product.image.src.startsWith("http")}
                           className="object-cover"
                           sizes="60px"
                         />
@@ -217,7 +216,7 @@ export function HeaderCart({ initialCart, className }: HeaderCartProps) {
               {/* Subtotal & Free Delivery Banner */}
               <div className="border-t border-line/70 bg-soft/30 px-5 py-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted">Subtotal (incl. GST):</span>
+                  <span className="text-muted">Subtotal (excl. GST):</span>
                   <span className="font-heading text-sm font-extrabold text-navy">
                     {formatINR(cart.total)}
                   </span>

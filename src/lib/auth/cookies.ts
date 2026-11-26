@@ -14,7 +14,7 @@ export const SESSION_COOKIE: Record<SessionTier, string> = {
   customer: "rmax_customer_session",
 };
 
-const MAX_AGE_SECONDS = Math.floor(ABSOLUTE_SESSION_MS / 1000); // 7 days — cookie dies exactly when the token would anyway
+const MAX_AGE_SECONDS = Math.floor(ABSOLUTE_SESSION_MS / 1000); // 30 days — cookie dies exactly when the token would anyway
 
 export async function getSessionCookie(tier: SessionTier): Promise<string | undefined> {
   const jar = await cookies();

@@ -22,14 +22,14 @@ export function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
   return (
     <figure className="relative flex flex-col md:flex-row items-stretch overflow-hidden rounded-[28px] sm:rounded-[36px] border border-[#D9E4F2] md:rounded-[40px] bg-gradient-to-b from-[#BFD4F4] via-[#E9F0FD] to-[#BCD0F0]">
       {/* Product Image Section */}
-      <div className="relative min-h-[260px] md:min-h-[360px] md:w-[280px] lg:w-[360px] xl:min-h-[460px] xl:w-[480px] shrink-0 overflow-hidden flex items-center justify-center">
+      <div className="relative min-h-[260px] md:min-h-[360px] md:w-[300px] lg:w-[360px] xl:min-h-[460px] xl:w-[480px] shrink-0 overflow-hidden flex items-center justify-center">
         {t.image && (
           <Image
             src={t.image.src}
             alt={t.image.alt}
             width={t.image.width}
             height={t.image.height}
-            className="absolute inset-0 size-full object-cover object-center md:object-left"
+            className="absolute inset-0 size-full object-cover object-center lg:object-left"
           />
         )}
         {t.product && (
@@ -40,7 +40,7 @@ export function FeaturedTestimonial({ t }: { t: TestimonialDTO }) {
       </div>
 
       {/* Featured Quote Section - overlaps the image on the left by 32px so the photo seamlessly shows behind the rounded card corners */}
-      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[24px] md:rounded-[36px] -mt-5 md:mt-0 md:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-7 md:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
+      <div className="relative z-10 flex flex-1 flex-col justify-between rounded-[24px] md:rounded-[36px] -mt-5 md:mt-0 lg:-ml-6 xl:-ml-8 bg-gradient-to-br from-[#18427F] to-[#245CA4] p-6 sm:p-7 md:p-8 xl:p-12 text-white shadow-[0_12px_36px_rgba(10,37,88,0.18)]">
         {/* Quote text row with cleanly aligned quotation mark at top-right */}
         <div className="relative flex items-start justify-between gap-6">
           <blockquote className="font-heading font-semibold text-[18px]/[26px] sm:text-[20px]/[28px] md:text-[22px]/[32px] lg:text-[26px]/[38px] xl:text-[32px]/[46px] tracking-[0.01em] text-[#FDFDFD] max-w-[641px] pr-12 sm:pr-16 md:pr-20">

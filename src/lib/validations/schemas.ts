@@ -1,16 +1,17 @@
 import { z } from "zod";
+import { capitalizeWords } from "@/lib/input-format";
 import { CONTACT_MODELS, ENQUIRY_TYPES, INSTITUTION_TYPES } from "@/lib/enums";
-import { cleanText, email, optionalText, password, phone, text } from "./common";
+import { cleanText, email, optionalName, optionalText, password, phone, pincode, properName, text } from "./common";
 
 /* ---------- Institutional quote ---------- */
 export const quoteRequestSchema = z.object({
-  organizationName: text("Organization name", 150),
+  organizationName: properName("Organization name", 150),
   institutionType: z.enum(INSTITUTION_TYPES, { error: "Select an institution type" }),
   contactPerson: z
     .string({ error: "Contact person is required" })
-    .transform(cleanText)
+    .transform((v) => capitalizeWords(cleanText(v)))
     .pipe(z.string().min(2, "Contact person name is required").max(100)),
-  role: optionalText(80),
+  role: optionalName(80),
   email,
   phone,
   // Any published product slug (or "help-me-choose"); existence is checked against the DB in the API route.
@@ -34,7 +35,7 @@ export type QuoteRequestData = z.output<typeof quoteRequestSchema>;
 export const contactSchema = z.object({
   name: z
     .string({ error: "Full name is required" })
-    .transform(cleanText)
+    .transform((v) => capitalizeWords(cleanText(v)))
     .pipe(
       z
         .string()
@@ -87,10 +88,10 @@ export type LoginInput = z.input<typeof loginSchema>;
 
 export const registerSchema = z
   .object({
-    name: text("Full name"),
+    name: properName("Full name"),
     email,
     phone,
-    organization: optionalText(),
+    organization: optionalName(),
     password,
     confirmPassword: z.string().min(1, "Confirm your password"),
     terms: z.literal(true, { error: "Please accept the Terms & Conditions" }),
@@ -116,21 +117,21 @@ export type ResetPasswordInput = z.input<typeof resetPasswordSchema>;
 
 /* ---------- Account ---------- */
 export const profileSchema = z.object({
-  name: text("Full name"),
-  organization: optionalText(),
+  name: properName("Full name"),
+  organization: optionalName(),
   phone: phone.optional(),
 });
 export type ProfileInput = z.input<typeof profileSchema>;
 
 export const addressSchema = z.object({
-  organization: text("Organization"),
-  recipient: optionalText(),
-  department: optionalText(),
+  organization: properName("Organization"),
+  recipient: optionalName(),
+  department: optionalName(),
   street: text("Street address"),
   line2: optionalText(),
-  city: text("City"),
-  state: text("State"),
-  postalCode: text("Postal code", 12),
+  city: properName("City"),
+  state: properName("State", 60),
+  postalCode: pincode,
   country: text("Country"),
 });
 export type AddressInput = z.input<typeof addressSchema>;
@@ -159,27 +160,27 @@ export const changePasswordSchema = z
 export type ChangePasswordInput = z.input<typeof changePasswordSchema>;
 
 /* ---------- Cart ---------- */
-export const cartAddSchema = z.object({ slug: z.string().min(1).max(40), quantity: z.number().int().min(1).max(5).optional() });
+export const cartAddSchema = z.object({ slug: z.string().min(1).max(100), quantity: z.number().int().min(1).max(5).optional() });
 export const cartUpdateSchema = z.object({
-  slug: z.string().min(1).max(40),
+  slug: z.string().min(1).max(100),
   quantity: z.number().int().min(0).max(5), // 0 = remove
 });
 
 /* ---------- Checkout ---------- */
-export const PAYMENT_METHODS = ["Online payment · example selection"] as const;
+export const PAYMENT_METHODS = ["Cash on Delivery (COD)", "Online payment"] as const;
 
 export const checkoutSchema = z
   .object({
-    fullName: text("Full name"),
+    fullName: properName("Full name"),
     email,
     phone: text("Phone for delivery", 20).pipe(phone),
-    organization: text("Organization / institution"),
-    department: text("Department / recipient"),
+    organization: properName("Organization / institution", 150),
+    department: optionalName(),
     street: text("Street address"),
     line2: optionalText(),
-    city: text("City"),
-    state: text("State", 60).pipe(z.string().min(1)),
-    postalCode: text("Postal code", 12),
+    city: properName("City"),
+    state: properName("State", 60),
+    postalCode: pincode,
     country: text("Country"),
     notes: optionalText(1000),
     billingSameAsShipping: z.boolean(),

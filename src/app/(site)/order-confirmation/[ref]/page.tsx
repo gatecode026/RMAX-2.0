@@ -52,7 +52,7 @@ async function Confirmation({ params }: { params: Promise<{ ref: string }> }) {
               <p className="mt-4 text-body-sm leading-6 text-muted">
                 3–5 day delivery · Free shipping
                 <br />
-                {order.shippingAddress.organization} · {order.shippingAddress.department}
+                {[order.shippingAddress.organization, order.shippingAddress.department].filter(Boolean).join(" · ")}
                 <br />
                 Illustrative address on order detail
               </p>
@@ -67,7 +67,7 @@ async function Confirmation({ params }: { params: Promise<{ ref: string }> }) {
 
           <div className="flex flex-wrap gap-4">
             <ButtonLink href={`/account/orders/${order.reference}`}>View order &amp; tracking</ButtonLink>
-            <ButtonLink href="/compare-models" variant="secondary">
+            <ButtonLink href="/our-product" variant="secondary">
               Continue shopping
             </ButtonLink>
           </div>
