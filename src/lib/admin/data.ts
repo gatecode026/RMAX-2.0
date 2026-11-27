@@ -51,7 +51,7 @@ export async function getAdminDashboardOverview() {
       User.countDocuments({ $or: [{ role: "customer" }, { role: { $exists: false }, email: { $nin: NON_CUSTOMER_EMAILS } }] }),
       User.distinct("organization"),
       ContactMessage.find().sort({ createdAt: -1 }).limit(5).lean(), // only the 5 newest are shown
-      Product.find().select("name title slug price specs.power specs.weight specs.dailyCapacity image.src stock category sortOrder createdAt updatedAt").sort({ sortOrder: 1 }).lean(),
+      Product.find().select("name title slug sku price specs.power specs.weight specs.dailyCapacity image.src stock category sortOrder createdAt updatedAt").sort({ sortOrder: 1 }).lean(),
       ServiceRequest.aggregate<{ _id: string; n: number }>([{ $group: { _id: "$status", n: { $sum: 1 } } }]),
       ServiceRequest.find().sort({ createdAt: -1 }).limit(50).lean(),
       Institution.find().sort({ createdAt: -1 }).limit(50).lean(),
@@ -71,17 +71,34 @@ export async function getAdminDashboardOverview() {
       ].map((s) => String(s).trim().toLowerCase())
     );
 
+    // Month-over-month change (this calendar month vs the previous one); 0 when neither month has data.
+    const today = new Date();
+    const thisStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const prevStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const pct = (cur: number, prev: number) => (prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : 0);
+    const inRange = (d: Date | string | undefined, from: Date, to: Date) => { const t = new Date(d || 0).getTime(); return t >= from.getTime() && t < to.getTime(); };
+    const monthOrders = (from: Date, to: Date) => dbOrders.filter((o) => inRange(o.createdAt, from, to));
+    const curOrders = monthOrders(thisStart, new Date(8.64e15));
+    const prevOrders = monthOrders(prevStart, thisStart);
+    const sum = (l: typeof dbOrders) => l.reduce((n, o) => n + (o.total || 0), 0);
+    const customerFilter: Record<string, unknown> = { $or: [{ role: "customer" }, { role: { $exists: false }, email: { $nin: NON_CUSTOMER_EMAILS } }] };
+    const [curCustomers, prevCustomers, curInst, prevInst] = await Promise.all([
+      User.countDocuments({ ...customerFilter, createdAt: { $gte: thisStart } }),
+      User.countDocuments({ ...customerFilter, createdAt: { $gte: prevStart, $lt: thisStart } }),
+      Institution.countDocuments({ createdAt: { $gte: thisStart } }),
+      Institution.countDocuments({ createdAt: { $gte: prevStart, $lt: thisStart } }),
+    ]);
+
     const kpis: KpiData = {
       totalOrders: totalOrdersCount,
-      ordersGrowth: 0,
+      ordersGrowth: pct(curOrders.length, prevOrders.length),
       totalCustomers: liveCustomers,
-      customersGrowth: 0,
+      customersGrowth: pct(curCustomers, prevCustomers),
       totalRevenue: liveRevenue,
-      revenueGrowth: 0,
+      revenueGrowth: pct(sum(curOrders), sum(prevOrders)),
       activeInstitutions: uniqueInstitutions.size,
-      institutionsGrowth: 0,
+      institutionsGrowth: pct(curInst, prevInst),
     };
-
     // 2. Genuine Recent Orders & Quotations (newest 50 only; the dashboard table shows 5)
     const RECENT_LIMIT = 50;
     const byNewest = <T extends { createdAt?: Date | string }>(a: T, b: T) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
@@ -93,10 +110,10 @@ export async function getAdminDashboardOverview() {
       combinedRecent.push({
         id: String(o._id),
         orderNumber: o.reference || `#${String(o._id).slice(-5).toUpperCase()}`,
-        customerName: o.contact?.fullName || "Institutional Client",
-        institution: o.shippingAddress?.organization || "Institutional Facility",
-        product: o.items?.[0]?.shortName || o.items?.[0]?.title || "Pro-Max",
-        productSlug: o.items?.[0]?.slug || "pro-max",
+        customerName: o.contact?.fullName || "—",
+        institution: o.shippingAddress?.organization || "—",
+        product: o.items?.[0]?.shortName || o.items?.[0]?.title || "—",
+        productSlug: o.items?.[0]?.slug || "",
         amount: o.total || 0,
         status:
           o.status === "delivered"
@@ -159,15 +176,15 @@ export async function getAdminDashboardOverview() {
           name: p.name,
           title: p.title || p.name,
           price: p.price || 0,
-          specs: p.specs
-            ? `${p.specs.power || ""} • ${p.specs.weight || ""} • ${p.specs.dailyCapacity || ""}`
-            : "OEM Standard",
+          // Only documented specs; nothing is filled in.
+          specs: [p.specs?.power, p.specs?.weight, p.specs?.dailyCapacity].filter((v) => v && v !== "Not specified").join(" • "),
           ordersCount,
           image:
             p.image?.src ||
             `/images/products/list-${p.slug === "pad-vending" ? "basic" : p.slug}.png`,
         };
       })
+      .filter((p) => p.ordersCount > 0) // only products customers actually ordered or asked a quote for
       .sort((a, b) => b.ordersCount - a.ordersCount)
       .slice(0, 5);
 
@@ -246,12 +263,12 @@ export async function getAdminDashboardOverview() {
 
     // 8. Genuine Inventory from Products
     const inventory: InventoryItem[] = dbProducts.slice(0, 50).map((p) => {
-      const stock = typeof p.stock === "number" ? p.stock : 25;
+      const stock = typeof p.stock === "number" ? p.stock : 0;
       const reorderPoint = 10;
       return {
         id: String(p._id),
         name: p.title || p.name,
-        sku: `RMAX-${p.slug.toUpperCase().replace(/-/g, "")}`,
+        sku: p.sku || "—",
         category: p.category === "pad-vending" ? "Vending Machines" : "Finished Machines",
         inStock: stock,
         allocated: 0,
@@ -272,7 +289,7 @@ export async function getAdminDashboardOverview() {
       name: u.name,
       email: u.email,
       role: u.role === "super_admin" || u.role === "admin" ? "Super Admin" : u.role === "manager" ? "Manager" : "Customer",
-      department: u.department || "Operations",
+      department: u.department || "—",
       status: u.status === "inactive" ? "Inactive" : "Active",
       lastActive: new Date(u.lastLoginAt || u.updatedAt || u.createdAt || Date.now()).toLocaleDateString("en-GB", {
         day: "2-digit",

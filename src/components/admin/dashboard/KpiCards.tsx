@@ -89,9 +89,9 @@ export function KpiCards({ data }: KpiCardsProps) {
 
             {/* Bottom row: Trend badge & comparison */}
             <div className="mt-3 flex items-center gap-2">
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-[11px] font-bold text-[#059669]">
-                <ArrowUp className="size-3 stroke-[3]" />
-                <span>+{card.growth}%</span>
+              <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${card.growth < 0 ? "bg-[#FEF2F2] text-[#DC2626]" : "bg-[#ECFDF5] text-[#059669]"}`}>
+                <ArrowUp className={`size-3 stroke-[3] ${card.growth < 0 ? "rotate-180" : ""}`} />
+                <span>{card.growth > 0 ? "+" : ""}{card.growth}%</span>
               </span>
               <span className="text-[11.5px] font-medium text-[#94A3B8]">
                 {card.period}

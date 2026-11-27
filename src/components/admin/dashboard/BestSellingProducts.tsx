@@ -51,7 +51,7 @@ export function BestSellingProducts({ products }: BestSellingProductsProps) {
                 >
                   {p.title}
                 </Link>
-                <p className="text-[12px] text-[#718096] truncate">{p.specs}</p>
+                {p.specs ? <p className="text-[12px] text-[#718096] truncate">{p.specs}</p> : null}
 
                 {/* Progress bar */}
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#EEF2F6]">

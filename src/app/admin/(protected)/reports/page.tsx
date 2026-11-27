@@ -3,10 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import AdminPageHeader from "@/components/admin/common/AdminPageHeader";
 import { Download, TrendingUp, ShieldCheck, Leaf, School, BarChart3, PieChart, RefreshCw } from "lucide-react";
-import { CustomSelect } from "@/components/ui/CustomSelect";
 
 export default function AdminReportsPage() {
-  const [period, setPeriod] = useState("FY 2026-27");
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<any>(null);
 
@@ -32,56 +30,24 @@ export default function AdminReportsPage() {
   const kpis = overview?.kpis || { totalRevenue: 0, totalOrders: 0, activeInstitutions: 0 };
   const salesOverview = overview?.salesOverview || [];
 
-  // Calculate environmental and institutional impact genuinely from live DB figures
-  const unitsTotal = kpis.totalOrders || 0;
-  const institutionsTotal = kpis.activeInstitutions || 0;
-  const padsIncinerated = unitsTotal > 0 ? (unitsTotal * 7500).toLocaleString("en-IN") : "0";
-  const wasteDiverted = unitsTotal > 0 ? `${(unitsTotal * 0.15).toFixed(1)} Tonnes` : "0 Tonnes";
-  const revenueRunRate = kpis.totalRevenue > 0 ? `₹${(kpis.totalRevenue / 100000).toFixed(2)} Lakhs` : "₹0";
+  // Every figure below comes straight from the database; nothing is estimated.
+  const avgOrder = kpis.totalOrders > 0 ? Math.round(kpis.totalRevenue / kpis.totalOrders) : 0;
+  const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
   const impactMetrics = [
-    {
-      title: "Pads Safely Incinerated",
-      value: padsIncinerated,
-      sub: "Estimated bio-hazard waste averted",
-      icon: ShieldCheck,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-    {
-      title: "Landfill Waste Diverted",
-      value: wasteDiverted,
-      sub: "Plastic & toxic footprint prevented",
-      icon: Leaf,
-      color: "text-teal-600",
-      bg: "bg-teal-50",
-    },
-    {
-      title: "Partner Campuses Reached",
-      value: String(institutionsTotal),
-      sub: "Verified institutions in database",
-      icon: School,
-      color: "text-[#10469B]",
-      bg: "bg-blue-50",
-    },
-    {
-      title: "Realized Business Value",
-      value: revenueRunRate,
-      sub: "Institutional proposals & orders",
-      icon: TrendingUp,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
-    },
+    { title: "Total Orders", value: String(kpis.totalOrders), sub: "Customer orders placed", icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { title: "Total Revenue", value: inr(kpis.totalRevenue), sub: "Sum of order totals (excl. GST)", icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { title: "Average Order Value", value: inr(avgOrder), sub: "Revenue per order", icon: Leaf, color: "text-teal-600", bg: "bg-teal-50" },
+    { title: "Institutions", value: String(kpis.activeInstitutions), sub: "Distinct institutions in the database", icon: School, color: "text-[#10469B]", bg: "bg-blue-50" },
   ];
 
   const handleExportReport = () => {
     const reportData = [
       ["Metric", "Value"],
-      ["Total Quoted & Orders", String(kpis.totalOrders)],
+      ["Total Orders", String(kpis.totalOrders)],
       ["Total Revenue", `₹${kpis.totalRevenue}`],
       ["Active Institutions", String(kpis.activeInstitutions)],
-      ["Pads Safely Incinerated", padsIncinerated],
-      ["Landfill Waste Diverted", wasteDiverted],
+      ["Average Order Value", String(avgOrder)],
     ];
     const csvContent = "data:text/csv;charset=utf-8," + reportData.map((e) => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -98,22 +64,14 @@ export default function AdminReportsPage() {
   return (
     <div>
       <AdminPageHeader
-        title="Reports & Environmental Impact"
-        subtitle="Track institutional hygiene outcomes, pads incinerated, environmental diversion metrics, and sales calculated directly from database records."
+        title="Reports"
+        subtitle="Orders, revenue and institutions, calculated directly from database records."
         breadcrumbs={[
           { label: "Dashboard", href: "/admin/dashboard" },
           { label: "Reports" },
         ]}
         actions={
           <div className="flex shrink-0 items-center gap-2.5">
-            <div className="w-36">
-              <CustomSelect
-                value={period}
-                onChange={(val) => setPeriod(val)}
-                options={["FY 2026-27", "Last 6 Months", "Full Year 2026"]}
-                triggerClassName="h-9 font-semibold text-slate-700 shadow-xs"
-              />
-            </div>
             <button
               onClick={handleExportReport}
               className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[#10469B] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#0B2450] transition"
@@ -159,8 +117,8 @@ export default function AdminReportsPage() {
             <div className="rounded-xl border border-[#E5EBF4] bg-white p-5 shadow-sm lg:col-span-8">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
-                  <h3 className="font-bold text-[#0B2450]">Monthly Institutional Orders & Inquiries</h3>
-                  <p className="text-xs text-slate-500">Actual timeline of transactions recorded in MongoDB</p>
+                  <h3 className="font-bold text-[#0B2450]">Monthly Orders</h3>
+                  <p className="text-xs text-slate-500">Orders and revenue per month</p>
                 </div>
                 <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-xs font-semibold text-slate-600">
                   <BarChart3 className="h-3.5 w-3.5" />
@@ -206,11 +164,11 @@ export default function AdminReportsPage() {
 
               <div className="mt-5 space-y-4">
                 <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                  <span className="text-xs font-semibold text-slate-600">Active Proposals / Orders</span>
+                  <span className="text-xs font-semibold text-slate-600">Orders</span>
                   <span className="font-bold text-[#10469B]">{kpis.totalOrders}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                  <span className="text-xs font-semibold text-slate-600">Registered Campuses</span>
+                  <span className="text-xs font-semibold text-slate-600">Institutions</span>
                   <span className="font-bold text-emerald-600">{kpis.activeInstitutions}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
@@ -218,7 +176,7 @@ export default function AdminReportsPage() {
                   <span className="font-bold text-slate-800">{kpis.totalCustomers}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                  <span className="text-xs font-semibold text-slate-600">Total Quoted / Realized Value</span>
+                  <span className="text-xs font-semibold text-slate-600">Total Revenue</span>
                   <span className="font-bold text-[#0B2450]">₹{kpis.totalRevenue.toLocaleString("en-IN")}</span>
                 </div>
               </div>

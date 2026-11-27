@@ -57,14 +57,14 @@ export default async function AdminDashboardPage() {
 
         {/* Right Sidebar Column (~0.7fr / 3 cols): Pro-Max Promotion + Quick Actions + Service Status */}
         <div className="lg:col-span-3 flex flex-col gap-6 min-w-0">
-          <ProMaxPromoCard />
+          <ProMaxPromoCard product={data.bestSellers[0]} />
           <QuickActions />
           <ServiceStatusChart summary={data.serviceSummary} />
         </div>
       </div>
 
       {/* 4. Full-Width Impact Banner */}
-      <ImpactBanner />
+      <ImpactBanner orders={data.kpis.totalOrders} institutions={data.kpis.activeInstitutions} />
     </div>
   );
 }
