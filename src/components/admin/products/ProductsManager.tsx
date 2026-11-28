@@ -24,6 +24,7 @@ import {
   PackageX,
   FileEdit,
   ImageOff,
+  RotateCcw,
 } from "lucide-react";
 
 interface ProductImage {
@@ -44,6 +45,8 @@ interface ProductRow {
   stock: number;
   stockStatus: string;
   status: "draft" | "published" | "archived";
+  isDeleted?: boolean;
+  deletedAt?: string;
   image?: ProductImage;
   updatedAt: string;
 }
@@ -54,12 +57,14 @@ interface Summary {
   draft: number;
   archived: number;
   outOfStock: number;
+  deleted: number;
 }
 
 const STATUS_STYLES: Record<string, string> = {
   published: "bg-emerald-50 text-emerald-700 border-emerald-200",
   draft: "bg-amber-50 text-amber-700 border-amber-200",
   archived: "bg-slate-100 text-slate-600 border-slate-200",
+  deleted: "bg-rose-50 text-rose-700 border-rose-200",
 };
 
 function formatINR(n: number) {
@@ -77,7 +82,7 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
   const { success: toastSuccess, error: toastError } = useToast();
 
   const [products, setProducts] = useState<ProductRow[]>([]);
-  const [summary, setSummary] = useState<Summary>({ total: 0, published: 0, draft: 0, archived: 0, outOfStock: 0 });
+  const [summary, setSummary] = useState<Summary>({ total: 0, published: 0, draft: 0, archived: 0, outOfStock: 0, deleted: 0 });
   const [pagination, setPagination] = useState({ page: 1, pageSize: 20, total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +93,17 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
   const [page, setPage] = useState(1);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ProductRow | null>(null);
+  const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<ProductRow | null>(null);
 
   // Bulk selection — scoped to the products currently on screen.
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
+  const [bulkPermanentOpen, setBulkPermanentOpen] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [failures, setFailures] = useState<{ id: string; name: string; error: string }[]>([]);
+
+  const isTrash = status === "deleted";
 
   const debouncedSearch = useDebounced(search, 300);
 
@@ -161,14 +171,17 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
       setProducts((prev) => prev.filter((p) => !gone.has(p._id)));
       setSelected(new Set(failed.map((f) => f.id)));
       setFailures(failed);
-      setSummary((prev) => ({ ...prev, total: Math.max(0, prev.total - deleted.length) }));
+      setSummary((prev) => ({
+        ...prev,
+        total: Math.max(0, prev.total - deleted.length),
+        deleted: prev.deleted + deleted.length,
+      }));
       setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - deleted.length) }));
 
-      if (deleted.length) toastSuccess(deleted.length + " product" + (deleted.length === 1 ? "" : "s") + " deleted.");
+      if (deleted.length) toastSuccess(deleted.length + " product" + (deleted.length === 1 ? "" : "s") + " moved to Trash.");
       if (failed.length) toastError(failed.length + " product" + (failed.length === 1 ? "" : "s") + " could not be deleted.");
       setBulkOpen(false);
 
-      // The last page may now be empty: step back one page (filters are kept); otherwise refill the page.
       if (deleted.length) {
         if (gone.size >= pageIds.length && page > 1) setPage(page - 1);
         else void load();
@@ -176,6 +189,85 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
     } catch (e) {
       toastError(e instanceof Error ? e.message : "Failed to delete selected products");
       setBulkOpen(false);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function handleBulkRestore() {
+    const ids = pageIds.filter((id) => selected.has(id));
+    if (!ids.length || bulkBusy) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/admin/products/bulk-restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to restore products");
+      const restored: string[] = json.restored ?? [];
+      const failed: { id: string; name: string; error: string }[] = json.failed ?? [];
+
+      const gone = new Set(restored);
+      setProducts((prev) => prev.filter((p) => !gone.has(p._id)));
+      setSelected(new Set(failed.map((f) => f.id)));
+      setFailures(failed);
+      setSummary((prev) => ({
+        ...prev,
+        deleted: Math.max(0, prev.deleted - restored.length),
+        total: prev.total + restored.length,
+      }));
+
+      if (restored.length) toastSuccess(restored.length + " product" + (restored.length === 1 ? "" : "s") + " restored.");
+      if (failed.length) toastError(failed.length + " product" + (failed.length === 1 ? "" : "s") + " could not be restored.");
+      setBulkRestoreOpen(false);
+
+      if (restored.length) {
+        if (gone.size >= pageIds.length && page > 1) setPage(page - 1);
+        else void load();
+      }
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "Failed to restore selected products");
+      setBulkRestoreOpen(false);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function handleBulkPermanentDelete() {
+    const ids = pageIds.filter((id) => selected.has(id));
+    if (!ids.length || bulkBusy) return;
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/admin/products/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, permanent: true }),
+      });
+      const json = await res.json();
+      if (res.status === 401 || res.status === 403 || res.status === 422) throw new Error(json.error || "Not allowed");
+      const deleted: string[] = json.deleted ?? [];
+      const failed: { id: string; name: string; error: string }[] = json.failed ?? [];
+
+      const gone = new Set(deleted);
+      setProducts((prev) => prev.filter((p) => !gone.has(p._id)));
+      setSelected(new Set(failed.map((f) => f.id)));
+      setFailures(failed);
+      setSummary((prev) => ({ ...prev, deleted: Math.max(0, prev.deleted - deleted.length) }));
+      setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - deleted.length) }));
+
+      if (deleted.length) toastSuccess(deleted.length + " product" + (deleted.length === 1 ? "" : "s") + " permanently deleted.");
+      if (failed.length) toastError(failed.length + " product" + (failed.length === 1 ? "" : "s") + " could not be deleted.");
+      setBulkPermanentOpen(false);
+
+      if (deleted.length) {
+        if (gone.size >= pageIds.length && page > 1) setPage(page - 1);
+        else void load();
+      }
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "Failed to permanently delete selected products");
+      setBulkPermanentOpen(false);
     } finally {
       setBulkBusy(false);
     }
@@ -210,6 +302,21 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
     }
   }
 
+  async function handleRestore(p: ProductRow) {
+    setActioningId(p._id);
+    try {
+      const res = await fetch(`/api/admin/products/${p._id}/restore`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to restore product");
+      toastSuccess(`Product “${p.name}” restored to catalogue.`);
+      load();
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "Failed to restore product");
+    } finally {
+      setActioningId(null);
+    }
+  }
+
   async function handleDelete() {
     if (!confirmDelete) return;
     setActioningId(confirmDelete._id);
@@ -223,7 +330,7 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
         return;
       }
       if (!res.ok || !json.success) throw new Error(json.error || "Failed to delete");
-      toastSuccess("Product deleted.");
+      toastSuccess("Product moved to Trash. You can recover it anytime.");
       setConfirmDelete(null);
       load();
     } catch (e) {
@@ -233,12 +340,36 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
     }
   }
 
-  const cards: { label: string; value: number; icon: React.ComponentType<{ className?: string }>; tone: string }[] = [
-    { label: "Total Products", value: summary.total, icon: Package, tone: "text-[#10469B] bg-blue-50" },
-    { label: "Published", value: summary.published, icon: PackageCheck, tone: "text-emerald-700 bg-emerald-50" },
-    { label: "Draft", value: summary.draft, icon: FileEdit, tone: "text-amber-700 bg-amber-50" },
+  async function handlePermanentDelete() {
+    if (!confirmPermanentDelete) return;
+    setActioningId(confirmPermanentDelete._id);
+    try {
+      const res = await fetch(`/api/admin/products/${confirmPermanentDelete._id}?permanent=true`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.status === 404) {
+        toastSuccess("This product was already deleted — list refreshed.");
+        setConfirmPermanentDelete(null);
+        load();
+        return;
+      }
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to permanently delete product");
+      toastSuccess("Product permanently deleted.");
+      setConfirmPermanentDelete(null);
+      load();
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : "Failed to permanently delete product");
+    } finally {
+      setActioningId(null);
+    }
+  }
+
+  const cards: { label: string; value: number; icon: React.ComponentType<{ className?: string }>; tone: string; statusFilter?: string }[] = [
+    { label: "Total Products", value: summary.total, icon: Package, tone: "text-[#10469B] bg-blue-50", statusFilter: "" },
+    { label: "Published", value: summary.published, icon: PackageCheck, tone: "text-emerald-700 bg-emerald-50", statusFilter: "published" },
+    { label: "Draft", value: summary.draft, icon: FileEdit, tone: "text-amber-700 bg-amber-50", statusFilter: "draft" },
     { label: "Out of Stock", value: summary.outOfStock, icon: PackageX, tone: "text-red-700 bg-red-50" },
-    { label: "Archived", value: summary.archived, icon: Archive, tone: "text-slate-600 bg-slate-100" },
+    { label: "Archived", value: summary.archived, icon: Archive, tone: "text-slate-600 bg-slate-100", statusFilter: "archived" },
+    { label: "Trash / Deleted", value: summary.deleted, icon: Trash2, tone: "text-rose-700 bg-rose-50", statusFilter: "deleted" },
   ];
 
   return (
@@ -261,17 +392,63 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
       />
 
       {/* Summary cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {cards.map((c) => (
-          <div key={c.label} className="rounded-xl border border-[#E5EBF4] bg-white p-4 shadow-sm">
-            <div className={`mb-2 inline-flex size-9 items-center justify-center rounded-lg ${c.tone}`}>
-              <c.icon className="h-4.5 w-4.5" />
-            </div>
-            <p className="text-2xl font-bold text-[#0B2450]">{c.value}</p>
-            <p className="text-xs font-medium text-slate-500">{c.label}</p>
-          </div>
-        ))}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {cards.map((c) => {
+          const isSelected = c.statusFilter !== undefined && status === c.statusFilter;
+          return (
+            <button
+              type="button"
+              key={c.label}
+              onClick={() => {
+                if (c.statusFilter !== undefined) {
+                  setPage(1);
+                  setStatus(c.statusFilter);
+                }
+              }}
+              className={`text-left rounded-xl border bg-white p-4 shadow-sm transition-all ${
+                isSelected
+                  ? "border-[#10469B] ring-2 ring-[#10469B]/20 bg-blue-50/20"
+                  : c.statusFilter !== undefined
+                  ? "border-[#E5EBF4] hover:border-slate-300 hover:shadow"
+                  : "border-[#E5EBF4]"
+              }`}
+            >
+              <div className={`mb-2 inline-flex size-9 items-center justify-center rounded-lg ${c.tone}`}>
+                <c.icon className="h-4.5 w-4.5" />
+              </div>
+              <p className="text-2xl font-bold text-[#0B2450]">{c.value}</p>
+              <p className="text-xs font-medium text-slate-500">{c.label}</p>
+            </button>
+          );
+        })}
       </div>
+
+      {/* Trash view notice */}
+      {isTrash && (
+        <div className="mb-4 flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50/60 p-4 sm:flex-row sm:items-center sm:justify-between" role="region" aria-label="Trash view">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-rose-900">Trash / Deleted Products ({summary.deleted})</p>
+              <p className="text-xs text-rose-700">
+                Products here are hidden from the live website. You can restore them anytime or permanently delete them.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setStatus("");
+            }}
+            className="self-start sm:self-auto rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-50 shadow-sm"
+          >
+            ← Back to active products
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 flex flex-col gap-3 rounded-xl border border-[#E5EBF4] bg-white p-4 shadow-sm sm:flex-row sm:items-center">
@@ -296,10 +473,11 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
           }}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#10469B] focus:outline-none"
         >
-          <option value="">All statuses</option>
+          <option value="">All active products</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
+          <option value="deleted">🗑️ Trash / Deleted ({summary.deleted})</option>
         </select>
         <select
           value={sort}
@@ -335,13 +513,32 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
             >
               Clear selection
             </button>
-            <button
-              type="button"
-              onClick={() => setBulkOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-red-700"
-            >
-              <Trash2 className="h-4 w-4" /> Delete selected
-            </button>
+            {isTrash ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setBulkRestoreOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 shadow-sm"
+                >
+                  <RotateCcw className="h-4 w-4" /> Restore selected
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkPermanentOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-red-700 shadow-sm"
+                >
+                  <Trash2 className="h-4 w-4" /> Permanently delete selected
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setBulkOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-red-700 shadow-sm"
+              >
+                <Trash2 className="h-4 w-4" /> Move selected to Trash
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -409,9 +606,15 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
                 <tr>
                   <td colSpan={canDelete ? 9 : 8} className="px-4 py-14 text-center">
                     <Package className="mx-auto h-8 w-8 text-slate-300" />
-                    <p className="mt-2 text-sm font-semibold text-slate-600">No products found</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-600">
+                      {isTrash ? "Trash is empty" : "No products found"}
+                    </p>
                     <p className="text-xs text-slate-400">
-                      {search || status ? "Try adjusting your search or filters." : "Add your first product to get started."}
+                      {isTrash
+                        ? "Deleted products will appear here and can be recovered."
+                        : search || status
+                        ? "Try adjusting your search or filters."
+                        : "Add your first product to get started."}
                     </p>
                   </td>
                 </tr>
@@ -419,8 +622,8 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
                 products.map((p) => (
                   <tr
                     key={p._id}
-                    onClick={isAdmin ? () => router.push(`/admin/products/${p.slug}/preview`) : undefined}
-                    className={`hover:bg-[#F8FAFD] ${isAdmin ? "cursor-pointer" : ""} ${selected.has(p._id) ? "bg-[#10469B]/5" : ""}`}
+                    onClick={isAdmin && !isTrash ? () => router.push(`/admin/products/${p.slug}/preview`) : undefined}
+                    className={`hover:bg-[#F8FAFD] ${isAdmin && !isTrash ? "cursor-pointer" : ""} ${selected.has(p._id) ? "bg-[#10469B]/5" : ""}`}
                   >
                     {canDelete && (
                       <td className="w-10 px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -457,84 +660,117 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
                       <span className={p.stockStatus === "out-of-stock" ? "font-semibold text-red-600" : "text-slate-600"}>{p.stock}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${STATUS_STYLES[p.status]}`}>
-                        {p.status}
-                      </span>
+                      {isTrash || p.isDeleted ? (
+                        <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-semibold text-rose-700">
+                          Trash
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${STATUS_STYLES[p.status]}`}>
+                          {p.status}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500">{new Date(p.updatedAt).toLocaleDateString("en-IN")}</td>
                     {/* Action buttons must not trigger the row click that opens the product. */}
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/products/${p.slug}`}
-                          target="_blank"
-                          title="View on website"
-                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[#10469B]"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                        {isAdmin && (
-                        <Link
-                          href={`/admin/products/${p.slug}`}
-                          title="Edit"
-                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[#10469B]"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Link>
-                        )}
-                        {isAdmin && (
-                        <button
-                          type="button"
-                          title="Duplicate"
-                          disabled={actioningId === p._id}
-                          onClick={() => runAction(p._id, "duplicate")}
-                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[#10469B] disabled:opacity-40"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
-                        )}
-                        {isAdmin && (p.status !== "published" ? (
-                          <button
-                            type="button"
-                            title="Publish"
-                            disabled={actioningId === p._id}
-                            onClick={() => runAction(p._id, "publish")}
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-40"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                          </button>
+                        {isTrash || p.isDeleted ? (
+                          <>
+                            <button
+                              type="button"
+                              title="Recover / Restore product"
+                              disabled={actioningId === p._id}
+                              onClick={() => handleRestore(p)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-40"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" /> Recover
+                            </button>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                title="Permanently delete"
+                                disabled={actioningId === p._id}
+                                onClick={() => setConfirmPermanentDelete(p)}
+                                className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </>
                         ) : (
-                          <button
-                            type="button"
-                            title="Unpublish"
-                            disabled={actioningId === p._id}
-                            onClick={() => runAction(p._id, "unpublish")}
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-40"
-                          >
-                            <EyeOff className="h-4 w-4" />
-                          </button>
-                        ))}
-                        {isAdmin && p.status !== "archived" && (
-                          <button
-                            type="button"
-                            title="Archive"
-                            disabled={actioningId === p._id}
-                            onClick={() => runAction(p._id, "archive")}
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
-                          >
-                            <Archive className="h-4 w-4" />
-                          </button>
-                        )}
-                        {canDelete && (
-                        <button
-                          type="button"
-                          title="Delete"
-                          disabled={actioningId === p._id}
-                          onClick={() => setConfirmDelete(p)}
-                          className="rounded-md p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                          <>
+                            <Link
+                              href={`/products/${p.slug}`}
+                              target="_blank"
+                              title="View on website"
+                              className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[#10469B]"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                            {isAdmin && (
+                              <Link
+                                href={`/admin/products/${p.slug}`}
+                                title="Edit"
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[#10469B]"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Link>
+                            )}
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                title="Duplicate"
+                                disabled={actioningId === p._id}
+                                onClick={() => runAction(p._id, "duplicate")}
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-[#10469B] disabled:opacity-40"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </button>
+                            )}
+                            {isAdmin && (p.status !== "published" ? (
+                              <button
+                                type="button"
+                                title="Publish"
+                                disabled={actioningId === p._id}
+                                onClick={() => runAction(p._id, "publish")}
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-40"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                title="Unpublish"
+                                disabled={actioningId === p._id}
+                                onClick={() => runAction(p._id, "unpublish")}
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-40"
+                              >
+                                <EyeOff className="h-4 w-4" />
+                              </button>
+                            ))}
+                            {isAdmin && p.status !== "archived" && (
+                              <button
+                                type="button"
+                                title="Archive"
+                                disabled={actioningId === p._id}
+                                onClick={() => runAction(p._id, "archive")}
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
+                              >
+                                <Archive className="h-4 w-4" />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                title="Move to Trash"
+                                disabled={actioningId === p._id}
+                                onClick={() => setConfirmDelete(p)}
+                                className="rounded-md p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
@@ -573,23 +809,59 @@ export function ProductsManager({ mode, canDelete }: { mode: "admin" | "manager"
         )}
       </div>
 
+      {/* Move to Trash confirmation */}
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title={`Move “${confirmDelete?.name ?? ""}” to Trash?`}
+        description="The product will be hidden from the live website immediately. If you deleted it by accident, you can recover it anytime from the Trash / Deleted tab."
+        confirmLabel="Move to Trash"
+        busy={Boolean(confirmDelete) && actioningId === confirmDelete?._id}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
+
+      {/* Bulk Move to Trash confirmation */}
       <ConfirmDialog
         open={bulkOpen}
-        title={`Delete ${selectedCount} product${selectedCount === 1 ? "" : "s"}?`}
-        description="This permanently removes the selected products. Products referenced by an order or quotation are skipped and stay selected so you can archive them instead."
-        confirmLabel={`Delete ${selectedCount}`}
+        title={`Move ${selectedCount} product${selectedCount === 1 ? "" : "s"} to Trash?`}
+        description="These products will be removed from your live store and moved to Trash. You can recover them at any time."
+        confirmLabel={`Move ${selectedCount} to Trash`}
         busy={bulkBusy}
         onConfirm={handleBulkDelete}
         onCancel={() => setBulkOpen(false)}
       />
+
+      {/* Bulk Restore confirmation */}
       <ConfirmDialog
-        open={Boolean(confirmDelete)}
-        title={`Delete “${confirmDelete?.name ?? ""}”?`}
-        description="This permanently removes the product. If it's referenced by an existing order, deletion will be blocked — archive it instead."
-        confirmLabel="Delete product"
-        busy={Boolean(confirmDelete) && actioningId === confirmDelete?._id}
-        onConfirm={handleDelete}
-        onCancel={() => setConfirmDelete(null)}
+        open={bulkRestoreOpen}
+        title={`Restore ${selectedCount} product${selectedCount === 1 ? "" : "s"}?`}
+        description="The selected products will be restored back to your active catalogue with their original status and images."
+        confirmLabel={`Restore ${selectedCount}`}
+        busy={bulkBusy}
+        onConfirm={handleBulkRestore}
+        onCancel={() => setBulkRestoreOpen(false)}
+      />
+
+      {/* Permanent Delete confirmation */}
+      <ConfirmDialog
+        open={Boolean(confirmPermanentDelete)}
+        title={`Permanently delete “${confirmPermanentDelete?.name ?? ""}”?`}
+        description="This action CANNOT be undone. The product and its images will be permanently wiped from the database and storage. Products referenced by orders or quotations will be blocked."
+        confirmLabel="Permanently Delete"
+        busy={Boolean(confirmPermanentDelete) && actioningId === confirmPermanentDelete?._id}
+        onConfirm={handlePermanentDelete}
+        onCancel={() => setConfirmPermanentDelete(null)}
+      />
+
+      {/* Bulk Permanent Delete confirmation */}
+      <ConfirmDialog
+        open={bulkPermanentOpen}
+        title={`Permanently delete ${selectedCount} product${selectedCount === 1 ? "" : "s"}?`}
+        description="This action CANNOT be undone. The products and their images will be permanently deleted. Any products referenced by existing orders will be protected and skipped."
+        confirmLabel={`Permanently Delete ${selectedCount}`}
+        busy={bulkBusy}
+        onConfirm={handleBulkPermanentDelete}
+        onCancel={() => setBulkPermanentOpen(false)}
       />
     </div>
   );

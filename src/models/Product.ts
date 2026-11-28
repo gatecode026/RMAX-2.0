@@ -204,6 +204,9 @@ export interface IProduct {
   /** Publication workflow (PRD §4N). Public queries only ever return "published". */
   status: ProductStatus;
   publishedAt?: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date;
+  deletedBy?: Types.ObjectId;
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
   createdAt?: Date;
@@ -386,6 +389,9 @@ const productSchema = new Schema<IProduct>(
     stockMovements: [{ _id: false, type: String, change: Number, resultingQuantity: Number, reason: String, at: Date, by: String }],
     status: { type: String, enum: ["draft", "published", "archived"], default: "draft", index: true },
     publishedAt: Date,
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: Date,
+    deletedBy: { type: Schema.Types.ObjectId, ref: "User" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

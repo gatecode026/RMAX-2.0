@@ -1,8 +1,4 @@
-/**
- * Source of truth for the catalogue import (scripts/import-products.ts).
- * Facts come only from the RMAX company profile and the machinery specification catalogue.
- * Missing facts are deliberately omitted — no prices, models, certifications or invented figures.
- */
+
 import type { IProduct } from "../src/models/Product";
 
 export type Cat = IProduct["category"];

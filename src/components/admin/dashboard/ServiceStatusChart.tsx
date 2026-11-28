@@ -31,22 +31,22 @@ export function ServiceStatusChart({ summary }: ServiceStatusChartProps) {
   return (
     <div className="flex flex-col rounded-2xl border border-[#E5EBF4] bg-white p-5 shadow-[0_2px_12px_rgb(35_42_50/0.03)]">
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#10469B]/10 text-[#10469B]">
-            <Wrench className="size-4.5" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <h3 className="font-jakarta text-[15px] font-bold leading-tight text-[#202A36]">Service &amp; Installation</h3>
-            <p className="text-[11px] font-medium text-[#718096]">This month</p>
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#10469B]/10 text-[#10469B]">
+          <Wrench className="size-4.5" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-jakarta text-[14px] font-bold leading-tight text-[#202A36]">Service &amp; Installation</h3>
+          <div className="mt-0.5 flex items-center justify-between gap-2">
+            <p className="text-[11px] font-medium leading-tight text-[#718096]">This month</p>
+            <Link
+              href="/admin/service-requests"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] font-bold leading-tight text-[#10469B] hover:underline"
+            >
+              View all <ArrowRight className="size-3" aria-hidden />
+            </Link>
           </div>
         </div>
-        <Link
-          href="/admin/service-requests"
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-bold text-[#10469B] transition hover:bg-[#10469B]/5"
-        >
-          View all <ArrowRight className="size-3" aria-hidden />
-        </Link>
       </div>
 
       {/* Donut */}
@@ -80,7 +80,7 @@ export function ServiceStatusChart({ summary }: ServiceStatusChartProps) {
         </div>
       </div>
 
-      {total === 0 && <p className="mt-3 text-center text-[12px] text-[#718096]">No service requests yet this month.</p>}
+      {total === 0 && <p className="mt-3 text-center text-[12px] leading-snug text-[#718096]">No service requests yet this month.</p>}
 
       {/* Status tiles */}
       <div className="mt-5 grid grid-cols-2 gap-2.5">
@@ -90,7 +90,7 @@ export function ServiceStatusChart({ summary }: ServiceStatusChartProps) {
             <div key={item.label} className="rounded-xl px-3 py-2.5" style={{ backgroundColor: item.soft }}>
               <div className="flex items-center gap-1.5">
                 <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} aria-hidden />
-                <span className="text-[11.5px] font-semibold text-slate-600">{item.label}</span>
+                <span className="whitespace-nowrap text-[11.5px] font-semibold leading-tight text-slate-600">{item.label}</span>
               </div>
               <div className="mt-1 flex items-baseline gap-1.5">
                 <span className="font-jakarta text-[20px] font-extrabold leading-none tabular-nums text-[#202A36]">{item.value}</span>

@@ -28,6 +28,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: `${SITE_NAME} — Advanced hygiene devices and products`, template: `%s | ${SITE_NAME}` },
   description: "Sanitary napkin incinerators — Basic, Pro and Pro-Max. Free shipping, exchange only, 1 year warranty.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico?v=3", sizes: "any" },
+      { url: "/icon.png?v=3", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [
+      { url: "/apple-icon.png?v=3", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,

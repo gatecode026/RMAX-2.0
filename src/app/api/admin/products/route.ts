@@ -47,7 +47,12 @@ export async function GET(req: NextRequest) {
     }
     if (category) filter.category = category;
     if (brandId) filter.brandId = brandId;
-    if (status) filter.status = status;
+    if (status === "deleted") {
+      filter.isDeleted = true;
+    } else {
+      filter.isDeleted = { $ne: true };
+      if (status) filter.status = status;
+    }
     if (stockStatus) filter.stockStatus = stockStatus;
     if (minPrice || maxPrice) {
       const priceFilter: Record<string, number> = {};
@@ -64,18 +69,22 @@ export async function GET(req: NextRequest) {
       name: { name: 1 },
     };
 
-    const [products, total, statusCounts, stockOutCount] = await Promise.all([
+    const [products, total, statusCounts, stockOutCount, deletedCount] = await Promise.all([
       Product.find(filter)
         .sort(sortMap[sort] || sortMap.newest)
         .skip((page - 1) * pageSize)
         .limit(pageSize)
         .lean(),
       Product.countDocuments(filter),
-      Product.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
-      Product.countDocuments({ stockStatus: "out-of-stock" }),
+      Product.aggregate([
+        { $match: { isDeleted: { $ne: true } } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Product.countDocuments({ isDeleted: { $ne: true }, stockStatus: "out-of-stock" }),
+      Product.countDocuments({ isDeleted: true }),
     ]);
 
-    const summary = { total: 0, published: 0, draft: 0, archived: 0, outOfStock: stockOutCount };
+    const summary = { total: 0, published: 0, draft: 0, archived: 0, outOfStock: stockOutCount, deleted: deletedCount };
     for (const row of statusCounts as { _id: string; count: number }[]) {
       summary.total += row.count;
       if (row._id === "published") summary.published = row.count;

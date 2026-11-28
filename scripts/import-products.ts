@@ -1,12 +1,4 @@
-/**
- * Idempotent catalogue import into the configured MongoDB (MONGODB_URI).
- *
- *   npm run import:products -- --dry-run   # show planned changes, write nothing
- *   npm run import:products                # upsert by slug; re-running changes nothing
- *
- * Existing seeded products keep their ImageKit photos; new products get none (the storefront
- * shows its photo-pending fallback) until a matching photo is uploaded via Admin → Products.
- */
+
 import fs from "node:fs";
 import ImageKit from "imagekit";
 import dotenv from "dotenv";
@@ -65,11 +57,13 @@ async function uploadPhoto(it: CatalogueItem, file: string) {
   });
   const r = await ik.upload({ file: fs.readFileSync(file), fileName: `${it.slug}-main.webp`, folder: `/rmax/products/${it.slug}/main`, useUniqueFileName: false });
   const img = { src: r.url, alt: it.name, width: r.width ?? 0, height: r.height ?? 0 };
-  await Product.updateOne({ slug: it.slug }, { $set: {
-    image: img, cardImage: img, overviewImage: img,
-    images: [{ fileId: r.fileId, url: r.url, filePath: r.filePath, type: "main", alt: it.name, isPrimary: true, sortOrder: 0, width: r.width, height: r.height }],
-    gallery: [{ src: r.url, thumb: r.url, alt: it.name, kind: "image" }],
-  } });
+  await Product.updateOne({ slug: it.slug }, {
+    $set: {
+      image: img, cardImage: img, overviewImage: img,
+      images: [{ fileId: r.fileId, url: r.url, filePath: r.filePath, type: "main", alt: it.name, isPrimary: true, sortOrder: 0, width: r.width, height: r.height }],
+      gallery: [{ src: r.url, thumb: r.url, alt: it.name, kind: "image" }],
+    }
+  });
 }
 
 async function main() {

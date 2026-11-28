@@ -6,7 +6,7 @@ import { resolveFamilyLink } from "@/lib/admin/family";
 import { Order } from "@/models/Order";
 import { checkApiRole } from "@/lib/session";
 import { checkApiPermission } from "@/lib/permissions-server";
-import { deleteProductWithPolicy } from "@/lib/product-delete";
+import { deleteProductWithPolicy, softDeleteProduct } from "@/lib/product-delete";
 import { logAuditEvent } from "@/lib/audit";
 import { deleteProductImage } from "@/lib/imagekit";
 import { revalidateTag } from "next/cache";
@@ -35,10 +35,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to load product" }, { status: 500 });
   }
 }
-
-// Fields an admin is allowed to set directly through PATCH. Keeping this explicit (rather than
-// spreading the whole body) stops stray client fields — like _id or createdBy — from silently
-// overwriting something they shouldn't.
 const PATCHABLE_FIELDS = [
   "title", "name", "shortName", "summary", "intro", "overview",
   "sku", "productCode", "model", "manufacturer", "countryOfOrigin", "tags",
@@ -197,7 +193,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     try {
       revalidateTag("products", { expire: 0 });
-    } catch {}
+    } catch { }
 
     return NextResponse.json({ success: true, product: updated });
   } catch (err) {
@@ -209,7 +205,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-/** DELETE /api/admin/products/:id — refuses to hard-delete a product referenced by any order (PRD §6); archive it instead. */
+/** DELETE /api/admin/products/:id — soft-deletes (moves to Trash) by default, or permanently deletes if ?permanent=true */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const authResult = await checkApiPermission("productsDelete");
   if ("error" in authResult) {
@@ -219,18 +215,27 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   try {
     const { id } = await params;
+    const { searchParams } = new URL(req.url);
+    const permanent = searchParams.get("permanent") === "true";
+
     await connectDB();
     const existing = await findByIdOrSlug(id);
     if (!existing) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-    const outcome = await deleteProductWithPolicy(existing, user);
+    const outcome = permanent
+      ? await deleteProductWithPolicy(existing, user)
+      : await softDeleteProduct(existing, user);
+
     if (!outcome.ok) return NextResponse.json({ error: outcome.error }, { status: outcome.status });
 
     try {
       revalidateTag("products", { expire: 0 });
-    } catch {}
+    } catch { }
 
-    return NextResponse.json({ success: true, message: "Product deleted successfully" });
+    return NextResponse.json({
+      success: true,
+      message: permanent ? "Product permanently deleted" : "Product moved to Trash",
+    });
   } catch (err) {
     console.error("Product DELETE error:", err);
     return NextResponse.json(

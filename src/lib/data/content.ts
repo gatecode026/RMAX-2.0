@@ -60,9 +60,9 @@ async function readAllProducts(): Promise<ProductDTO[]> {
   cacheTag("products");
   try {
     await connectDB();
-    // Published only — this is the public catalogue. Draft and archived products never appear
+    // Published only — this is the public catalogue. Draft, archived, and deleted products never appear
     // here regardless of who's asking; see getProductBySlugAnyStatus for the admin preview path.
-    const rows = await Product.find({ status: "published" }).sort({ sortOrder: 1 }).lean();
+    const rows = await Product.find({ status: "published", isDeleted: { $ne: true } }).sort({ sortOrder: 1 }).lean();
     // `images[]` (the admin uploader) is the source of truth; the legacy image/cardImage/gallery fields can be stale.
     // Derive them from it (primary first) so cards, listing and the detail page all show the same main photo.
     return plain<ProductDTO[]>(rows).map((p) => {
@@ -92,7 +92,7 @@ export async function getAllProducts(): Promise<ProductDTO[]> {
       after(async () => {
         try {
           await connectDB();
-          if (await Product.exists({ status: "published" })) revalidateTag("products", { expire: 0 });
+          if (await Product.exists({ status: "published", isDeleted: { $ne: true } })) revalidateTag("products", { expire: 0 });
         } catch {
           /* still down: the next request checks again */
         }
@@ -143,10 +143,10 @@ export async function getProductBySlugAnyStatus(slug: string): Promise<ProductDT
   try {
     await connectDB();
     const targetSlug = INCINERATOR_ALIASES[slug] || slug;
-    const doc = await Product.findOne({ slug: targetSlug }).lean();
+    const doc = await Product.findOne({ slug: targetSlug, isDeleted: { $ne: true } }).lean();
     if (doc) return plain<ProductDTO>(doc);
     if (slug === "pad-vending") {
-      const alt = await Product.findOne({ slug: "pad-vending-coin" }).lean();
+      const alt = await Product.findOne({ slug: "pad-vending-coin", isDeleted: { $ne: true } }).lean();
       if (alt) return plain<ProductDTO>(alt);
     }
     return null;
